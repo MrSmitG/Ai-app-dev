@@ -1,12 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { modelsDir, dataDir } from "./paths.js";
 import { getSettings, patchSettings } from "./settings.js";
 import { hardwareSnapshot, fitEstimate } from "./hardware.js";
-
-const execFileAsync = promisify(execFile);
 
 const downloads = new Map();
 
@@ -227,32 +223,8 @@ function isLoopback(url) {
 }
 
 export async function pickLibraryDir() {
-  let selected = "";
-  try {
-    if (process.platform === "win32") {
-      const script = [
-        "Add-Type -AssemblyName System.Windows.Forms",
-        "$d = New-Object System.Windows.Forms.FolderBrowserDialog",
-        "$d.Description = 'Choose where Localmod saves GGUF models'",
-        "$d.ShowNewFolderButton = $true",
-        "if ($d.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { [Console]::Out.Write($d.SelectedPath) }",
-      ].join("; ");
-      const { stdout } = await execFileAsync(
-        "powershell.exe",
-        ["-NoProfile", "-STA", "-Command", script],
-        { timeout: 300000, windowsHide: false, encoding: "utf8" }
-      );
-      selected = String(stdout || "").trim();
-    } else if (process.platform === "darwin") {
-      const { stdout } = await execFileAsync("osascript", [
-        "-e",
-        'POSIX path of (choose folder with prompt "Choose where Localmod saves GGUF models")',
-      ]);
-      selected = String(stdout || "").trim();
-    }
-  } catch {
-    selected = "";
-  }
+  const { pickFolder } = await import("./pickFolder.js");
+  const selected = await pickFolder("Choose where Localmod saves GGUF models");
   if (!selected) return { cancelled: true, path: libraryDir() };
   patchSettings({ libraryPath: selected });
   return { cancelled: false, path: libraryDir() };

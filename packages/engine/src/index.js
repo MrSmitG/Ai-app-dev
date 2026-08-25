@@ -16,6 +16,10 @@ import * as mcp from "./mcp.js";
 import * as race from "./race.js";
 import * as ollama from "./ollama.js";
 import * as autotuneMod from "./autotune.js";
+import * as cursorAgent from "./cursorAgent.js";
+import * as skills from "./skills.js";
+import * as voice from "./voice.js";
+import * as contextMod from "./context.js";
 
 const PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 
@@ -69,14 +73,29 @@ const cancelDownload = grab(hf, "cancelDownload");
 const inferenceStatus = grab(inference, "inferenceStatus");
 const startInference = grab(inference, "startInference");
 const stopInference = grab(inference, "stopInference");
+const reloadInference = grab(inference, "reloadInference");
+const loadEstimate = grab(inference, "loadEstimate");
+const modelInfo = grab(inference, "modelInfo");
 const completeChat = grab(chat, "completeChat");
 const logTurn = grab(chat, "logTurn");
 const listCollections = grab(rag, "listCollections");
 const createCollection = grab(rag, "createCollection");
 const deleteCollection = grab(rag, "deleteCollection");
 const ingestFile = grab(rag, "ingestFile");
+const ingestPath = grab(rag, "ingestPath");
+const listSources = grab(rag, "listSources");
+const pickDataPath = grab(rag, "pickDataPath");
 const retrieve = grab(rag, "retrieve");
 const getChunk = grab(rag, "getChunk");
+const listSkills = grab(skills, "listSkills");
+const createSkill = grab(skills, "createSkill");
+const updateSkill = grab(skills, "updateSkill");
+const deleteSkill = grab(skills, "deleteSkill");
+const activateSkill = grab(skills, "activateSkill");
+const activeSkill = grab(skills, "activeSkill");
+const getSkill = grab(skills, "getSkill");
+const voiceStatus = grab(voice, "voiceStatus");
+const transcribeWhisper = grab(voice, "transcribeWhisper");
 const apiStatus = grab(apiServer, "apiStatus");
 const startApiServer = grab(apiServer, "startApiServer");
 const stopApiServer = grab(apiServer, "stopApiServer");
@@ -93,6 +112,14 @@ const hardwareSnapshot = grab(hardware, "hardwareSnapshot");
 const ollamaTags = grab(ollama, "ollamaTags");
 const autotune = grab(autotuneMod, "autotune");
 const raceModels = grab(race, "raceModels");
+const cursorStatus = grab(cursorAgent, "cursorStatus");
+const listCursorModels = grab(cursorAgent, "listCursorModels");
+const listCursorAgents = grab(cursorAgent, "listCursorAgents");
+const startCursorRun = grab(cursorAgent, "startCursorRun");
+const cancelCursorRun = grab(cursorAgent, "cancelCursorRun");
+const getCursorRun = grab(cursorAgent, "getCursorRun");
+const cursorHistory = grab(cursorAgent, "cursorHistory");
+const pickCursorCwd = grab(cursorAgent, "pickCursorCwd");
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -160,17 +187,58 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
     if (url.pathname === "/inference" && req.method === "GET") return json(res, 200, inferenceStatus());
+    if (url.pathname === "/inference/estimate" && req.method === "GET") {
+      return json(res, 200, await loadEstimate(url.searchParams.get("model") || undefined));
+    }
+    if (url.pathname === "/inference/model" && req.method === "GET") {
+      return json(res, 200, modelInfo(url.searchParams.get("path") || undefined));
+    }
     if (url.pathname === "/inference/start" && req.method === "POST") return json(res, 200, await startInference(await readBody(req)));
     if (url.pathname === "/inference/stop" && req.method === "POST") return json(res, 200, await stopInference());
+    if (url.pathname === "/inference/reload" && req.method === "POST") return json(res, 200, await reloadInference());
     if (url.pathname === "/ollama/tags") return json(res, 200, await ollamaTags());
     if (url.pathname === "/autotune" && req.method === "POST") return json(res, 200, autotune((await readBody(req)).prompt || ""));
+    if (url.pathname === "/context/estimate" && req.method === "POST") {
+      const body = await readBody(req);
+      const s = getSettings();
+      if (Array.isArray(body.messages)) {
+        const packed = contextMod.packMessages(body.messages, {
+          contextLength: body.contextLength ?? s.contextLength,
+          reserveTokens: body.reserveTokens ?? s.contextReserveTokens,
+          keepRecent: body.keepRecent ?? s.contextKeepRecent,
+          compact: body.compact ?? s.contextCompact !== false,
+          imageTokenCost: body.imageTokenCost ?? s.imageTokenCost,
+          vision: s.visionEnabled !== false,
+        });
+        return json(res, 200, packed.usage);
+      }
+      return json(
+        res,
+        200,
+        contextMod.estimatePromptBundle({
+          text: body.text || "",
+          voice: body.voice || "",
+          images: body.images || [],
+          contextLength: body.contextLength ?? s.contextLength,
+          reserveTokens: body.reserveTokens ?? s.contextReserveTokens,
+          imageTokenCost: body.imageTokenCost ?? s.imageTokenCost,
+        })
+      );
+    }
     if (url.pathname === "/chat" && req.method === "POST") {
       const body = await readBody(req);
       const ac = new AbortController();
       req.on("close", () => ac.abort());
       const result = await completeChat({ ...body, signal: ac.signal });
       res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": "*" });
-      res.write(`event: meta\ndata: ${JSON.stringify({ citations: result.citations, tune: result.tune, provider: result.provider })}\n\n`);
+      res.write(
+        `event: meta\ndata: ${JSON.stringify({
+          citations: result.citations,
+          tune: result.tune,
+          provider: result.provider,
+          context: result.context,
+        })}\n\n`
+      );
       const decoder = new TextDecoder();
       let buf = "";
       let full = "";
@@ -220,7 +288,26 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === "/rag/ingest" && req.method === "POST") {
       const { collectionId, path: p } = await readBody(req);
-      return json(res, 200, await ingestFile(collectionId, p));
+      return json(res, 200, await ingestPath(collectionId, p));
+    }
+    if (url.pathname === "/harbor/sources" && req.method === "GET") {
+      return json(res, 200, listSources(url.searchParams.get("collectionId")));
+    }
+    if (url.pathname === "/harbor/pick" && req.method === "POST") return json(res, 200, await pickDataPath());
+    if (url.pathname === "/harbor/ingest" && req.method === "POST") {
+      const { collectionId, path: p } = await readBody(req);
+      return json(res, 200, await ingestPath(collectionId, p));
+    }
+    if (url.pathname === "/skills" && req.method === "GET") return json(res, 200, listSkills());
+    if (url.pathname === "/skills/active" && req.method === "GET") return json(res, 200, { skill: activeSkill(), activeSkillId: getSettings().activeSkillId || "" });
+    if (url.pathname === "/skills" && req.method === "POST") return json(res, 200, createSkill(await readBody(req)));
+    if (url.pathname === "/skills/activate" && req.method === "POST") return json(res, 200, activateSkill((await readBody(req)).id));
+    if (url.pathname.startsWith("/skills/") && req.method === "POST") {
+      const id = url.pathname.split("/").pop();
+      return json(res, 200, updateSkill(id, await readBody(req)));
+    }
+    if (url.pathname.startsWith("/skills/") && req.method === "DELETE") {
+      return json(res, 200, deleteSkill(url.pathname.split("/").pop()));
     }
     if (url.pathname === "/rag/query" && req.method === "POST") {
       const { collectionId, query, k } = await readBody(req);
@@ -238,6 +325,40 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/mcp/permission" && req.method === "POST") return json(res, 200, await resolvePermission(await readBody(req)));
     if (url.pathname === "/mcp/audit") return json(res, 200, mcpAudit());
     if (url.pathname === "/race" && req.method === "POST") return json(res, 200, await raceModels(await readBody(req)));
+    if (url.pathname === "/voice" && req.method === "GET") return json(res, 200, voiceStatus());
+    if (url.pathname === "/voice/transcribe" && req.method === "POST") return json(res, 200, await transcribeWhisper(await readBody(req)));
+    if (url.pathname === "/cursor" && req.method === "GET") return json(res, 200, cursorStatus());
+    if (url.pathname === "/forge" && req.method === "GET") return json(res, 200, cursorStatus());
+    if (url.pathname === "/cursor/models" && req.method === "GET") return json(res, 200, await listCursorModels());
+    if (url.pathname === "/forge/models" && req.method === "GET") return json(res, 200, await listCursorModels());
+    if (url.pathname === "/cursor/agents" && req.method === "GET") return json(res, 200, await listCursorAgents());
+    if (url.pathname === "/forge/agents" && req.method === "GET") return json(res, 200, await listCursorAgents());
+    if (url.pathname === "/cursor/history" && req.method === "GET") return json(res, 200, cursorHistory());
+    if (url.pathname === "/forge/history" && req.method === "GET") return json(res, 200, cursorHistory());
+    if (url.pathname === "/cursor/pick-cwd" && req.method === "POST") return json(res, 200, await pickCursorCwd());
+    if (url.pathname === "/forge/pick-cwd" && req.method === "POST") return json(res, 200, await pickCursorCwd());
+    if (url.pathname === "/cursor/run" && req.method === "GET") return json(res, 200, getCursorRun(url.searchParams.get("id")));
+    if (url.pathname === "/forge/run" && req.method === "GET") return json(res, 200, getCursorRun(url.searchParams.get("id")));
+    if (url.pathname === "/cursor/cancel" && req.method === "POST") return json(res, 200, await cancelCursorRun((await readBody(req)).id));
+    if (url.pathname === "/forge/cancel" && req.method === "POST") return json(res, 200, await cancelCursorRun((await readBody(req)).id));
+    if ((url.pathname === "/cursor/run" || url.pathname === "/forge/run") && req.method === "POST") {
+      const body = await readBody(req);
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Access-Control-Allow-Origin": "*",
+      });
+      const write = (event, data) => {
+        res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+      };
+      try {
+        await startCursorRun(body, (msg) => write(msg.type, msg.data));
+      } catch (err) {
+        write("error", { error: String(err.message || err) });
+      }
+      res.end();
+      return;
+    }
     json(res, 404, { error: "not found" });
   } catch (err) {
     json(res, 400, { error: String(err.message || err) });

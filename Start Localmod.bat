@@ -1,9 +1,9 @@
 @echo off
 cd /d "%~dp0"
-title Localmod
+title Localmod Desktop
 where node >nul 2>&1
 if errorlevel 1 (
-  echo Install Node.js from https://nodejs.org then double-click this file again.
+  echo Install Node.js 20+ from https://nodejs.org then run this again.
   pause
   exit /b 1
 )
@@ -12,9 +12,9 @@ if not exist node_modules (
   call npm install
 )
 echo.
-echo Localmod is starting.
-echo The React app should open at http://localhost:1420
+echo Starting Localmod desktop app for Windows...
+echo Engine + React UI + Electron window.
 echo Keep this window open while you use the app.
 echo.
-call npm run dev
+call npm run desktop
 pause

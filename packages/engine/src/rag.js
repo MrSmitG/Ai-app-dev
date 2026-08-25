@@ -37,7 +37,7 @@ export function deleteCollection(id) {
 async function extractText(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   const buf = fs.readFileSync(filePath);
-  if (ext === ".txt" || ext === ".md" || ext === ".csv" || ext === ".html") {
+  if ([".txt", ".md", ".csv", ".html", ".json", ".ts", ".tsx", ".js", ".jsx", ".py", ".rs", ".go", ".java", ".c", ".cpp", ".h", ".cs", ".rb", ".php", ".yml", ".yaml", ".toml", ".xml", ".sql", ".sh", ".ps1"].includes(ext)) {
     return buf.toString("utf8");
   }
   if (ext === ".docx") {
@@ -103,6 +103,63 @@ export async function ingestFile(collectionId, filePath) {
   );
   saveCollections(cols);
   return { chunks: chunks.length, filename };
+}
+
+const TEXT_EXTS = new Set([".txt", ".md", ".csv", ".html", ".docx", ".pdf", ".json", ".ts", ".tsx", ".js", ".jsx", ".py", ".rs", ".go", ".java", ".c", ".cpp", ".h", ".cs", ".rb", ".php", ".yml", ".yaml", ".toml", ".xml", ".sql", ".sh", ".ps1"]);
+
+function walkFiles(dir, out, depth = 0) {
+  if (depth > 8) return;
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const ent of entries) {
+    if (ent.name.startsWith(".") || ent.name === "node_modules" || ent.name === "dist" || ent.name === ".git") continue;
+    const p = path.join(dir, ent.name);
+    if (ent.isDirectory()) walkFiles(p, out, depth + 1);
+    else if (TEXT_EXTS.has(path.extname(ent.name).toLowerCase())) out.push(p);
+  }
+}
+
+export async function ingestPath(collectionId, targetPath) {
+  if (!fs.existsSync(targetPath)) throw new Error("Path not found");
+  const st = fs.statSync(targetPath);
+  if (st.isFile()) return { ...await ingestFile(collectionId, targetPath), files: 1, errors: [] };
+  const files = [];
+  walkFiles(targetPath, files);
+  let ok = 0;
+  let chunks = 0;
+  const errors = [];
+  for (const f of files.slice(0, 400)) {
+    try {
+      const r = await ingestFile(collectionId, f);
+      ok += 1;
+      chunks += r.chunks || 0;
+    } catch (err) {
+      errors.push({ path: f, error: String(err.message || err) });
+    }
+  }
+  return { files: ok, chunks, errors: errors.slice(0, 20), skipped: Math.max(0, files.length - 400) };
+}
+
+export function listSources(collectionId) {
+  const idx = readJson(indexPath(collectionId), { chunks: [] });
+  const map = new Map();
+  for (const c of idx.chunks || []) {
+    const key = c.filename || "unknown";
+    const row = map.get(key) || { filename: key, chunks: 0 };
+    row.chunks += 1;
+    map.set(key, row);
+  }
+  return [...map.values()].sort((a, b) => b.chunks - a.chunks);
+}
+
+export async function pickDataPath() {
+  const { pickFolder } = await import("./pickFolder.js");
+  const selected = await pickFolder("Choose a folder to load into Harbor");
+  return selected ? { cancelled: false, path: selected } : { cancelled: true, path: "" };
 }
 
 function idf(chunks) {

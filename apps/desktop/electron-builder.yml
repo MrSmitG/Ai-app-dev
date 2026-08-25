@@ -1,0 +1,42 @@
+appId: com.localmod.app
+productName: Localmod
+copyright: Copyright © Smit Gaikwad
+# Run from repo root: npm run build:win / build:mac
+directories:
+  output: release
+  buildResources: apps/desktop/build
+files:
+  - apps/desktop/dist/**/*
+  - apps/desktop/electron/**/*
+  - apps/desktop/package.json
+  - package.json
+extraMetadata:
+  main: apps/desktop/electron/main.cjs
+extraResources:
+  - from: packages/engine
+    to: engine
+    filter:
+      - "**/*"
+      - "!**/node_modules/**"
+  - from: node_modules
+    to: node_modules
+    filter:
+      - "mammoth/**/*"
+      - "pdf-parse/**/*"
+      - "@cursor/**/*"
+win:
+  target:
+    - nsis
+  artifactName: Localmod-Setup-${version}.${ext}
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+  artifactName: Localmod-${version}-mac.${ext}
+linux:
+  target:
+    - AppImage
+  category: Development
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
