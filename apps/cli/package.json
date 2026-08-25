@@ -1,0 +1,11 @@
+{
+  "name": "@localmod/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "localmodd": "src/localmodd.js"
+  },
+  "scripts": {
+    "start": "node src/localmodd.js"
+  }
+}

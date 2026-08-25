@@ -1,0 +1,17 @@
+{
+  "name": "@localmod/engine",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "localmod-engine": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "build": "node -e \"console.log('engine is source JS')\""
+  },
+  "dependencies": {
+    "mammoth": "^1.9.0",
+    "pdf-parse": "^1.1.1"
+  }
+}

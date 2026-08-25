@@ -1,0 +1,8 @@
+[package]
+name = "localmodd"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "localmodd"
+path = "src/main.rs"

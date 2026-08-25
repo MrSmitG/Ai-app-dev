@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/core",
+  "crates/inference",
+  "crates/rag",
+  "crates/api",
+  "crates/mcp",
+  "apps/desktop/src-tauri",
+  "apps/cli-rs",
+]
