@@ -75,6 +75,8 @@ const DEFAULTS = {
   visionEnabled: true,
   /** Max images on a single user turn */
   maxImagesPerTurn: 8,
+  /** IDs from the Bundles tab the user has turned on */
+  selectedBundleIds: [],
 };
 
 export function getSettings() {

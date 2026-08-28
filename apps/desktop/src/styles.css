@@ -292,6 +292,23 @@ input:focus, textarea:focus, select:focus {
   border-color: rgba(78, 205, 196, 0.5);
   box-shadow: 0 0 0 1px rgba(78, 205, 196, 0.2), var(--shadow);
 }
+.bundle-card { display: grid; gap: 10px; }
+.bundle-card.in-use {
+  border-color: rgba(78, 205, 196, 0.45);
+  box-shadow: 0 0 0 1px rgba(78, 205, 196, 0.15);
+}
+.bundle-card.recommended { border-color: rgba(255, 159, 67, 0.28); }
+.bundle-card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.bundle-flags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.bundle-blurb { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text); }
+.bundle-using { display: grid; gap: 8px; }
+.ok-pill { color: var(--ok); border-color: rgba(107, 220, 140, 0.4); }
+.warn-text { color: var(--warn); }
+.chip.on {
+  color: var(--accent-text);
+  border-color: rgba(78, 205, 196, 0.45);
+  background: rgba(78, 205, 196, 0.1);
+}
 .skill-emoji {
   width: 40px; height: 40px; border-radius: 12px;
   display: grid; place-items: center;

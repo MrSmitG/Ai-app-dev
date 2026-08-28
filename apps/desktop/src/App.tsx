@@ -8,6 +8,7 @@ import { OwnerCard } from "./components/OwnerCard";
 import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
+import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
 import { useDesktop } from "./providers/AppProviders";
 import { OWNER } from "./owner";
 
@@ -16,6 +17,7 @@ const NAV = [
   ["chat", "Chat", "chat", "Local chat with your loaded GGUF / Ollama model."],
   ["llm", "LLM", "llm", "LM Studio-style inference controls: GPU offload, sampling, KV cache, RoPE, presets."],
   ["models", "Models", "models", "Search Hugging Face, download GGUF files, and manage your local model library."],
+  ["bundles", "Bundles", "bundles", "Select curated packs to use: starter chat, vision, voice, RAG, agent, privacy."],
   ["forge", "Agent", "forge", "Autonomous coding agent that can edit a workspace locally or in the cloud."],
   ["skills", "Skills", "skills", "Personalities that shape how Chat replies — Architect, Critic, or your own packs."],
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
@@ -143,6 +145,7 @@ export default function App() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [skillDraft, setSkillDraft] = useState({ name: "", tagline: "", personality: "", emoji: "○" });
+  const [bundles, setBundles] = useState<BundleRow[]>([]);
   const abort = useRef<AbortController | null>(null);
   const forgeAbort = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -151,7 +154,7 @@ export default function App() {
 
   const refresh = useCallback(async () => {
     try {
-      const [h, s, v, lib, chats, inf, cols, ap, dl, dir, frg, hist, sk, act] = await Promise.all([
+      const [h, s, v, lib, chats, inf, cols, ap, dl, dir, frg, hist, sk, act, bdl] = await Promise.all([
         api<any>("/hardware"),
         api<any>("/settings"),
         api<any>("/vault"),
@@ -166,6 +169,7 @@ export default function App() {
         api<any>("/forge/history").catch(() => []),
         api<any>("/skills").catch(() => []),
         api<any>("/skills/active").catch(() => ({ skill: null })),
+        api<any>("/bundles").catch(() => []),
       ]);
       setHw({ ...h, inference: inf });
       setSettings(s);
@@ -191,6 +195,7 @@ export default function App() {
       setForgeHistory(Array.isArray(hist) ? hist : []);
       setSkills(Array.isArray(sk) ? sk : []);
       setActiveSkill(act.skill || null);
+      setBundles(Array.isArray(bdl) ? bdl : []);
       setActive((id) => id || list[0]?.id || null);
       setCollectionId((id) => id || cols?.[0]?.id || "");
       setError("");
@@ -586,6 +591,7 @@ export default function App() {
       ...NAV.map(([id, label, , tip]) => ({ id: `nav-${id}`, label: `${label} — ${tip}`, run: () => setTab(id) })),
       { id: "new", label: "New chat", run: () => newChat() },
       { id: "skill", label: "Browse Skills", run: () => setTab("skills") },
+      { id: "bundles", label: "Select bundles to use", run: () => setTab("bundles") },
       { id: "harbor", label: "Load data (files / folders)", run: () => setTab("harbor") },
       { id: "forge", label: "Launch coding agent", run: () => setTab("forge") },
       { id: "ollama", label: "Tools → Race (Ollama tags)", run: () => { setTab("tools"); setToolTab("race"); } },
@@ -629,6 +635,9 @@ export default function App() {
             <span className={`status-pill ${hw?.inference?.running ? "ok" : ""}`}>{hw?.inference?.running ? "Engine live" : "Engine idle"}</span>
             <span className={`status-pill ${forge.configured ? "ok" : ""}`} title="Coding agent API key status">{forge.configured ? "Agent ready" : "Agent key"}</span>
             <span className={`status-pill ${activeSkill ? "ok" : ""}`} title="Active Skill personality for Chat">{activeSkill ? activeSkill.name : "No skill"}</span>
+            <span className={`status-pill ${bundles.some((b) => b.selected) ? "ok" : ""}`} title="Bundles currently in use">
+              {bundles.filter((b) => b.selected).length ? `${bundles.filter((b) => b.selected).length} bundle${bundles.filter((b) => b.selected).length === 1 ? "" : "s"}` : "No bundles"}
+            </span>
           </div>
           <div className="top-actions">
             <button className="btn ghost" onClick={() => setPalette(true)} title="Open command palette">Ctrl+K</button>
@@ -715,7 +724,8 @@ export default function App() {
                       <h1>Talk to a local model</h1>
                       <p>Load a GGUF from Models, tune it in LLM, pick a Skill, attach Data, then chat.</p>
                       <div className="row">
-                        <button className="btn primary" onClick={() => setTab("models")}>Get models</button>
+                        <button className="btn primary" onClick={() => setTab("bundles")}>Choose a bundle</button>
+                        <button className="btn" onClick={() => setTab("models")}>Get models</button>
                         <button className="btn" onClick={() => setTab("llm")}>Open LLM studio</button>
                         <button className="btn" onClick={() => setTab("skills")}>Choose a skill</button>
                       </div>
@@ -907,6 +917,15 @@ export default function App() {
                   </div>
                 )}
               </section>
+            )}
+
+            {tab === "bundles" && (
+              <BundlesPanel
+                bundles={bundles}
+                onRefresh={refresh}
+                setError={setError}
+                setTab={setTab}
+              />
             )}
 
             {tab === "forge" && (

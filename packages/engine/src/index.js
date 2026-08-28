@@ -20,6 +20,7 @@ import * as cursorAgent from "./cursorAgent.js";
 import * as skills from "./skills.js";
 import * as voice from "./voice.js";
 import * as contextMod from "./context.js";
+import * as bundles from "./bundles.js";
 
 const PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 
@@ -120,6 +121,10 @@ const cancelCursorRun = grab(cursorAgent, "cancelCursorRun");
 const getCursorRun = grab(cursorAgent, "getCursorRun");
 const cursorHistory = grab(cursorAgent, "cursorHistory");
 const pickCursorCwd = grab(cursorAgent, "pickCursorCwd");
+const listBundles = grab(bundles, "listBundles");
+const useBundle = grab(bundles, "useBundle");
+const stopUsingBundle = grab(bundles, "stopUsingBundle");
+const setBundleEnabled = grab(bundles, "setBundleEnabled");
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -325,6 +330,18 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/mcp/permission" && req.method === "POST") return json(res, 200, await resolvePermission(await readBody(req)));
     if (url.pathname === "/mcp/audit") return json(res, 200, mcpAudit());
     if (url.pathname === "/race" && req.method === "POST") return json(res, 200, await raceModels(await readBody(req)));
+    if (url.pathname === "/bundles" && req.method === "GET") return json(res, 200, await listBundles());
+    if (url.pathname === "/bundles/use" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await useBundle(body.id, { download: body.download !== false }));
+    }
+    if (url.pathname === "/bundles/stop" && req.method === "POST") {
+      return json(res, 200, stopUsingBundle((await readBody(req)).id));
+    }
+    if (url.pathname === "/bundles/toggle" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await setBundleEnabled(body.id, !!body.enabled, { download: body.download !== false }));
+    }
     if (url.pathname === "/voice" && req.method === "GET") return json(res, 200, voiceStatus());
     if (url.pathname === "/voice/transcribe" && req.method === "POST") return json(res, 200, await transcribeWhisper(await readBody(req)));
     if (url.pathname === "/cursor" && req.method === "GET") return json(res, 200, cursorStatus());

@@ -109,11 +109,12 @@ export function Icon({ name }: { name: string }) {
           <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
         </svg>
       );
-    case "about":
+    case "bundles":
       return (
         <svg {...common}>
-          <circle cx="12" cy="8" r="3.5" />
-          <path d="M6 19c1.2-3 3.5-4.5 6-4.5s4.8 1.5 6 4.5" />
+          <path d="M3 7.5 12 3l9 4.5-9 4.5L3 7.5z" />
+          <path d="M3 12.5 12 17l9-4.5" />
+          <path d="M3 16.5 12 21l9-4.5" />
         </svg>
       );
     case "info":

@@ -37,6 +37,7 @@ If `npm ci` fails with a lockfile mismatch, run `npm install` / `npm --prefix ap
 - Default `npm run dev` / `npm start` now launches **Electron** (`npm run desktop`). In Cloud Agents use **`npm run dev:web`** instead (engine + Vite, no Electron window).
 - Engine binds `127.0.0.1:4781`. If the port is in use, Localmod reuses it.
 - Chat vault lives under `~/.localmod/`. Save chats as `{ "threads": [...] }`.
-- New engine modules include context meter, Cursor agent, skills, voice, and folder picker — see `packages/engine/src/`.
+- New engine modules include context meter, Cursor agent, skills, voice, folder picker, and **bundles** (`GET /bundles`, `POST /bundles/use`).
+- Bundles tab lets users turn on curated packs (starter chat, vision, voice, RAG, agent, privacy). Chat-model packs are exclusive; feature packs stack.
 - Full chat completions need `llama-server` or Ollama. Without a loaded model, vault / RAG / settings / UI still work.
 - Do not commit Hugging Face tokens or vault passphrases.
