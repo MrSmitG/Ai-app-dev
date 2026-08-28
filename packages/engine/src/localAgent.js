@@ -232,6 +232,7 @@ function executeAction(root, action) {
   if (name === "list") {
     const dir = safeJoin(root, args.path || ".");
     const names = fs.readdirSync(dir).slice(0, 80);
+    if (!names.length) return "(empty folder)";
     return names
       .map((n) => {
         const st = fs.statSync(path.join(dir, n));
@@ -345,7 +346,7 @@ function fallbackThink({ goal, cards, step, maxSteps, lastResult }) {
     action: {
       name: "finish",
       args: {
-        summary: `Local vision pass finished. Goal: ${String(goal).slice(0, 180)}. ${cards ? "Vision cards were fed to the planner." : "No images attached."} Load Ollama moondream/llava or a GGUF for fuller LLM thinking.`,
+        summary: `Local vision pass finished. Goal: ${String(goal).slice(0, 180)}. ${cards && cards !== "(no images attached)" ? "Vision cards were fed to the planner." : "No images attached."} Load Ollama moondream/llava or a GGUF for fuller LLM thinking.`,
       },
     },
   };
