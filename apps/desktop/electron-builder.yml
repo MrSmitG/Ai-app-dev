@@ -1,6 +1,6 @@
 appId: com.localmod.app
 productName: Localmod
-copyright: Copyright © Smit Gaikwad
+copyright: Copyright © Localmod
 # Run from repo root: npm run build:win / build:mac
 directories:
   output: release
