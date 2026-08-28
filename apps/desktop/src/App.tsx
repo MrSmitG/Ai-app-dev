@@ -8,6 +8,7 @@ import { OwnerCard } from "./components/OwnerCard";
 import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
+import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
 import { useDesktop } from "./providers/AppProviders";
 import { OWNER } from "./owner";
 
@@ -16,7 +17,8 @@ const NAV = [
   ["chat", "Chat", "chat", "Local chat with your loaded GGUF / Ollama model."],
   ["llm", "LLM", "llm", "LM Studio-style inference controls: GPU offload, sampling, KV cache, RoPE, presets."],
   ["models", "Models", "models", "Search Hugging Face, download GGUF files, and manage your local model library."],
-  ["forge", "Agent", "forge", "Autonomous coding agent that can edit a workspace locally or in the cloud."],
+  ["bundles", "Bundles", "bundles", "Select curated packs to use: starter chat, vision, voice, RAG, agent, privacy."],
+  ["forge", "Agent", "forge", "Autonomous agent: local vision loop (no API key) or Forge with a key."],
   ["skills", "Skills", "skills", "Personalities that shape how Chat replies — Architect, Critic, or your own packs."],
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
@@ -31,7 +33,7 @@ const MODEL_TABS = [
 
 const OPTION_TABS = [
   ["voice", "Voice", "Microphone input, transcription engine, and transcript output behavior."],
-  ["forge", "Agent", "API key and workspace for the coding agent."],
+  ["forge", "Agent", "Forge API key, local vision agent, workspace, and max steps."],
   ["models", "Storage", "Where GGUF models are saved on disk."],
   ["privacy", "Privacy", "Airplane mode, encrypted vault, integrity log."],
   ["developer", "Developer", "Ollama URL, local API port, and advanced wiring."],
@@ -143,15 +145,18 @@ export default function App() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [skillDraft, setSkillDraft] = useState({ name: "", tagline: "", personality: "", emoji: "○" });
+  const [bundles, setBundles] = useState<BundleRow[]>([]);
   const abort = useRef<AbortController | null>(null);
   const forgeAbort = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const forgeFileRef = useRef<HTMLInputElement | null>(null);
   const thread = threads.find((t) => t.id === active);
+  const localVision = (settings.cursorRuntime || "") === "local-vision" || settings.agentMode === "local";
+  const agentReady = localVision || !!forge.configured;
 
   const refresh = useCallback(async () => {
     try {
-      const [h, s, v, lib, chats, inf, cols, ap, dl, dir, frg, hist, sk, act] = await Promise.all([
+      const [h, s, v, lib, chats, inf, cols, ap, dl, dir, frg, hist, sk, act, bdl] = await Promise.all([
         api<any>("/hardware"),
         api<any>("/settings"),
         api<any>("/vault"),
@@ -166,6 +171,7 @@ export default function App() {
         api<any>("/forge/history").catch(() => []),
         api<any>("/skills").catch(() => []),
         api<any>("/skills/active").catch(() => ({ skill: null })),
+        api<any>("/bundles").catch(() => []),
       ]);
       setHw({ ...h, inference: inf });
       setSettings(s);
@@ -191,6 +197,7 @@ export default function App() {
       setForgeHistory(Array.isArray(hist) ? hist : []);
       setSkills(Array.isArray(sk) ? sk : []);
       setActiveSkill(act.skill || null);
+      setBundles(Array.isArray(bdl) ? bdl : []);
       setActive((id) => id || list[0]?.id || null);
       setCollectionId((id) => id || cols?.[0]?.id || "");
       setError("");
@@ -470,6 +477,7 @@ export default function App() {
           cwd: forgeCwdDraft || settings.cursorCwd,
           cloudRepo: settings.cursorCloudRepo,
           agentId: followUp ? forgeSession?.agentId : undefined,
+          maxSteps: settings.localAgentMaxSteps,
         },
         {
           onToken: (t) => setForgeText((x) => x + t),
@@ -586,6 +594,7 @@ export default function App() {
       ...NAV.map(([id, label, , tip]) => ({ id: `nav-${id}`, label: `${label} — ${tip}`, run: () => setTab(id) })),
       { id: "new", label: "New chat", run: () => newChat() },
       { id: "skill", label: "Browse Skills", run: () => setTab("skills") },
+      { id: "bundles", label: "Select bundles to use", run: () => setTab("bundles") },
       { id: "harbor", label: "Load data (files / folders)", run: () => setTab("harbor") },
       { id: "forge", label: "Launch coding agent", run: () => setTab("forge") },
       { id: "ollama", label: "Tools → Race (Ollama tags)", run: () => { setTab("tools"); setToolTab("race"); } },
@@ -627,8 +636,11 @@ export default function App() {
           <div className="top-pills">
             <span className={`status-pill ${settings.airplane ? "warn" : "ok"}`}>{settings.airplane ? "Airplane" : "Online"}</span>
             <span className={`status-pill ${hw?.inference?.running ? "ok" : ""}`}>{hw?.inference?.running ? "Engine live" : "Engine idle"}</span>
-            <span className={`status-pill ${forge.configured ? "ok" : ""}`} title="Coding agent API key status">{forge.configured ? "Agent ready" : "Agent key"}</span>
+            <span className={`status-pill ${agentReady ? "ok" : ""}`} title={localVision ? "Local vision agent — no API key" : "Coding agent API key status"}>{agentReady ? (localVision ? "Local agent" : "Agent ready") : "Agent key"}</span>
             <span className={`status-pill ${activeSkill ? "ok" : ""}`} title="Active Skill personality for Chat">{activeSkill ? activeSkill.name : "No skill"}</span>
+            <span className={`status-pill ${bundles.some((b) => b.selected) ? "ok" : ""}`} title="Bundles currently in use">
+              {bundles.filter((b) => b.selected).length ? `${bundles.filter((b) => b.selected).length} bundle${bundles.filter((b) => b.selected).length === 1 ? "" : "s"}` : "No bundles"}
+            </span>
           </div>
           <div className="top-actions">
             <button className="btn ghost" onClick={() => setPalette(true)} title="Open command palette">Ctrl+K</button>
@@ -676,7 +688,7 @@ export default function App() {
                         setForgeSession(h); setForgeText(h.text || ""); setForgeEvents(h.events || []); setForgePrompt(h.prompt || "");
                       }}>
                         <div className="side-item-title">{h.prompt?.slice(0, 48) || h.id}</div>
-                        <div className="muted tiny">{h.status} · {h.model}</div>
+                        <div className="muted tiny">{h.status} · {h.runtime === "local-vision" ? "local vision" : h.model}</div>
                       </button>
                     ))}
                     {!forgeHistory.length && <div className="muted pad">Your agent runs show up here.</div>}
@@ -715,7 +727,8 @@ export default function App() {
                       <h1>Talk to a local model</h1>
                       <p>Load a GGUF from Models, tune it in LLM, pick a Skill, attach Data, then chat.</p>
                       <div className="row">
-                        <button className="btn primary" onClick={() => setTab("models")}>Get models</button>
+                        <button className="btn primary" onClick={() => setTab("bundles")}>Choose a bundle</button>
+                        <button className="btn" onClick={() => setTab("models")}>Get models</button>
                         <button className="btn" onClick={() => setTab("llm")}>Open LLM studio</button>
                         <button className="btn" onClick={() => setTab("skills")}>Choose a skill</button>
                       </div>
@@ -909,21 +922,36 @@ export default function App() {
               </section>
             )}
 
+            {tab === "bundles" && (
+              <BundlesPanel
+                bundles={bundles}
+                onRefresh={refresh}
+                setError={setError}
+                setTab={setTab}
+              />
+            )}
+
             {tab === "forge" && (
               <section className="view forge-view flow-in">
                 <div className="panel spotlight">
                   <div className="panel-head">
                     <div>
-                      <div className="hero-kicker">Agent <Tip text="Autonomous coding agent (Forge). Needs an API key under Options → Agent." /></div>
-                      <div className="panel-title">Run a coding agent on a workspace</div>
-                      <div className="muted">Point it at a folder. It can explore and edit files — local machine or cloud VM.</div>
+                      <div className="hero-kicker">Agent <Tip text="Local vision agent: a small CV model turns images into text cards, then your local LLM thinks, acts, and reads its own log. Forge still needs an API key." /></div>
+                      <div className="panel-title">{localVision ? "Local vision agent" : "Run a coding agent on a workspace"}</div>
+                      <div className="muted">
+                        {localVision
+                          ? "Observe → think → act. Vision cards feed the LLM; agentic logs keep its place in the workflow. No API key."
+                          : "Point it at a folder. It can explore and edit files — local machine or cloud VM."}
+                      </div>
                     </div>
-                    <span className={`status-pill ${forge.configured ? "ok" : "warn"}`}>{forge.configured ? "Key set" : "Needs key"}</span>
+                    <span className={`status-pill ${agentReady ? "ok" : "warn"}`}>
+                      {localVision ? "No API key" : forge.configured ? "Key set" : "Needs key"}
+                    </span>
                   </div>
                   <div className="form-grid">
                     <label>Workspace
                       <div className="row">
-                        <input className="grow" value={forgeCwdDraft} onChange={(e) => setForgeCwdDraft(e.target.value)} placeholder="D:\PROJECT\MyRepo" />
+                        <input className="grow" value={forgeCwdDraft} onChange={(e) => setForgeCwdDraft(e.target.value)} placeholder="Folder the agent may list/read/write" />
                         <button className="btn" onClick={async () => {
                           const r = await api<{ cancelled?: boolean; path?: string }>("/forge/pick-cwd", { method: "POST" });
                           if (!r.cancelled && r.path) { setForgeCwdDraft(r.path); refresh(); }
@@ -931,20 +959,51 @@ export default function App() {
                         <button className="btn" onClick={() => patch({ cursorCwd: forgeCwdDraft.trim() }).then(refresh)}>Save</button>
                       </div>
                     </label>
-                    <label>Model
-                      <div className="row">
-                        <input className="grow" value={settings.cursorModel || "composer-2.5"} onChange={(e) => patch({ cursorModel: e.target.value })} list="forge-models" />
-                        <button className="btn" onClick={async () => {
-                          const m = await api<any>("/forge/models");
-                          setForgeModels(Array.isArray(m) ? m : m.items || []);
-                        }}>List</button>
-                      </div>
-                      <datalist id="forge-models">{forgeModels.map((m: any) => { const id = m.id || m.name || String(m); return <option key={id} value={id} />; })}</datalist>
-                    </label>
+                    {localVision ? (
+                      <>
+                        <label>Vision model
+                          <input
+                            value={settings.localAgentVisionModel || ""}
+                            onChange={(e) => patch({ localAgentVisionModel: e.target.value })}
+                            placeholder="auto (Ollama moondream / llava, else loaded GGUF)"
+                          />
+                        </label>
+                        <label>Max steps
+                          <input
+                            type="number"
+                            min={1}
+                            max={12}
+                            value={settings.localAgentMaxSteps || 8}
+                            onChange={(e) => patch({ localAgentMaxSteps: Math.max(1, Math.min(12, Number(e.target.value) || 8)) })}
+                          />
+                        </label>
+                      </>
+                    ) : (
+                      <label>Model
+                        <div className="row">
+                          <input className="grow" value={settings.cursorModel || "composer-2.5"} onChange={(e) => patch({ cursorModel: e.target.value })} list="forge-models" />
+                          <button className="btn" onClick={async () => {
+                            const m = await api<any>("/forge/models");
+                            setForgeModels(Array.isArray(m) ? m : m.items || []);
+                          }}>List</button>
+                        </div>
+                        <datalist id="forge-models">{forgeModels.map((m: any) => { const id = m.id || m.name || String(m); return <option key={id} value={id} />; })}</datalist>
+                      </label>
+                    )}
                     <label>Runtime
-                      <select value={settings.cursorRuntime || "local"} onChange={(e) => patch({ cursorRuntime: e.target.value })}>
-                        <option value="local">Local machine</option>
-                        <option value="cloud">Cloud VM</option>
+                      <select
+                        value={localVision ? "local-vision" : (settings.cursorRuntime || "local")}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          patch({
+                            cursorRuntime: value,
+                            agentMode: value === "local-vision" ? "local" : "forge",
+                          });
+                        }}
+                      >
+                        <option value="local-vision">Local vision agent (no API key)</option>
+                        <option value="local">Forge · local machine</option>
+                        <option value="cloud">Forge · cloud VM</option>
                       </select>
                     </label>
                     {(settings.cursorRuntime || "local") === "cloud" && (
@@ -968,7 +1027,7 @@ export default function App() {
                       <button className="btn ghost" type="button" onClick={() => setForgeVoiceNote("")}>Clear voice</button>
                     </div>
                   )}
-                  <textarea value={forgePrompt} onChange={(e) => setForgePrompt(e.target.value)} placeholder="What should the agent build, fix, or explore?" rows={4} />
+                  <textarea value={forgePrompt} onChange={(e) => setForgePrompt(e.target.value)} placeholder={localVision ? "What should the local agent observe, think about, and do next?" : "What should the agent build, fix, or explore?"} rows={4} />
                   <div className="row wrap">
                     <button className="btn" type="button" onClick={() => forgeFileRef.current?.click()} disabled={forgeBusy}>Attach image</button>
                     <input
@@ -1000,10 +1059,11 @@ export default function App() {
                     </div>
                   )}
                   <div className="row">
-                    <button className="btn primary" disabled={forgeBusy || !forge.configured} onClick={() => runForge(false)}>{forgeBusy ? "Running…" : "Run agent"}</button>
+                    <button className="btn primary" disabled={forgeBusy || !agentReady} onClick={() => runForge(false)}>{forgeBusy ? "Running…" : "Run agent"}</button>
                     <button className="btn" disabled={forgeBusy || !forgeSession?.agentId} onClick={() => runForge(true)}>Follow-up</button>
                     <button className="btn" disabled={!forgeBusy} onClick={() => { forgeAbort.current?.abort(); if (forgeSession?.id) api("/forge/cancel", { method: "POST", body: JSON.stringify({ id: forgeSession.id }) }); }}><Icon name="stop" /> Stop</button>
-                    <button className="btn ghost" onClick={() => { setOptionTab("forge"); setTab("settings"); }}>API key</button>
+                    {!localVision && <button className="btn ghost" onClick={() => { setOptionTab("forge"); setTab("settings"); }}>API key</button>}
+                    {localVision && <button className="btn ghost" onClick={() => setTab("bundles")}>Bundles</button>}
                   </div>
                 </div>
                 <div className="forge-split">
@@ -1012,12 +1072,36 @@ export default function App() {
                     <div className="forge-output">{forgeText ? <Markdown>{forgeText}</Markdown> : <div className="muted">Live agent output streams here.</div>}</div>
                   </div>
                   <div className="panel timeline">
+                    <div className="section-label">Workflow</div>
+                    <div className="workflow-list">
+                      {(forgeSession?.plan || [
+                        { id: "1", title: "Observe images & workspace", status: "todo" },
+                        { id: "2", title: "Think against the user prompt", status: "todo" },
+                        { id: "3", title: "Act and move forward", status: "todo" },
+                        { id: "4", title: "Finish with a logged summary", status: "todo" },
+                      ]).map((p: any) => (
+                        <div key={p.id} className={`workflow-step ${p.status || "todo"}`}>
+                          <span className="workflow-dot" />
+                          <div>
+                            <div>{p.title}</div>
+                            <div className="muted tiny">{p.status || "todo"}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {forgeSession?.vision && (
+                      <div className="muted tiny pad-sm">
+                        Vision: {forgeSession.vision.provider || "none"} {forgeSession.vision.model || "metadata"}
+                        {forgeSession.usedFallback ? " · lightweight planner" : ""}
+                        {forgeSession.phase ? ` · ${forgeSession.phase}` : ""}
+                      </div>
+                    )}
                     <div className="section-label">Activity</div>
                     <div className="event-list">
                       {forgeEvents.map((e, i) => (
                         <div key={i} className="event-row"><span className="event-type">{e.type}</span><span className="muted">{e.name ? `${e.name} · ` : ""}{e.preview}</span></div>
                       ))}
-                      {!forgeEvents.length && <div className="muted">Tool calls appear as the agent works.</div>}
+                      {!forgeEvents.length && <div className="muted">{localVision ? "Observe → think → act is logged so the agent knows where it is." : "Tool calls appear as the agent works."}</div>}
                     </div>
                   </div>
                 </div>
@@ -1247,6 +1331,20 @@ export default function App() {
                       <label><LabelWithTip tip="Default model id for agent runs.">Default model</LabelWithTip><input value={settings.cursorModel || "composer-2.5"} onChange={(e) => patch({ cursorModel: e.target.value })} /></label>
                       <label><LabelWithTip tip="Local folder the agent works in.">Default workspace</LabelWithTip><input value={settings.cursorCwd || ""} onChange={(e) => patch({ cursorCwd: e.target.value })} /></label>
                       <label><LabelWithTip tip="GitHub repo URL when Agent runtime is Cloud.">Cloud repo</LabelWithTip><input value={settings.cursorCloudRepo || ""} onChange={(e) => patch({ cursorCloudRepo: e.target.value })} /></label>
+                      <div className="panel">
+                        <div className="panel-title">
+                          <LabelWithTip tip="Bundles → Local vision agent. A computer-vision model writes image cards; the local LLM thinks and acts. Logs live under the machine agent-logs folder.">
+                            Local vision agent
+                          </LabelWithTip>
+                        </div>
+                        <div className="muted">No API key. Uses Ollama moondream/llava if installed, otherwise the loaded GGUF, otherwise a lightweight planner.</div>
+                        <label><LabelWithTip tip="Preferred Ollama vision tag, e.g. moondream or llava. Leave blank to auto-pick.">Vision model</LabelWithTip>
+                          <input value={settings.localAgentVisionModel || ""} onChange={(e) => patch({ localAgentVisionModel: e.target.value })} placeholder="auto" />
+                        </label>
+                        <label><LabelWithTip tip="How many observe/think/act steps before the agent must finish (1–12).">Max steps</LabelWithTip>
+                          <input type="number" min={1} max={12} value={settings.localAgentMaxSteps || 8} onChange={(e) => patch({ localAgentMaxSteps: Math.max(1, Math.min(12, Number(e.target.value) || 8)) })} />
+                        </label>
+                      </div>
                     </div>
                   )}
                   {optionTab === "models" && (

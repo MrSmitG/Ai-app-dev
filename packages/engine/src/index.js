@@ -20,6 +20,8 @@ import * as cursorAgent from "./cursorAgent.js";
 import * as skills from "./skills.js";
 import * as voice from "./voice.js";
 import * as contextMod from "./context.js";
+import * as bundles from "./bundles.js";
+import * as localAgent from "./localAgent.js";
 
 const PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 
@@ -120,6 +122,15 @@ const cancelCursorRun = grab(cursorAgent, "cancelCursorRun");
 const getCursorRun = grab(cursorAgent, "getCursorRun");
 const cursorHistory = grab(cursorAgent, "cursorHistory");
 const pickCursorCwd = grab(cursorAgent, "pickCursorCwd");
+const listBundles = grab(bundles, "listBundles");
+const useBundle = grab(bundles, "useBundle");
+const stopUsingBundle = grab(bundles, "stopUsingBundle");
+const setBundleEnabled = grab(bundles, "setBundleEnabled");
+const startLocalAgent = grab(localAgent, "startLocalAgent");
+const localAgentHistory = grab(localAgent, "localAgentHistory");
+const getLocalAgentRun = grab(localAgent, "getLocalAgentRun");
+const cancelLocalAgent = grab(localAgent, "cancelLocalAgent");
+const localAgentStatus = grab(localAgent, "localAgentStatus");
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -325,22 +336,58 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/mcp/permission" && req.method === "POST") return json(res, 200, await resolvePermission(await readBody(req)));
     if (url.pathname === "/mcp/audit") return json(res, 200, mcpAudit());
     if (url.pathname === "/race" && req.method === "POST") return json(res, 200, await raceModels(await readBody(req)));
+    if (url.pathname === "/bundles" && req.method === "GET") return json(res, 200, await listBundles());
+    if (url.pathname === "/bundles/use" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await useBundle(body.id, { download: body.download !== false }));
+    }
+    if (url.pathname === "/bundles/stop" && req.method === "POST") {
+      return json(res, 200, stopUsingBundle((await readBody(req)).id));
+    }
+    if (url.pathname === "/bundles/toggle" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await setBundleEnabled(body.id, !!body.enabled, { download: body.download !== false }));
+    }
     if (url.pathname === "/voice" && req.method === "GET") return json(res, 200, voiceStatus());
     if (url.pathname === "/voice/transcribe" && req.method === "POST") return json(res, 200, await transcribeWhisper(await readBody(req)));
-    if (url.pathname === "/cursor" && req.method === "GET") return json(res, 200, cursorStatus());
-    if (url.pathname === "/forge" && req.method === "GET") return json(res, 200, cursorStatus());
+    if (url.pathname === "/cursor" && req.method === "GET") {
+      const local = localAgentStatus();
+      const cur = cursorStatus();
+      return json(res, 200, { ...cur, local, configured: Boolean(cur.configured || local.configured) });
+    }
+    if (url.pathname === "/forge" && req.method === "GET") {
+      const local = localAgentStatus();
+      const cur = cursorStatus();
+      return json(res, 200, { ...cur, local, configured: Boolean(cur.configured || local.configured) });
+    }
     if (url.pathname === "/cursor/models" && req.method === "GET") return json(res, 200, await listCursorModels());
     if (url.pathname === "/forge/models" && req.method === "GET") return json(res, 200, await listCursorModels());
     if (url.pathname === "/cursor/agents" && req.method === "GET") return json(res, 200, await listCursorAgents());
     if (url.pathname === "/forge/agents" && req.method === "GET") return json(res, 200, await listCursorAgents());
-    if (url.pathname === "/cursor/history" && req.method === "GET") return json(res, 200, cursorHistory());
-    if (url.pathname === "/forge/history" && req.method === "GET") return json(res, 200, cursorHistory());
+    if (url.pathname === "/cursor/history" && req.method === "GET") {
+      return json(res, 200, [...localAgentHistory(), ...cursorHistory()]);
+    }
+    if (url.pathname === "/forge/history" && req.method === "GET") {
+      return json(res, 200, [...localAgentHistory(), ...cursorHistory()]);
+    }
     if (url.pathname === "/cursor/pick-cwd" && req.method === "POST") return json(res, 200, await pickCursorCwd());
     if (url.pathname === "/forge/pick-cwd" && req.method === "POST") return json(res, 200, await pickCursorCwd());
-    if (url.pathname === "/cursor/run" && req.method === "GET") return json(res, 200, getCursorRun(url.searchParams.get("id")));
-    if (url.pathname === "/forge/run" && req.method === "GET") return json(res, 200, getCursorRun(url.searchParams.get("id")));
-    if (url.pathname === "/cursor/cancel" && req.method === "POST") return json(res, 200, await cancelCursorRun((await readBody(req)).id));
-    if (url.pathname === "/forge/cancel" && req.method === "POST") return json(res, 200, await cancelCursorRun((await readBody(req)).id));
+    if (url.pathname === "/cursor/run" && req.method === "GET") {
+      const id = url.searchParams.get("id");
+      return json(res, 200, getLocalAgentRun(id) || getCursorRun(id));
+    }
+    if (url.pathname === "/forge/run" && req.method === "GET") {
+      const id = url.searchParams.get("id");
+      return json(res, 200, getLocalAgentRun(id) || getCursorRun(id));
+    }
+    if (url.pathname === "/cursor/cancel" && req.method === "POST") {
+      const id = (await readBody(req)).id;
+      return json(res, 200, cancelLocalAgent(id) || (await cancelCursorRun(id)));
+    }
+    if (url.pathname === "/forge/cancel" && req.method === "POST") {
+      const id = (await readBody(req)).id;
+      return json(res, 200, cancelLocalAgent(id) || (await cancelCursorRun(id)));
+    }
     if ((url.pathname === "/cursor/run" || url.pathname === "/forge/run") && req.method === "POST") {
       const body = await readBody(req);
       res.writeHead(200, {
@@ -351,10 +398,18 @@ const server = http.createServer(async (req, res) => {
       const write = (event, data) => {
         res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
       };
+      const runtime = body.runtime || getSettings().cursorRuntime || "local";
+      const localMode = runtime === "local-vision" || getSettings().agentMode === "local";
+      const ac = new AbortController();
+      const onClose = () => ac.abort();
+      req.on("close", onClose);
       try {
-        await startCursorRun(body, (msg) => write(msg.type, msg.data));
+        if (localMode) await startLocalAgent({ ...body, signal: ac.signal }, (msg) => write(msg.type, msg.data));
+        else await startCursorRun(body, (msg) => write(msg.type, msg.data));
       } catch (err) {
         write("error", { error: String(err.message || err) });
+      } finally {
+        req.off("close", onClose);
       }
       res.end();
       return;

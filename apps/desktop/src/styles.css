@@ -292,6 +292,23 @@ input:focus, textarea:focus, select:focus {
   border-color: rgba(78, 205, 196, 0.5);
   box-shadow: 0 0 0 1px rgba(78, 205, 196, 0.2), var(--shadow);
 }
+.bundle-card { display: grid; gap: 10px; }
+.bundle-card.in-use {
+  border-color: rgba(78, 205, 196, 0.45);
+  box-shadow: 0 0 0 1px rgba(78, 205, 196, 0.15);
+}
+.bundle-card.recommended { border-color: rgba(255, 159, 67, 0.28); }
+.bundle-card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.bundle-flags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.bundle-blurb { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text); }
+.bundle-using { display: grid; gap: 8px; }
+.ok-pill { color: var(--ok); border-color: rgba(107, 220, 140, 0.4); }
+.warn-text { color: var(--warn); }
+.chip.on {
+  color: var(--accent-text);
+  border-color: rgba(78, 205, 196, 0.45);
+  background: rgba(78, 205, 196, 0.1);
+}
 .skill-emoji {
   width: 40px; height: 40px; border-radius: 12px;
   display: grid; place-items: center;
@@ -508,6 +525,30 @@ label.check { display: flex; align-items: center; gap: 8px; color: var(--text); 
   text-transform: uppercase; letter-spacing: 0.04em;
 }
 .timeline { min-width: 0; }
+.workflow-list { display: grid; gap: 6px; margin-bottom: 12px; }
+.workflow-step {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.workflow-step.doing {
+  border-color: rgba(255, 159, 67, 0.45);
+  background: rgba(255, 159, 67, 0.08);
+}
+.workflow-step.done { border-color: rgba(107, 220, 140, 0.28); }
+.workflow-step.todo { opacity: 0.8; }
+.workflow-dot {
+  width: 8px; height: 8px; margin-top: 5px; border-radius: 99px;
+  background: var(--muted);
+}
+.workflow-step.doing .workflow-dot { background: var(--accent, #ff9f43); }
+.workflow-step.done .workflow-dot { background: var(--ok); }
+.pad-sm { padding: 6px 0 10px; }
 
 .options-layout { display: grid; grid-template-columns: 180px 1fr; gap: 18px; align-items: start; }
 .options-nav { display: grid; gap: 4px; }
