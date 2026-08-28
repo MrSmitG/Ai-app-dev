@@ -4,7 +4,7 @@
   "private": true,
   "description": "Local-first desktop studio for open-weight models — React + Electron for Mac & Windows",
   "license": "MIT",
-  "author": "Smit Gaikwad",
+  "author": "Localmod",
   "type": "module",
   "main": "apps/desktop/electron/main.cjs",
   "scripts": {

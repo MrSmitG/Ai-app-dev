@@ -83,9 +83,9 @@ GPU: NVIDIA (`nvidia-smi` VRAM HUD + `-ngl`), Apple Metal when llama-server is a
 
 Remote machines: `ssh -L 8080:127.0.0.1:8080 user@box` then point Localmod at localhost.
 
-## Author
+## Support
 
-Built by **Smit Gaikwad** ([GitHub](https://github.com/MrSmitG) · [LinkedIn](https://www.linkedin.com/in/mr-smit-gaikwad/)).
+Donations and public notes go through a Web3 wallet on the About tab (Ethereum donate + on-chain message). The account address is configured in `apps/desktop/src/web3.ts` (or `VITE_WEB3_ADDRESS`) once it exists.
 
 ## Layout
 
