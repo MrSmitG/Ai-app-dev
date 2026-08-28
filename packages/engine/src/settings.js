@@ -75,6 +75,10 @@ const DEFAULTS = {
   visionEnabled: true,
   /** Max images on a single user turn */
   maxImagesPerTurn: 8,
+  /** forge | local */
+  agentMode: "forge",
+  localAgentMaxSteps: 8,
+  localAgentVisionModel: "",
   /** IDs from the Bundles tab the user has turned on */
   selectedBundleIds: [],
 };
