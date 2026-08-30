@@ -1,6 +1,6 @@
 {
   "name": "@localmod/engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "main": "src/index.js",
   "bin": {
@@ -11,6 +11,7 @@
     "build": "node -e \"console.log('engine is source JS')\""
   },
   "dependencies": {
+    "@cursor/sdk": "^1.0.28",
     "mammoth": "^1.9.0",
     "pdf-parse": "^1.1.1"
   }

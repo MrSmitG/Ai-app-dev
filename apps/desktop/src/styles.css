@@ -546,13 +546,24 @@ label.check { display: flex; align-items: center; gap: 8px; color: var(--text); 
 .owner-blurb { margin: 0; color: var(--muted); line-height: 1.55; max-width: 560px; }
 .owner-links { display: flex; flex-wrap: wrap; gap: 8px; }
 a.owner-link, a.status-link, a.btn { text-decoration: none; color: inherit; }
-a.status-link { color: var(--accent-text); font-weight: 600; }
-a.status-link:hover { text-decoration: underline; }
+a.status-link, button.status-link { color: var(--accent-text); font-weight: 600; }
+button.status-link {
+  background: none; border: 0; padding: 0; cursor: pointer; font: inherit;
+}
+a.status-link:hover, button.status-link:hover { text-decoration: underline; }
 .owner-card.compact {
   margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);
   display: grid; gap: 8px;
 }
 .owner-card.compact .owner-name { font-size: 15px; font-family: var(--font); }
+.web3-box { display: grid; gap: 12px; padding-top: 4px; }
+.web3-addr {
+  display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;
+  padding: 12px; border: 1px solid var(--line); border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+}
+.web3-amount { min-width: 120px; }
+.web3-box textarea { width: 100%; }
 .llm-status-grid {
   display: grid;
   gap: 12px;

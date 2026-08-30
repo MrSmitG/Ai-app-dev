@@ -4,12 +4,12 @@ import Markdown from "react-markdown";
 import { api, streamChat, streamForge } from "./api";
 import { Icon, LabelWithTip, LocationBar, Tip, bytes } from "./components/ui";
 import { LlmPanel } from "./components/LlmPanel";
-import { OwnerCard } from "./components/OwnerCard";
+import { Web3Support } from "./components/Web3Support";
 import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { useDesktop } from "./providers/AppProviders";
-import { OWNER } from "./owner";
+import { PRODUCT } from "./web3";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
 const NAV = [
@@ -21,7 +21,7 @@ const NAV = [
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
   ["settings", "Options", "settings", "API keys, privacy vault, Ollama URL, and developer settings."],
-  ["about", "About", "about", "Owner details — connect with Smit Gaikwad on LinkedIn or GitHub."],
+  ["about", "About", "about", "Product info, Web3 donate, and on-chain messages."],
 ] as const;
 
 const MODEL_TABS = [
@@ -1202,20 +1202,25 @@ export default function App() {
 
             {tab === "about" && (
               <section className="view flow-in stack">
-                <OwnerCard />
+                <Web3Support />
                 <div className="panel">
-                  <div className="panel-title">Localmod</div>
+                  <div className="panel-title">Download and run</div>
                   <div className="muted">
-                    Local-first desktop studio for open-weight models — Chat, LLM controls, Agents, Skills, and Data.
-                    MIT licensed. No chats leave your machine unless you choose cloud agent runs.
-                  </div>
-                  <div className="muted tiny">
-                    Runtime: {desktop.isDesktop ? `Desktop (${desktop.platform})` : "Browser"} · React + Electron-ready
-                    {desktop.versions?.electron ? ` · Electron ${desktop.versions.electron}` : ""}
+                    Windows installer or portable exe, macOS DMG, and Linux AppImage. No Node.js, Git, or terminal required —
+                    double-click the file from the latest release.
                   </div>
                   <div className="row">
-                    <a className="btn" href={OWNER.repo.url} target="_blank" rel="noreferrer">View on GitHub</a>
-                    <a className="btn primary" href={OWNER.linkedin.url} target="_blank" rel="noreferrer">Message on LinkedIn</a>
+                    <a className="btn primary" href={PRODUCT.releasesUrl} target="_blank" rel="noreferrer">
+                      Get installers
+                    </a>
+                  </div>
+                </div>
+                <div className="panel">
+                  <div className="panel-title">Runtime</div>
+                  <div className="muted tiny">
+                    {desktop.isDesktop ? `Desktop (${desktop.platform})` : "Browser"} · React + Electron-ready
+                    {desktop.versions?.electron ? ` · Electron ${desktop.versions.electron}` : ""}
+                    · MIT licensed
                   </div>
                 </div>
               </section>
@@ -1301,18 +1306,14 @@ export default function App() {
             <div className="panel compact muted">{collections.find((c) => c.id === collectionId)?.name || "None selected"}</div>
             <div className="section-label"><LabelWithTip tip="Folder the coding agent uses.">Agent workspace</LabelWithTip></div>
             <div className="panel compact mono muted">{settings.cursorCwd || forgeCwdDraft || "not set"}</div>
-            <OwnerCard compact />
+            <Web3Support compact onOpen={() => setTab("about")} />
           </aside>
         </div>
 
         <footer className="statusbar">
           <span className="brand-word">Localmod</span>
           <span className="dot" />
-          <span>by {OWNER.name}</span>
-          <span className="dot" />
-          <a className="status-link" href={OWNER.github.url} target="_blank" rel="noreferrer">GitHub</a>
-          <span className="dot" />
-          <a className="status-link" href={OWNER.linkedin.url} target="_blank" rel="noreferrer">LinkedIn</a>
+          <button className="status-link" type="button" onClick={() => setTab("about")}>Support</button>
           <span className="grow" />
           <span>{forge.activeRuns ? `${forge.activeRuns} agent run(s)` : "Ready"}</span>
         </footer>

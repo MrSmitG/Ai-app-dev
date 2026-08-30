@@ -1,12 +1,20 @@
 {
   "name": "localmod",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Local-first desktop studio for open-weight models — React + Electron for Mac & Windows",
   "license": "MIT",
-  "author": "Smit Gaikwad",
+  "author": "Localmod",
   "type": "module",
   "main": "apps/desktop/electron/main.cjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrsmitg/ai-app-dev.git"
+  },
+  "homepage": "https://github.com/mrsmitg/ai-app-dev/releases/latest",
+  "bugs": {
+    "url": "https://github.com/mrsmitg/ai-app-dev/issues"
+  },
   "scripts": {
     "start": "npm run desktop",
     "dev": "npm run desktop",
@@ -16,10 +24,14 @@
     "desktop": "concurrently -k -n engine,ui,electron -c cyan,magenta,green \"npm run dev:engine\" \"npm run dev:ui\" \"wait-on http://127.0.0.1:4781/health http://127.0.0.1:1420 && cross-env LOCALMOD_EXTERNAL_ENGINE=1 electron apps/desktop/electron/main.cjs\"",
     "desktop:win": "npm run desktop",
     "desktop:mac": "npm run desktop",
+    "icon": "node scripts/make-icon.mjs",
+    "pack:engine": "node scripts/pack-engine.mjs",
     "build": "npm --prefix apps/desktop run build",
-    "build:desktop": "npm run build && electron-builder --config apps/desktop/electron-builder.yml --publish never",
-    "build:win": "npm run build && electron-builder --config apps/desktop/electron-builder.yml --win --publish never",
-    "build:mac": "npm run build && electron-builder --config apps/desktop/electron-builder.yml --mac --publish never",
+    "prepare:app": "npm run icon && npm run pack:engine && npm run build",
+    "build:desktop": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --publish never",
+    "build:win": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --win --publish never",
+    "build:mac": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --mac --publish never",
+    "build:linux": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --linux --publish never",
     "cli": "node apps/cli/src/localmodd.js",
     "preview": "npm --prefix apps/desktop run preview"
   },
