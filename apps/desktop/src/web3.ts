@@ -18,6 +18,7 @@ export const PRODUCT = {
   name: "Localmod",
   blurb:
     "Local-first desktop studio for open-weight models — Chat, agents, skills, and data on this machine. MIT licensed. Chats stay local unless you choose a cloud agent run.",
+  releasesUrl: "https://github.com/mrsmitg/ai-app-dev/releases/latest",
 } as const;
 
 export function explorerAddressUrl(address: string) {

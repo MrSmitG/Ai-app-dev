@@ -1,31 +1,44 @@
 # Localmod
 
-Local-first **React + Electron** desktop studio for open-weight models (Windows & macOS). Chat with smart context (pie meter), Loki-style memory tree pivots, LM Studio-style LLM controls, Hugging Face GGUF downloads, agents, skills, Harbor data, voice, images, local RAG, OpenAI-style API, MCP, and Ollama race.
+Local-first **React + Electron** desktop studio for open-weight models (Windows, macOS, and Linux). Chat with smart context, agents, skills, Harbor data, voice, images, local RAG, an OpenAI-style API, MCP, and Ollama race.
 
 This is original MIT-licensed software. It is not a fork of LM Studio or G0DM0D3.
 
-## Why not a public blockchain
+## Download and run (no Node.js)
 
-Publishing chats or hashes on a public chain exposes them. Localmod keeps data on your machine: airplane mode, `127.0.0.1` binds, an AES-GCM vault, and a **local** integrity hash chain.
+Grab the latest installer from **[Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest)** and double-click it.
 
-## Run on Windows or Mac
+| Platform | File | How to run |
+|----------|------|------------|
+| Windows | `Localmod-Setup-*.exe` | Run the installer (desktop + Start Menu shortcuts) |
+| Windows (portable) | `Localmod-*-portable.exe` | Double-click — no install |
+| macOS | `Localmod-*-mac.dmg` | Drag to Applications. If macOS blocks it: right-click the app → **Open** |
+| Linux | `Localmod-*-linux.AppImage` | `chmod +x` the file, then double-click or run it |
+
+The packaged app starts the local engine by itself. You do **not** need Node.js, Git, or a terminal.
+
+On first launch, open **Models** to download a GGUF, or use [Ollama](https://ollama.com) if it is already installed. Chat needs a loaded model; vault, settings, and the rest of the UI work immediately.
+
+Unsigned builds: Windows SmartScreen or macOS Gatekeeper may warn on the first open. Choose **More info → Run anyway** (Windows) or right-click **Open** (macOS).
+
+Maintainers: pushing a `v*` tag (for example `git tag v0.2.0 && git push origin v0.2.0`) builds installers on GitHub Actions and attaches them to that release.
+
+## Run from source
 
 Requires **Node.js 20+**.
 
 ```bash
 npm install
+npm --prefix apps/desktop install
 npm run desktop
 ```
 
 | Platform | Launcher |
 |----------|----------|
 | Windows | Double-click `Start Localmod.bat` |
-| macOS | Double-click `Start Localmod.command` (or run `npm run desktop`) |
+| macOS | Double-click `Start Localmod.command` |
 
-That starts:
-1. Local engine (`http://127.0.0.1:4781`)
-2. React UI (Vite on `1420`)
-3. **Electron** desktop window
+That starts the engine (`http://127.0.0.1:4781`), the React UI (Vite on `1420`), and an **Electron** window.
 
 Browser-only (no Electron window):
 
@@ -33,21 +46,24 @@ Browser-only (no Electron window):
 npm run dev:web
 ```
 
-### Package installers
-
-Build the UI, then package with electron-builder (artifacts in `release/`):
+### Build installers locally
 
 ```bash
-npm run build:win    # Windows NSIS installer
-npm run build:mac    # macOS DMG (run on a Mac)
+npm run build:win     # Windows NSIS + portable (run on Windows)
+npm run build:mac     # macOS DMG (run on a Mac)
+npm run build:linux   # Linux AppImage
 ```
 
-`desktop:win` / `desktop:mac` are aliases of `npm run desktop` (same cross-platform dev command).
+Artifacts land in `release/`.
+
+## Why not a public blockchain
+
+Publishing chats or hashes on a public chain exposes them. Localmod keeps data on your machine: airplane mode, `127.0.0.1` binds, an AES-GCM vault, and a **local** integrity hash chain.
 
 ### Headless (`localmodd`)
 
 ```bash
-npm run cli -- --model D:\models\something.gguf --ngl 20 --airplane
+npm run cli -- --model /path/to/model.gguf --ngl 20 --airplane
 ```
 
 OpenAI-style API (when started from the UI or CLI): `http://127.0.0.1:4782/v1/chat/completions`
@@ -63,8 +79,8 @@ OpenAI-style API (when started from the UI or CLI): `http://127.0.0.1:4782/v1/ch
 ## Stack
 
 - **React 19** + Vite + React Router (`HashRouter` for Electron)
-- **Electron** shell for Mac + Windows (supported desktop path)
-- **Node engine** sidecar for inference, HF, RAG, voice, agents
+- **Electron** shell for Mac, Windows, and Linux
+- **Node engine** sidecar for inference, HF, RAG, voice, agents (bundled in the installer)
 
 ## Inference
 

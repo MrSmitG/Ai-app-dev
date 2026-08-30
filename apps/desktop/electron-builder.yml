@@ -1,7 +1,7 @@
 appId: com.localmod.app
 productName: Localmod
 copyright: Copyright © Localmod
-# Run from repo root: npm run build:win / build:mac
+# Built from repo root: npm run build:win / build:mac / build:linux
 directories:
   output: release
   buildResources: apps/desktop/build
@@ -13,30 +13,40 @@ files:
 extraMetadata:
   main: apps/desktop/electron/main.cjs
 extraResources:
-  - from: packages/engine
-    to: engine
-    filter:
-      - "**/*"
-      - "!**/node_modules/**"
-  - from: node_modules
-    to: node_modules
-    filter:
-      - "mammoth/**/*"
-      - "pdf-parse/**/*"
-      - "@cursor/**/*"
+  - from: build/engine-pack/src
+    to: engine/src
+  - from: build/engine-pack/package.json
+    to: engine/package.json
+  - from: build/engine-pack/node_modules
+    to: engine/node_modules
+asar: true
+icon: apps/desktop/build/icon.png
 win:
   target:
     - nsis
-  artifactName: Localmod-Setup-${version}.${ext}
+    - portable
 mac:
   target:
     - dmg
+    - zip
   category: public.app-category.developer-tools
   artifactName: Localmod-${version}-mac.${ext}
+  identity: null
 linux:
   target:
     - AppImage
   category: Development
+  artifactName: Localmod-${version}-linux.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Localmod
+  uninstallDisplayName: Localmod
+  artifactName: Localmod-Setup-${version}.${ext}
+portable:
+  artifactName: Localmod-${version}-portable.${ext}
+publish:
+  provider: github
+  releaseType: release

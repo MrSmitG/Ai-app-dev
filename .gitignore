@@ -1,8 +1,11 @@
 ﻿node_modules/
-dist/
-build/
+/build/
+/release/
+apps/desktop/dist/
 .next/
 .venv/
 __pycache__/
 *.log
 .DS_Store
+.env
+.env.local

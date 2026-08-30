@@ -9,6 +9,7 @@ import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { useDesktop } from "./providers/AppProviders";
+import { PRODUCT } from "./web3";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
 const NAV = [
@@ -1202,6 +1203,18 @@ export default function App() {
             {tab === "about" && (
               <section className="view flow-in stack">
                 <Web3Support />
+                <div className="panel">
+                  <div className="panel-title">Download and run</div>
+                  <div className="muted">
+                    Windows installer or portable exe, macOS DMG, and Linux AppImage. No Node.js, Git, or terminal required —
+                    double-click the file from the latest release.
+                  </div>
+                  <div className="row">
+                    <a className="btn primary" href={PRODUCT.releasesUrl} target="_blank" rel="noreferrer">
+                      Get installers
+                    </a>
+                  </div>
+                </div>
                 <div className="panel">
                   <div className="panel-title">Runtime</div>
                   <div className="muted tiny">
