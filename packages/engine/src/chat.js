@@ -7,7 +7,7 @@ import { appendIntegrity } from "./integrity.js";
 import { skillSystemPrompt } from "./skills.js";
 import { contentToText, packMessages, toOllamaMessages } from "./context.js";
 
-export async function completeChat({ messages, collectionId, provider, model, signal, vision }) {
+export async function completeChat({ messages, collectionId, provider, model, signal, vision, stream }) {
   const s = getSettings();
   const systemPrompt = skillSystemPrompt(s.systemPrompt);
   let params = {
@@ -66,13 +66,14 @@ export async function completeChat({ messages, collectionId, provider, model, si
   });
   const finalMessages = packed.messages;
 
+  const streamChat = stream !== undefined ? Boolean(stream) : s.streamChat !== false;
   const useOllama = provider === "ollama" || s.provider === "ollama";
   const started = Date.now();
   if (useOllama) {
     const res = await ollamaChat({
       model: model || s.loadedModel || "llama3.2",
       messages: toOllamaMessages(finalMessages),
-      stream: s.streamChat !== false,
+      stream: streamChat,
       params,
     });
     return { stream: res.body, citations, tune, provider: "ollama", started, context: packed.usage };
@@ -81,7 +82,7 @@ export async function completeChat({ messages, collectionId, provider, model, si
   const body = {
     model: model || "local",
     messages: finalMessages,
-    stream: s.streamChat !== false,
+    stream: streamChat,
     temperature: params.temperature,
     top_p: params.topP,
     top_k: params.topK,
@@ -111,6 +112,62 @@ export async function completeChat({ messages, collectionId, provider, model, si
     throw new Error(t || `Inference failed (${res.status})`);
   }
   return { stream: res.body, citations, tune, provider: "llama", started, context: packed.usage };
+}
+
+/** Consume a chat completion stream into a single string (Ollama JSONL or OpenAI SSE). */
+export async function collectChatText(stream, provider) {
+  if (!stream) return "";
+  const decoder = new TextDecoder();
+  let buf = "";
+  let full = "";
+  for await (const chunk of stream) {
+    buf += decoder.decode(chunk, { stream: true });
+    if (provider === "ollama") {
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const t = JSON.parse(line).message?.content || "";
+          if (t) full += t;
+        } catch {
+          /* ignore */
+        }
+      }
+    } else {
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim();
+        if (!data || data === "[DONE]") continue;
+        try {
+          const t = JSON.parse(data).choices?.[0]?.delta?.content || "";
+          if (t) full += t;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }
+  if (provider === "ollama") {
+    const rest = buf.trim();
+    if (rest) {
+      try {
+        const t = JSON.parse(rest).message?.content || "";
+        if (t) full += t;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  return full.trim();
+}
+
+export async function completeOnce(opts) {
+  const result = await completeChat({ ...opts, stream: true });
+  const text = await collectChatText(result.stream, result.provider);
+  return { text, provider: result.provider, citations: result.citations, context: result.context };
 }
 
 export function logTurn({ provider, model, prompt, response }) {
