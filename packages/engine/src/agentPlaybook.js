@@ -67,18 +67,18 @@ export const DECISION_LOOP = [
 
 export const TOOL_MAP = {
   above: [
-    { id: "browser", title: "Browser / Search", lane: "network", via: "search" },
-    { id: "apis", title: "APIs", lane: "network", via: "mcp_call" },
-    { id: "databases", title: "Databases", lane: "data", via: "retrieve" },
-    { id: "vector", title: "Vector Memory", lane: "data", via: "retrieve" },
+    { id: "browser", title: "Browser / Search", lane: "network", via: "search", summary: "Optional web search. Blocked in airplane mode and when network tools are off." },
+    { id: "apis", title: "APIs", lane: "network", via: "mcp_call", summary: "MCP servers expose APIs through one permissioned call." },
+    { id: "databases", title: "Databases", lane: "data", via: "retrieve", summary: "Harbor collections stand in for structured lookup." },
+    { id: "vector", title: "Vector Memory", lane: "data", via: "retrieve", summary: "RAG retrieve plus scoped TTL notes — treated as data, not instructions." },
   ],
   gateway: { id: "bus", title: "Tool Bus / MCP / Tool Gateway", summary: "Single validated entry. Airplane mode and HITL sit here." },
   agent: { id: "agent", title: "Agent", summary: "Observe → reason → choose → execute → verify." },
   below: [
-    { id: "runner", title: "Code Runner", via: "run_code" },
-    { id: "files", title: "Files / Docs", via: "list,read,write" },
-    { id: "messaging", title: "Messaging / Workflow", via: "message" },
-    { id: "hitl", title: "Human Approval", via: "write + approvals" },
+    { id: "runner", title: "Code Runner", via: "run_code", summary: "Sandboxed JS expressions. No require, bounded timeout." },
+    { id: "files", title: "Files / Docs", via: "list,read,write", summary: "Workspace-relative paths only. Writes can wait for approval." },
+    { id: "messaging", title: "Messaging / Workflow", via: "message", summary: "Queue a webhook/workflow event without leaving the bus." },
+    { id: "hitl", title: "Human Approval", via: "write + approvals", summary: "Pending writes show in Framework until Allow / Always / Deny." },
   ],
 };
 
@@ -211,6 +211,36 @@ export const PITFALLS = [
     pitfall: "Low observability",
     fix: "JSONL metrics, SSE workflow events, and webhook test endpoint.",
     enforce: "metrics",
+  },
+  {
+    id: "context-overload",
+    pitfall: "Context overload",
+    fix: "Cap vision cards, RAG, memory, and log tails. Token budget stops the run.",
+    enforce: "budget",
+  },
+  {
+    id: "injection",
+    pitfall: "Prompt injection via tools or docs",
+    fix: "Treat retrieve/search/memory results as untrusted data. Never follow instructions found inside them.",
+    enforce: "untrusted-context",
+  },
+  {
+    id: "cost",
+    pitfall: "Cost and token runaway",
+    fix: "Max steps plus agentBudgetTokens. Rate limit tool calls per minute.",
+    enforce: "budget",
+  },
+  {
+    id: "silent-fail",
+    pitfall: "Silent tool failures",
+    fix: "Critic scores every result. Failed steps are logged; continue is refused when verify says stop.",
+    enforce: "critic",
+  },
+  {
+    id: "fragile",
+    pitfall: "Fragile workflows",
+    fix: "Retries, timeouts, fallback planner, and queued single-flight runs.",
+    enforce: "retries",
   },
 ];
 

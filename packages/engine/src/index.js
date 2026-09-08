@@ -424,7 +424,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, agentTools.toolCatalog());
     }
     if (url.pathname === "/agent/decide" && req.method === "POST") {
-      return json(res, 200, agentFramework.recommendAutonomy(await readBody(req)));
+      return json(res, 200, agentFramework.decideAutonomy(await readBody(req)));
     }
     if (url.pathname === "/agent/metrics" && req.method === "GET") {
       return json(res, 200, agentOrchestrator.orchestratorStatus());

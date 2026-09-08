@@ -283,7 +283,7 @@ export function AgentFramework({
             </div>
           </div>
 
-      <div className="panel" id="af-guide" style={pane === "guide" ? { outline: "1px solid rgba(255,159,67,0.45)" } : undefined}>
+      <div className="panel" id="af-guide">
             <p className="muted">Deterministic → workflow. Dynamic tools → autonomous agent. Specialists → multi-agent. High risk → human approval.</p>
             <form className="stack" onSubmit={runGuide}>
               <label>
