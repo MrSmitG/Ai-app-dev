@@ -263,6 +263,7 @@ export async function useBundle(id, { download = true } = {}) {
   if (bundle.ensureCollection) {
     const cols = listCollections();
     collection = cols[0] || createCollection("Bundle docs");
+    patchSettings({ agentCollectionId: collection.id });
   }
 
   let api = null;

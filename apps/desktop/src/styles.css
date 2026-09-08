@@ -268,8 +268,7 @@ input:focus, textarea:focus, select:focus {
   display: inline-flex; gap: 4px; padding: 4px;
   background: rgba(18, 23, 31, 0.9); border: 1px solid var(--line); border-radius: 14px; width: fit-content;
 }
-.seg button { border: 0; background: transparent; color: var(--muted); padding: 8px 14px; border-radius: 10px; }
-.seg button.active { background: var(--bg-soft); color: var(--text); }
+.forge-view > .seg { margin-bottom: 14px; }
 
 .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .cards.two { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
@@ -684,8 +683,10 @@ a.download-icon-only svg { width: 26px; height: 26px; }
 }
 .af-stack { display: grid; gap: 14px; }
 .af-pipeline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.af-pipe { position: relative; flex: 1 1 140px; min-width: 120px; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,159,67,0.22); background: rgba(255,159,67,0.06); }
+.af-pipe { position: relative; flex: 1 1 140px; min-width: 120px; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,159,67,0.22); background: rgba(255,159,67,0.06); text-align: left; }
+.af-pipe.active { border-color: rgba(255,159,67,0.7); box-shadow: 0 0 0 1px rgba(255,159,67,0.25); background: rgba(255,159,67,0.14); }
 .af-pipe-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+.workflow-list button.workflow-step { width: 100%; }
 .af-arrow { display: none; }
 .af-grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
 .af-card { padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-soft); }

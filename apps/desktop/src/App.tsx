@@ -144,7 +144,7 @@ export default function App() {
   const [pendingImages, setPendingImages] = useState<Attachment[]>([]);
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const [forgeBudget, setForgeBudget] = useState<ContextUsage | null>(null);
-  const [forgePane, setForgePane] = useState<"run" | "framework">("run");
+  const [forgePane, setForgePane] = useState<"run" | "framework" | "guide">("framework");
   const [skills, setSkills] = useState<Skill[]>([]);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [skillDraft, setSkillDraft] = useState({ name: "", tagline: "", personality: "", emoji: "○" });
@@ -936,12 +936,13 @@ export default function App() {
 
             {tab === "forge" && (
               <section className="view forge-view flow-in">
-                <div className="options-nav">
+                <div className="seg">
                   <button className={forgePane === "run" ? "active" : ""} onClick={() => setForgePane("run")}>Run</button>
                   <button className={forgePane === "framework" ? "active" : ""} onClick={() => setForgePane("framework")}>Framework</button>
+                  <button className={forgePane === "guide" ? "active" : ""} onClick={() => setForgePane("guide")}>Guide</button>
                 </div>
-                {forgePane === "framework" && (
-                  <AgentFramework settings={settings} patch={patch} setTab={setTab} />
+                {(forgePane === "framework" || forgePane === "guide") && (
+                  <AgentFramework settings={settings} patch={patch} setTab={setTab} pane={forgePane} />
                 )}
                 {forgePane === "run" && (
                 <>
@@ -952,7 +953,7 @@ export default function App() {
                       <div className="panel-title">{localVision ? "Local vision agent" : "Run a coding agent on a workspace"}</div>
                       <div className="muted">
                         {localVision
-                          ? "Observe → think → act. Vision cards feed the LLM; agentic logs keep its place in the workflow. No API key."
+                          ? "Observe → Reason → Choose → Execute → Verify. Vision cards, scoped memory, and the tool bus feed the loop. No API key."
                           : "Point it at a folder. It can explore and edit files — local machine or cloud VM."}
                       </div>
                     </div>
@@ -1349,8 +1350,38 @@ export default function App() {
                         <label><LabelWithTip tip="Preferred Ollama vision tag, e.g. moondream or llava. Leave blank to auto-pick.">Vision model</LabelWithTip>
                           <input value={settings.localAgentVisionModel || ""} onChange={(e) => patch({ localAgentVisionModel: e.target.value })} placeholder="auto" />
                         </label>
-                        <label><LabelWithTip tip="How many observe/think/act steps before the agent must finish (1–12).">Max steps</LabelWithTip>
+                        <label><LabelWithTip tip="How many observe/reason/act steps before the agent must finish (1–12).">Max steps</LabelWithTip>
                           <input type="number" min={1} max={12} value={settings.localAgentMaxSteps || 8} onChange={(e) => patch({ localAgentMaxSteps: Math.max(1, Math.min(12, Number(e.target.value) || 8)) })} />
+                        </label>
+                      </div>
+                      <div className="panel">
+                        <div className="panel-title">
+                          <LabelWithTip tip="Production controls for the autonomous loop. Same toggles live on Agent → Framework.">
+                            Agent framework
+                          </LabelWithTip>
+                        </div>
+                        <label className="row check">
+                          <input type="checkbox" checked={!!settings.agentHitlWrites} onChange={(e) => patch({ agentHitlWrites: e.target.checked })} />
+                          Human-in-the-loop on workspace writes
+                        </label>
+                        <label className="row check">
+                          <input type="checkbox" checked={!!settings.agentAllowNetwork} onChange={(e) => patch({ agentAllowNetwork: e.target.checked })} />
+                          Allow search (still blocked in airplane mode)
+                        </label>
+                        <label><LabelWithTip tip="Scoped notes under ~/.localmod/agent-memory expire after this many hours.">Memory TTL (hours)</LabelWithTip>
+                          <input type="number" min={1} max={720} value={settings.agentMemoryTtlHours ?? 72} onChange={(e) => patch({ agentMemoryTtlHours: Number(e.target.value) || 72 })} />
+                        </label>
+                        <label><LabelWithTip tip="Tool-bus token bucket. Extra calls wait.">Rate / minute</LabelWithTip>
+                          <input type="number" min={1} max={120} value={settings.agentRatePerMin ?? 20} onChange={(e) => patch({ agentRatePerMin: Number(e.target.value) || 20 })} />
+                        </label>
+                        <label><LabelWithTip tip="Stop the loop when the transcript exceeds this many estimated tokens.">Token budget</LabelWithTip>
+                          <input type="number" min={256} max={200000} value={settings.agentBudgetTokens ?? 8000} onChange={(e) => patch({ agentBudgetTokens: Number(e.target.value) || 8000 })} />
+                        </label>
+                        <label><LabelWithTip tip="Harbor collection id used by the retrieve tool.">RAG collection id</LabelWithTip>
+                          <input value={settings.agentCollectionId || ""} onChange={(e) => patch({ agentCollectionId: e.target.value })} placeholder="from Data tab" />
+                        </label>
+                        <label><LabelWithTip tip="POST run lifecycle events here. Test from Agent → Framework.">Webhook URL</LabelWithTip>
+                          <input value={settings.agentWebhookUrl || ""} onChange={(e) => patch({ agentWebhookUrl: e.target.value })} placeholder="https://…" />
                         </label>
                       </div>
                     </div>

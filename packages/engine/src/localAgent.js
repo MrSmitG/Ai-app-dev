@@ -8,8 +8,8 @@ import { ollamaTags, ollamaChat } from "./ollama.js";
 import { inferenceStatus } from "./inference.js";
 import { skillSystemPrompt } from "./skills.js";
 import { executeTool, sandboxRoot, validateAction, allowedToolNames, actionFingerprint } from "./agentTools.js";
-import { remember } from "./agentMemory.js";
-import { withRetry, appendMetric } from "./agentOrchestrator.js";
+import { remember, recall } from "./agentMemory.js";
+import { withRetry, appendMetric, markLive, markDone, bumpMetric } from "./agentOrchestrator.js";
 import {
   criticVerify,
   defaultOrchestrationPlan,
@@ -330,6 +330,7 @@ export async function startLocalAgent(body, onEvent) {
     usedFallback: false,
   };
   liveRuns.set(run.id, run);
+  markLive(run.id);
   persistRun(run);
   emit("session", publicLocalRun(run));
   notifyRun("start", run).catch(() => {});
@@ -339,6 +340,7 @@ export async function startLocalAgent(body, onEvent) {
     run.finishedAt = run.finishedAt || Date.now();
     persistRun(run);
     liveRuns.delete(run.id);
+    markDone(run.id);
     remember({ scope: cwd, key: "last-run", text: `${goal.slice(0, 180)} → ${status}`, runId: run.id });
     notifyRun(status === "error" ? "error" : "done", run).catch(() => {});
     emit("done", publicLocalRun(run));
@@ -364,7 +366,21 @@ export async function startLocalAgent(body, onEvent) {
       action: { name: "observe" },
       result: cards.slice(0, 1200),
     });
+    const memBits = recall({ scope: cwd, query: goal, limit: 6 })
+      .map((n) => `- ${n.key}: ${String(n.text).slice(0, 200)}`)
+      .join("\n");
+    let ragBits = "";
+    if (s.agentCollectionId) {
+      try {
+        const ragOut = await executeTool({ name: "retrieve", args: { query: goal } }, { cwd, runId: run.id, goal, scope: cwd });
+        ragBits = String(ragOut.result || "").slice(0, 1500);
+      } catch {
+        ragBits = "";
+      }
+    }
     run.transcript += `## Observe\n${cards}\n\n`;
+    if (memBits) run.transcript += `## Memory\n${memBits}\n\n`;
+    if (ragBits) run.transcript += `## Context retrieval\n${ragBits}\n\n`;
     emit("token", run.transcript);
     emit("event", { type: "observe", name: run.vision.model || run.vision.provider, preview: cards.slice(0, 180), ts: Date.now() });
     persistRun(run);
@@ -376,6 +392,7 @@ export async function startLocalAgent(body, onEvent) {
       if (aborted()) return finish(run.status === "running" ? "cancelled" : run.status);
       run.step = i;
       appendMetric({ kind: "step", runId: run.id, step: i });
+      bumpMetric("steps");
       run.phase = "reason";
       run.plan = defaultOrchestrationPlan(Math.min(8, 2 + i));
       const logTail = run.log
@@ -392,6 +409,8 @@ export async function startLocalAgent(body, onEvent) {
         `You are at step ${i} of ${maxSteps}. Allowed tools: ${allowedToolNames().join(", ")}.`,
         `Orchestration:\n${planText}`,
         `Agent log:\n${logTail || "(empty)"}`,
+        memBits ? `Scoped memory:\n${memBits}` : "",
+        ragBits ? `RAG:\n${ragBits}` : "",
         `Vision cards:\n${cards}`,
       ]
         .filter(Boolean)
@@ -448,6 +467,7 @@ export async function startLocalAgent(body, onEvent) {
       seenFp.set(fp, (seenFp.get(fp) || 0) + 1);
       const rails = guardrailCheck({ run, action: parsed.action });
       if (rails.loop.looping || seenFp.get(fp) >= 3) {
+        bumpMetric("loopsStopped");
         parsed.action = { name: "finish", args: { summary: "Stopped: same tool+args repeated (loop guard)." } };
       }
       if (rails.budget.exceeded) {
@@ -481,6 +501,7 @@ export async function startLocalAgent(body, onEvent) {
       emit("token", line);
       emit("event", { type: "tool", name: parsed.action?.name, preview: String(result).slice(0, 180), ts: Date.now() });
       emit("event", { type: "verify", name: verdict.pass ? "pass" : "fail", preview: verdict.critique || "", ts: Date.now() });
+      if (!verdict.pass) bumpMetric("criticFail");
       persistRun(run);
       emit("session", publicLocalRun(run));
 
@@ -498,6 +519,7 @@ export async function startLocalAgent(body, onEvent) {
     return finish("done");
   } catch (err) {
     appendMetric({ kind: "error", runId: run.id, error: String(err.message || err) });
+    bumpMetric("errors");
     run.error = String(err.message || err);
     emit("error", { error: run.error });
     return finish("error");
@@ -549,6 +571,8 @@ export function cancelLocalAgent(id) {
     run.status = "cancelled";
     run.finishedAt = Date.now();
     persistRun(run);
+    liveRuns.delete(id);
+    markDone(id);
   }
   return publicLocalRun(run);
 }
@@ -565,5 +589,8 @@ export function localAgentStatus() {
     llmReady: Boolean(inf.running) || s.provider === "ollama",
     configured: local,
     cwd: s.cursorCwd || path.join(dataDir(), "agent-workspace"),
+    hitlWrites: !!s.agentHitlWrites,
+    allowNetwork: !!s.agentAllowNetwork && !s.airplane,
+    budgetTokens: s.agentBudgetTokens || 8000,
   };
 }

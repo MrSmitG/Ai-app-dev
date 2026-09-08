@@ -143,12 +143,15 @@ export function recommendAutonomy(input = {}) {
   const task = String(input.task || input.goal || "").trim();
   const deterministic = boolish(input.deterministic, /cron|batch|every|scheduled|repeat|pipeline|etl/i.test(task));
   const dynamicTools = boolish(input.dynamicTools, /search|browse|unknown|explore|investigate|research/i.test(task));
-  const specialists = boolish(input.specialists, /multi-agent|specialist|team|architect|reviewer/i.test(task));
+  const specialists = boolish(input.specialists ?? input.multiSpecialist, /multi-agent|specialist|team|architect|reviewer/i.test(task));
   const highRisk = boolish(input.highRisk, /delete|prod|payment|email everyone|irreversible|deploy/i.test(task));
-  const simple = boolish(input.simple, task.length > 0 && task.length < 40 && !dynamicTools && !highRisk);
+  const simple = boolish(
+    input.simple,
+    !deterministic && task.length > 0 && task.length < 28 && !dynamicTools && !highRisk && !specialists
+  );
   const toolCoverage = input.toolCoverage !== false && input.poorTools !== true;
   const observability = input.observability !== false;
-  const hitl = boolish(input.hitl, getSettings().agentHitlWrites !== false);
+  const hitl = boolish(input.hitl, !!getSettings().agentHitlWrites);
 
   const reasons = [];
   let recommendation = "autonomous";
@@ -158,10 +161,6 @@ export function recommendAutonomy(input = {}) {
     recommendation = "need-task";
     label = "Describe the task first";
     reasons.push("Decision guide needs a goal.");
-  } else if (simple && !dynamicTools && !specialists) {
-    recommendation = "skip";
-    label = "Skip autonomy — use Chat";
-    reasons.push("Low-value simple tasks are cheaper as a single Chat turn.");
   } else if (!toolCoverage) {
     recommendation = "skip";
     label = "Do not use — poor tool coverage";
@@ -182,6 +181,10 @@ export function recommendAutonomy(input = {}) {
     recommendation = "workflow";
     label = "Use a workflow";
     reasons.push("Deterministic and repeatable — orchestration steps without a free tool loop.");
+  } else if (simple && !dynamicTools) {
+    recommendation = "skip";
+    label = "Skip autonomy — use Chat";
+    reasons.push("Low-value simple tasks are cheaper as a single Chat turn.");
   } else if (dynamicTools) {
     recommendation = "autonomous";
     label = "Use an autonomous agent";
@@ -207,6 +210,8 @@ export function recommendAutonomy(input = {}) {
 
   return {
     recommendation,
+    choice: recommendation === "autonomous" ? "agent" : recommendation === "skip" ? "chat" : recommendation,
+    humanApproval: recommendation === "hitl" || highRisk,
     label,
     reasons,
     path,
@@ -224,6 +229,11 @@ function boolish(v, fallback) {
 }
 
 export async function criticVerify({ goal, thought, action, result, signal }) {
+  const inf = inferenceStatus();
+  const s = getSettings();
+  if (!inf.running && s.provider !== "ollama") {
+    return heuristicVerify({ action, result });
+  }
   const critic = getSkill("critic");
   const prompt = `Goal: ${String(goal || "").slice(0, 400)}
 Thought: ${String(thought || "").slice(0, 400)}
@@ -311,9 +321,45 @@ export function liveStatus() {
 }
 
 export function getFramework(extra = {}) {
+  const book = playbook();
+  const live = { ...liveStatus(), ...extra };
+  const blurb = (row) => ({ ...row, blurb: row.blurb || row.summary || row.body || "" });
   return {
-    playbook: playbook(),
-    live: { ...liveStatus(), ...extra },
+    playbook: book,
+    live,
+    pipeline: book.pipeline.map(blurb),
+    feedback: book.feedbackLoop?.title || "Learn, Adapt, Refine",
+    loop: book.decisionLoop.map(blurb),
+    tools: {
+      inputs: (book.toolMap?.above || []).map(blurb),
+      gateway: { ...book.toolMap?.gateway, blurb: book.toolMap?.gateway?.summary },
+      below: (book.toolMap?.below || []).map(blurb),
+      live: {
+        tools: live.tools?.tools || [],
+        pendingApprovals: live.pendingWrites || [],
+      },
+    },
+    orchestration: {
+      steps: book.orchestration.map(blurb),
+      services: book.orchestrationServices.map(blurb),
+      queue: live.orchestrator?.queue,
+      live: live.orchestrator?.queue?.depth || 0,
+    },
+    controls: book.controls.map(blurb),
+    settings: live.settings,
+    pitfalls: book.pitfalls,
+    worksBest: book.whenBest.map(blurb),
+    doNotUse: book.whenNot.map(blurb),
+    tips: book.tips.map((t) => ({ ...t, blurb: t.body })),
+    health: {
+      llmReady: Boolean(live.inference?.running),
+      mcp: live.tools?.mcpServers?.length || 0,
+      collections: live.memory?.notes ?? 0,
+      pendingMcp: live.mcpPending?.length || 0,
+      pendingWrites: live.pendingWrites?.length || 0,
+      memory: live.memory,
+      metrics: live.orchestrator?.metrics || {},
+    },
   };
 }
 
@@ -389,7 +435,6 @@ export function decideAutonomy(input = {}) {
     ...rec,
     choice,
     humanApproval: rec.recommendation === "hitl" || !!rec.flags.highRisk,
-    path: rec.path.map((s) => `${s.if} → ${s.label}`),
   };
 }
 
