@@ -144,10 +144,11 @@ export default function App() {
   const [pendingImages, setPendingImages] = useState<Attachment[]>([]);
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const [forgeBudget, setForgeBudget] = useState<ContextUsage | null>(null);
-  const [forgePane, setForgePane] = useState<"run" | "framework" | "guide">(() => {
-    const p = new URLSearchParams(location.search).get("pane");
-    return p === "framework" || p === "guide" || p === "run" ? p : "run";
-  });
+  const paneFromSearch = (search: string): "run" | "framework" | "guide" => {
+    const p = new URLSearchParams(search).get("pane");
+    return p === "framework" || p === "guide" || p === "run" ? p : "framework";
+  };
+  const [forgePane, setForgePane] = useState<"run" | "framework" | "guide">(() => paneFromSearch(location.search));
   const [skills, setSkills] = useState<Skill[]>([]);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [skillDraft, setSkillDraft] = useState({ name: "", tagline: "", personality: "", emoji: "○" });
@@ -222,7 +223,11 @@ export default function App() {
     const seg = location.pathname.replace(/^\//, "").split("/")[0];
     const id = NAV.find(([x]) => x === seg)?.[0];
     if (id && id !== tab) setTabState(id);
-  }, [location.pathname]);
+    if (id === "forge") {
+      const next = paneFromSearch(location.search);
+      setForgePane((cur) => (cur === next ? cur : next));
+    }
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     if (!collectionId) return;
@@ -940,7 +945,7 @@ export default function App() {
             {tab === "forge" && (
               <section className="view forge-view flow-in">
                 <div className="seg">
-                  <button className={forgePane === "run" ? "active" : ""} onClick={() => { setForgePane("run"); navigate("/forge"); }}>Run</button>
+                  <button className={forgePane === "run" ? "active" : ""} onClick={() => { setForgePane("run"); navigate("/forge?pane=run"); }}>Run</button>
                   <button className={forgePane === "framework" ? "active" : ""} onClick={() => { setForgePane("framework"); navigate("/forge?pane=framework"); }}>Framework</button>
                   <button className={forgePane === "guide" ? "active" : ""} onClick={() => { setForgePane("guide"); navigate("/forge?pane=guide"); }}>Guide</button>
                 </div>
