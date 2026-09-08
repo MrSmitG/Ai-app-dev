@@ -594,6 +594,51 @@ a.status-link:hover { text-decoration: underline; }
   display: grid; gap: 8px;
 }
 .owner-card.compact .owner-name { font-size: 15px; font-family: var(--font); }
+.download-panel { gap: 12px; }
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.download-tile {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 18px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,159,67,0.28);
+  background: linear-gradient(165deg, rgba(255,159,67,0.12), rgba(20,53,50,0.35));
+}
+.download-tile:hover {
+  border-color: rgba(255,159,67,0.7);
+  box-shadow: 0 0 0 1px rgba(255,159,67,0.2);
+}
+.download-os-icon { color: var(--accent-text); display: grid; place-items: center; }
+.download-os-name { font-weight: 700; letter-spacing: 0.02em; }
+.download-icon-row { display: flex; gap: 8px; }
+a.download-icon-only {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: grid; place-items: center;
+  color: var(--accent-text);
+  border: 1px solid rgba(255,159,67,0.35);
+  background: rgba(255,159,67,0.08);
+}
+a.download-icon-only:hover { border-color: rgba(255,159,67,0.8); }
+a.download-icon-only svg { width: 26px; height: 26px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
+.hero-kicker {
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-text); font-weight: 700;
+}
+@media (max-width: 720px) {
+  .download-grid { grid-template-columns: 1fr; }
+}
 .llm-status-grid {
   display: grid;
   gap: 12px;

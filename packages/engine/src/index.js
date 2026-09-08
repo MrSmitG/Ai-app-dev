@@ -456,7 +456,7 @@ const here = fileURLToPath(import.meta.url);
 const launchedDirectly = String(process.argv[1] || "")
   .replace(/\\/g, "/")
   .toLowerCase()
-  .endsWith("packages/engine/src/index.js");
+  .endsWith("/engine/src/index.js");
 const spawnVite =
   process.argv.includes("--spawn-vite") || process.argv.includes("--spawn-vite");
 if (launchedDirectly || spawnVite) {

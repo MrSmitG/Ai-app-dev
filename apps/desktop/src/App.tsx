@@ -4,13 +4,14 @@ import Markdown from "react-markdown";
 import { api, streamChat, streamForge } from "./api";
 import { Icon, LabelWithTip, LocationBar, Tip, bytes } from "./components/ui";
 import { LlmPanel } from "./components/LlmPanel";
-import { OwnerCard } from "./components/OwnerCard";
+import { DownloadIcons } from "./components/DownloadIcons";
+import { Web3Support } from "./components/Web3Support";
+import { PRODUCT } from "./web3";
 import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
 import { useDesktop } from "./providers/AppProviders";
-import { OWNER } from "./owner";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
 const NAV = [
@@ -23,7 +24,7 @@ const NAV = [
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
   ["settings", "Options", "settings", "API keys, privacy vault, Ollama URL, and developer settings."],
-  ["about", "About", "about", "Owner details — connect with Smit Gaikwad on LinkedIn or GitHub."],
+  ["about", "About", "about", "Click your OS icon to download Localmod from GitHub. Then click the Localmod icon to run."],
 ] as const;
 
 const MODEL_TABS = [
@@ -1286,22 +1287,16 @@ export default function App() {
 
             {tab === "about" && (
               <section className="view flow-in stack">
-                <OwnerCard />
+                <DownloadIcons />
                 <div className="panel">
                   <div className="panel-title">Localmod</div>
-                  <div className="muted">
-                    Local-first desktop studio for open-weight models — Chat, LLM controls, Agents, Skills, and Data.
-                    MIT licensed. No chats leave your machine unless you choose cloud agent runs.
-                  </div>
+                  <div className="muted">{PRODUCT.blurb}</div>
                   <div className="muted tiny">
                     Runtime: {desktop.isDesktop ? `Desktop (${desktop.platform})` : "Browser"} · React + Electron-ready
                     {desktop.versions?.electron ? ` · Electron ${desktop.versions.electron}` : ""}
                   </div>
-                  <div className="row">
-                    <a className="btn" href={OWNER.repo.url} target="_blank" rel="noreferrer">View on GitHub</a>
-                    <a className="btn primary" href={OWNER.linkedin.url} target="_blank" rel="noreferrer">Message on LinkedIn</a>
-                  </div>
                 </div>
+                <Web3Support />
               </section>
             )}
 
@@ -1399,18 +1394,20 @@ export default function App() {
             <div className="panel compact muted">{collections.find((c) => c.id === collectionId)?.name || "None selected"}</div>
             <div className="section-label"><LabelWithTip tip="Folder the coding agent uses.">Agent workspace</LabelWithTip></div>
             <div className="panel compact mono muted">{settings.cursorCwd || forgeCwdDraft || "not set"}</div>
-            <OwnerCard compact />
+            <DownloadIcons compact />
           </aside>
         </div>
 
         <footer className="statusbar">
           <span className="brand-word">Localmod</span>
           <span className="dot" />
-          <span>by {OWNER.name}</span>
+          <span>Click an OS icon to download</span>
           <span className="dot" />
-          <a className="status-link" href={OWNER.github.url} target="_blank" rel="noreferrer">GitHub</a>
+          <a className="status-link" href={PRODUCT.downloads.windows} download="Localmod.exe">Windows</a>
           <span className="dot" />
-          <a className="status-link" href={OWNER.linkedin.url} target="_blank" rel="noreferrer">LinkedIn</a>
+          <a className="status-link" href={PRODUCT.downloads.mac} download="Localmod.dmg">macOS</a>
+          <span className="dot" />
+          <a className="status-link" href={PRODUCT.downloads.linux} download="Localmod.AppImage">Linux</a>
           <span className="grow" />
           <span>{forge.activeRuns ? `${forge.activeRuns} agent run(s)` : "Ready"}</span>
         </footer>
