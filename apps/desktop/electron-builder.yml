@@ -10,8 +10,12 @@ files:
   - apps/desktop/electron/**/*
   - apps/desktop/package.json
   - package.json
+  - "!**/node_modules/**"
 extraMetadata:
   main: apps/desktop/electron/main.cjs
+  dependencies: {}
+npmRebuild: false
+nodeGypRebuild: false
 extraResources:
   - from: build/engine-pack/src
     to: engine/src

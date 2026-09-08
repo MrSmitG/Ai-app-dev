@@ -1,12 +1,14 @@
 # Localmod
 
-Local-first **React Router 7** framework app (SPA) plus an Electron shell for open-weight models (Windows, macOS, Linux). Chat with smart context (pie meter), Loki-style memory tree pivots, LM Studio-style LLM controls, Hugging Face GGUF downloads, agents, skills, Harbor data, voice, images, local RAG, OpenAI-style API, MCP, and Ollama race.
+A **React** desktop app (React Router 7) you download and run. Chat with local open-weight models on Windows, macOS, and Linux — no Node.js, Git, or terminal.
 
 This is original MIT-licensed software. It is not a fork of LM Studio or G0DM0D3.
 
-## Download (click an icon)
+## Download and run
 
-No Node.js, Git, or terminal. Files come from [GitHub Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest). After the file finishes, **click the Localmod icon** to run.
+No install toolchain. Files come from [GitHub Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest). After the file finishes, **click the Localmod icon**.
+
+If you cloned this repo, double-click **Start Localmod** instead — it downloads that same ready-to-run app (`.bat` on Windows, `.command` on Mac, `.sh` on Linux).
 
 | | |
 |---|---|

@@ -75,8 +75,8 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
       <div className="hero-kicker">Download</div>
       <h2 className="owner-name">Click your system icon</h2>
       <p className="muted">
-        Files come from GitHub Releases. After the download finishes, click the Localmod icon — no Node.js, Git, or
-        terminal.
+        This is the Localmod React app. Files come from GitHub Releases. After the download finishes, click the
+        Localmod icon — no Node.js, Git, or terminal.
       </p>
       <div className="download-grid">
         {TILES.map((t) => (

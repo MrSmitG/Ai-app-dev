@@ -12,6 +12,7 @@ let mainWindow = null;
 let splashWindow = null;
 let engineProc = null;
 let uiServer = null;
+let uiPort = UI_PORT;
 
 const UI_MIME = {
   ".html": "text/html; charset=utf-8",
@@ -30,36 +31,54 @@ function uiDist() {
 
 function startPackagedUi() {
   if (isDev) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const dist = uiDist();
-    uiServer = http.createServer((req, res) => {
-      try {
-        const u = new URL(req.url || "/", "http://127.0.0.1");
-        let rel = decodeURIComponent(u.pathname);
-        if (rel === "/") rel = "/index.html";
-        let file = path.normalize(path.join(dist, rel));
-        if (!file.startsWith(dist)) {
-          res.writeHead(403);
-          res.end();
-          return;
-        }
-        if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-          file = path.join(dist, "index.html");
-        }
-        const ext = path.extname(file);
-        res.writeHead(200, { "Content-Type": UI_MIME[ext] || "application/octet-stream" });
-        fs.createReadStream(file).pipe(res);
-      } catch (err) {
-        res.writeHead(500);
-        res.end(String(err.message || err));
+  const dist = uiDist();
+  const index = path.join(dist, "index.html");
+  if (!fs.existsSync(index)) {
+    return Promise.reject(new Error(`Packaged React app missing at ${dist}`));
+  }
+  const handler = (req, res) => {
+    try {
+      const u = new URL(req.url || "/", "http://127.0.0.1");
+      let rel = decodeURIComponent(u.pathname);
+      if (rel === "/") rel = "/index.html";
+      let file = path.normalize(path.join(dist, rel));
+      if (!file.startsWith(dist)) {
+        res.writeHead(403);
+        res.end();
+        return;
       }
+      if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+        file = index;
+      }
+      const ext = path.extname(file);
+      res.writeHead(200, { "Content-Type": UI_MIME[ext] || "application/octet-stream" });
+      fs.createReadStream(file).pipe(res);
+    } catch (err) {
+      res.writeHead(500);
+      res.end(String(err.message || err));
+    }
+  };
+  const bind = (port) =>
+    new Promise((resolve, reject) => {
+      const server = http.createServer(handler);
+      const onError = (err) => {
+        try {
+          server.close();
+        } catch {
+          /* ignore */
+        }
+        if (err.code === "EADDRINUSE" && port !== 0) bind(0).then(resolve, reject);
+        else reject(err);
+      };
+      server.once("error", onError);
+      server.listen(port, "127.0.0.1", () => {
+        server.off("error", onError);
+        uiServer = server;
+        uiPort = server.address().port;
+        resolve();
+      });
     });
-    uiServer.once("error", (err) => {
-      if (err.code === "EADDRINUSE") resolve();
-      else reject(err);
-    });
-    uiServer.listen(UI_PORT, "127.0.0.1", () => resolve());
-  });
+  return bind(UI_PORT);
 }
 
 function engineEntry() {
@@ -206,8 +225,8 @@ async function createWindow() {
     await mainWindow.loadURL(`http://127.0.0.1:${UI_PORT}/`);
   } else {
     await startPackagedUi();
-    await waitForUrl(`http://127.0.0.1:${UI_PORT}/`);
-    await mainWindow.loadURL(`http://127.0.0.1:${UI_PORT}/`);
+    await waitForUrl(`http://127.0.0.1:${uiPort}/`);
+    await mainWindow.loadURL(`http://127.0.0.1:${uiPort}/`);
   }
 
   mainWindow.on("closed", () => {
@@ -311,6 +330,13 @@ app.on("before-quit", () => {
   if (engineProc && !engineProc.killed) {
     try {
       engineProc.kill();
+    } catch {
+      /* ignore */
+    }
+  }
+  if (uiServer) {
+    try {
+      uiServer.close();
     } catch {
       /* ignore */
     }
