@@ -11,11 +11,18 @@ import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
+import { SuiteHome, CurrentApp, KeyringApp, PulseApp, KeepApp, HandsApp } from "./components/SuiteApps";
 import { useDesktop } from "./providers/AppProviders";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
 const NAV = [
-  ["chat", "Chat", "chat", "Local chat with your loaded GGUF / Ollama model."],
+  ["suite", "Suite", "suite", "Localmod suite home — named AI apps by usage."],
+  ["current", "Current", "current", "Agentic coding: repo context and multi-file edits."],
+  ["keyring", "Keyring", "keyring", "Bring your own API keys. No subscription lock-in."],
+  ["pulse", "Pulse", "pulse", "Speed: ping backends and race local vs cloud."],
+  ["keep", "Keep", "keep", "Stay in VS Code. Chat and inline edit via the local engine."],
+  ["hands", "Hands", "hands", "Autonomous engineer: files, allowlisted CLI, multi-step tasks."],
+  ["chat", "Studio", "chat", "Local chat with your loaded GGUF / Ollama model."],
   ["llm", "LLM", "llm", "LM Studio-style inference controls: GPU offload, sampling, KV cache, RoPE, presets."],
   ["models", "Models", "models", "Search Hugging Face, download GGUF files, and manage your local model library."],
   ["bundles", "Bundles", "bundles", "Select curated packs to use: starter chat, vision, voice, RAG, agent, privacy."],
@@ -82,7 +89,7 @@ export default function App() {
   const desktop = useDesktop();
   const initialTab = (() => {
     const seg = location.pathname.replace(/^\//, "").split("/")[0];
-    return (NAV.find(([id]) => id === seg)?.[0] || "chat") as (typeof NAV)[number][0];
+    return (NAV.find(([id]) => id === seg)?.[0] || "suite") as (typeof NAV)[number][0];
   })();
   const [tab, setTabState] = useState<(typeof NAV)[number][0]>(initialTab);
   const setTab = (id: (typeof NAV)[number][0]) => {
@@ -598,6 +605,9 @@ export default function App() {
       { id: "bundles", label: "Select bundles to use", run: () => setTab("bundles") },
       { id: "harbor", label: "Load data (files / folders)", run: () => setTab("harbor") },
       { id: "forge", label: "Launch coding agent", run: () => setTab("forge") },
+      { id: "current", label: "Current — agentic multi-file edits", run: () => setTab("current") },
+      { id: "hands", label: "Hands — autonomous engineer", run: () => setTab("hands") },
+      { id: "keyring", label: "Keyring — bring your own keys", run: () => setTab("keyring") },
       { id: "ollama", label: "Tools → Race (Ollama tags)", run: () => { setTab("tools"); setToolTab("race"); } },
     ];
     const q = paletteQ.trim().toLowerCase();
@@ -605,7 +615,7 @@ export default function App() {
   }, [paletteQ]);
 
   const title = NAV.find(([id]) => id === tab)?.[1] || "Localmod";
-  const sideTabs = tab === "chat" || tab === "forge" || tab === "skills";
+  const sideTabs = tab === "chat" || tab === "forge" || tab === "skills" || tab === "current" || tab === "hands";
 
   return (
     <div className="shell">
@@ -718,6 +728,13 @@ export default function App() {
 
           <main className="main">
             {error && <div className="banner error flow-in">{error}<button className="btn ghost" onClick={() => setError("")}>Dismiss</button></div>}
+
+            {tab === "suite" && <SuiteHome setTab={setTab} />}
+            {tab === "current" && <CurrentApp settings={settings} patch={patch} />}
+            {tab === "keyring" && <KeyringApp settings={settings} patch={patch} />}
+            {tab === "pulse" && <PulseApp setTab={setTab} />}
+            {tab === "keep" && <KeepApp settings={settings} patch={patch} />}
+            {tab === "hands" && <HandsApp settings={settings} patch={patch} />}
 
             {tab === "chat" && (
               <section className="view chat-view">

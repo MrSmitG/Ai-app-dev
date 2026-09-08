@@ -81,6 +81,16 @@ const DEFAULTS = {
   localAgentVisionModel: "",
   /** IDs from the Bundles tab the user has turned on */
   selectedBundleIds: [],
+  openaiApiKey: "",
+  openaiModel: "gpt-4o-mini",
+  anthropicApiKey: "",
+  anthropicModel: "claude-sonnet-4-20250514",
+  openrouterApiKey: "",
+  openrouterModel: "openai/gpt-4o-mini",
+  customApiBase: "",
+  customApiKey: "",
+  customApiModel: "",
+  fastProvider: "auto",
 };
 
 export function getSettings() {

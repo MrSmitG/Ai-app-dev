@@ -22,6 +22,11 @@ import * as voice from "./voice.js";
 import * as contextMod from "./context.js";
 import * as bundles from "./bundles.js";
 import * as localAgent from "./localAgent.js";
+import * as suite from "./suite.js";
+import * as codebase from "./codebase.js";
+import * as providers from "./providers.js";
+import * as currentAgent from "./currentAgent.js";
+import * as handsAgent from "./handsAgent.js";
 
 const PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 
@@ -413,6 +418,43 @@ const server = http.createServer(async (req, res) => {
       }
       res.end();
       return;
+    }
+    if (url.pathname === "/suite" && req.method === "GET") {
+      return json(res, 200, await suite.suiteStatus());
+    }
+    if (url.pathname === "/providers" && req.method === "GET") {
+      return json(res, 200, { providers: providers.listProviders() });
+    }
+    if (url.pathname === "/providers/ping" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await providers.pingProvider(body.id || body.provider));
+    }
+    if (url.pathname === "/pulse" && req.method === "GET") {
+      return json(res, 200, await providers.pulseBackends());
+    }
+    if (url.pathname === "/codebase/tree" && req.method === "GET") {
+      return json(res, 200, codebase.listTree(url.searchParams.get("cwd")));
+    }
+    if (url.pathname === "/codebase/search" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, codebase.searchCode(body.cwd, body.query));
+    }
+    if (url.pathname === "/codebase/read" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, codebase.readFileRel(body.cwd, body.path));
+    }
+    if (url.pathname === "/current/run" && req.method === "POST") {
+      return json(res, 200, await currentAgent.runCurrent(await readBody(req)));
+    }
+    if (url.pathname === "/keep/inline" && req.method === "POST") {
+      return json(res, 200, await currentAgent.inlineEdit(await readBody(req)));
+    }
+    if (url.pathname === "/hands/run" && req.method === "POST") {
+      return json(res, 200, await handsAgent.runHands(await readBody(req)));
+    }
+    if (url.pathname === "/hands/cli" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await handsAgent.runCli(body.cwd, body.command));
     }
     json(res, 404, { error: "not found" });
   } catch (err) {

@@ -69,6 +69,11 @@ export async function completeChat({ messages, collectionId, provider, model, si
   const streamChat = stream !== undefined ? Boolean(stream) : s.streamChat !== false;
   const useOllama = provider === "ollama" || s.provider === "ollama";
   const started = Date.now();
+  const route = provider || s.provider || "llama";
+  if (["openai", "anthropic", "openrouter", "custom"].includes(route)) {
+    if (s.airplane) throw new Error("Airplane mode blocks cloud providers. Use llama or Ollama, or turn airplane off.");
+    return completeCloud({ route, s, finalMessages, streamChat, citations, tune, packed, started, model, signal });
+  }
   if (useOllama) {
     const res = await ollamaChat({
       model: model || s.loadedModel || "llama3.2",
@@ -112,6 +117,79 @@ export async function completeChat({ messages, collectionId, provider, model, si
     throw new Error(t || `Inference failed (${res.status})`);
   }
   return { stream: res.body, citations, tune, provider: "llama", started, context: packed.usage };
+}
+
+function openaiCompatibleBase(route, s) {
+  if (route === "openai") return { base: "https://api.openai.com/v1", key: s.openaiApiKey, model: s.openaiModel || "gpt-4o-mini" };
+  if (route === "openrouter") {
+    return {
+      base: "https://openrouter.ai/api/v1",
+      key: s.openrouterApiKey,
+      model: s.openrouterModel || "openai/gpt-4o-mini",
+      extra: { "HTTP-Referer": "https://localmod.app", "X-Title": "Localmod" },
+    };
+  }
+  return {
+    base: String(s.customApiBase || "").replace(/\/$/, ""),
+    key: s.customApiKey || "",
+    model: s.customApiModel || "local",
+    extra: {},
+  };
+}
+
+async function completeCloud({ route, s, finalMessages, streamChat, citations, tune, packed, started, model, signal }) {
+  if (route === "anthropic") {
+    if (!s.anthropicApiKey) throw new Error("Add an Anthropic key in Keyring.");
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": s.anthropicApiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: model || s.anthropicModel || "claude-sonnet-4-20250514",
+        max_tokens: s.maxTokens > 0 ? s.maxTokens : 2048,
+        stream: false,
+        messages: finalMessages
+          .filter((m) => m.role !== "system")
+          .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) })),
+        system: finalMessages.find((m) => m.role === "system")?.content,
+      }),
+      signal,
+    });
+    if (!res.ok) throw new Error((await res.text()) || `Anthropic failed (${res.status})`);
+    const j = await res.json();
+    const text = (j.content || []).map((c) => c.text || "").join("");
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`));
+        c.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+        c.close();
+      },
+    });
+    return { stream, citations, tune, provider: "openai", started, context: packed.usage };
+  }
+  const cfg = openaiCompatibleBase(route, s);
+  if (!cfg.base) throw new Error("Set a custom API base URL in Keyring.");
+  if (route !== "custom" && !cfg.key) throw new Error(`Add a ${route} API key in Keyring.`);
+  const res = await fetch(`${cfg.base}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cfg.key ? { Authorization: `Bearer ${cfg.key}` } : {}),
+      ...(cfg.extra || {}),
+    },
+    body: JSON.stringify({
+      model: model || cfg.model,
+      messages: finalMessages,
+      stream: streamChat,
+      temperature: s.temperature,
+    }),
+    signal,
+  });
+  if (!res.ok) throw new Error((await res.text()) || `${route} failed (${res.status})`);
+  return { stream: res.body, citations, tune, provider: "openai", started, context: packed.usage };
 }
 
 /** Consume a chat completion stream into a single string (Ollama JSONL or OpenAI SSE). */

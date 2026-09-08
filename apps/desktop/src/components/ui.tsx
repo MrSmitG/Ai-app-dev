@@ -117,6 +117,51 @@ export function Icon({ name }: { name: string }) {
           <path d="M3 16.5 12 21l9-4.5" />
         </svg>
       );
+    case "suite":
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+      );
+    case "current":
+      return (
+        <svg {...common}>
+          <path d="M4 12h16" />
+          <path d="M14 6l6 6-6 6" />
+          <path d="M4 6v12" />
+        </svg>
+      );
+    case "keyring":
+      return (
+        <svg {...common}>
+          <circle cx="8" cy="12" r="4" />
+          <path d="M12 12h9M18 12v3M21 12v2" />
+        </svg>
+      );
+    case "pulse":
+      return (
+        <svg {...common}>
+          <path d="M3 12h4l2-6 4 12 2-6h6" />
+        </svg>
+      );
+    case "keep":
+      return (
+        <svg {...common}>
+          <path d="M4 5h9a3 3 0 0 1 3 3v11H7a3 3 0 0 0-3 3z" />
+          <path d="M16 8h4v13H10" />
+        </svg>
+      );
+    case "hands":
+      return (
+        <svg {...common}>
+          <path d="M8 13V7a1.5 1.5 0 0 1 3 0v5" />
+          <path d="M11 12V6a1.5 1.5 0 0 1 3 0v6" />
+          <path d="M14 12V8a1.5 1.5 0 0 1 3 0v8.5a4.5 4.5 0 0 1-4.5 4.5H12a5 5 0 0 1-5-5v-3" />
+        </svg>
+      );
     case "info":
       return (
         <svg {...common} width={14} height={14}>

@@ -1,8 +1,19 @@
 # Localmod
 
-A **React** desktop app (React Router 7) you download and run. Chat with local open-weight models on Windows, macOS, and Linux — no Node.js, Git, or terminal.
+A **React** desktop suite you download and run. Six named apps — Studio, Current, Keyring, Pulse, Keep, Hands — covering chat, agentic coding, BYOK, speed, IDE extensions, and an autonomous engineer. No Node.js required for the downloaded app.
 
-This is original MIT-licensed software. It is not a fork of LM Studio or G0DM0D3.
+This is original MIT-licensed software. It is not a fork of LM Studio, Cursor, or G0DM0D3.
+
+## Suite
+
+| App | Usage |
+|---|---|
+| **Studio** | Local chat, models, RAG, voice |
+| **Current** | Agentic coding — full-repo context, multi-file edits |
+| **Keyring** | Bring your own keys (llama, Ollama, OpenAI, Anthropic, OpenRouter, custom) |
+| **Pulse** | Speed — ping backends, race local vs cloud |
+| **Keep** | Stay in VS Code — chat + inline edit via the local engine |
+| **Hands** | Autonomous engineer — files, allowlisted CLI, multi-step tasks |
 
 ## Download and run
 

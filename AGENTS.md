@@ -39,5 +39,6 @@ If `npm ci` fails with a lockfile mismatch, run `npm install` / `npm --prefix ap
 - Chat vault lives under `~/.localmod/`. Save chats as `{ "threads": [...] }`.
 - New engine modules include context meter, Cursor agent, skills, voice, folder picker, and **bundles** (`GET /bundles`, `POST /bundles/use`).
 - Bundles tab lets users turn on curated packs (starter chat, vision, voice, RAG, agent, privacy). Chat-model packs are exclusive; feature packs stack.
+- Suite apps: Current (multi-file agentic edits), Keyring (BYOK), Pulse (latency race), Keep and Hands (VS Code extensions under `apps/keep` and `apps/hands`).
 - Full chat completions need `llama-server` or Ollama. Without a loaded model, vault / RAG / settings / UI still work.
 - Do not commit Hugging Face tokens or vault passphrases.

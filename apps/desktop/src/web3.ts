@@ -17,7 +17,7 @@ export const WEB3 = {
 export const PRODUCT = {
   name: "Localmod",
   blurb:
-    "Local-first desktop studio for open-weight models — Chat, agents, skills, and data on this machine. MIT licensed. Chats stay local unless you choose a cloud agent run.",
+    "A local-first suite of AI systems: Studio, Current, Keyring, Pulse, Keep, and Hands. MIT licensed. Chats stay local unless you choose a cloud key.",
   releasesUrl: "https://github.com/mrsmitg/ai-app-dev/releases/latest",
   /** Stable names so GitHub /releases/latest/download/Localmod.exe always works. */
   downloads: {

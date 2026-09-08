@@ -1,0 +1,16 @@
+{
+  "name": "localmod-hands",
+  "displayName": "Localmod Hands",
+  "description": "Autonomous engineer in the sidebar: files, allowlisted CLI, multi-step tasks via the Localmod engine.",
+  "version": "0.1.0",
+  "publisher": "localmod",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:localmod.hands.run"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "localmod.hands.run", "title": "Localmod Hands: Run autonomous task" }
+    ]
+  }
+}
