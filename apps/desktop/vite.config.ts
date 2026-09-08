@@ -1,12 +1,10 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { reactRouter } from "@react-router/dev/vite";
 import path from "node:path";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [reactRouter()],
   clearScreen: false,
-  // Relative base so Electron can load file:// dist/index.html on Mac & Windows
-  base: "./",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
@@ -24,10 +22,5 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/engine/, ""),
       },
     },
-  },
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-    sourcemap: true,
   },
 });
