@@ -22,6 +22,9 @@ import * as voice from "./voice.js";
 import * as contextMod from "./context.js";
 import * as bundles from "./bundles.js";
 import * as localAgent from "./localAgent.js";
+import * as agentFramework from "./agentFramework.js";
+import * as agentTools from "./agentTools.js";
+import * as agentOrchestrator from "./agentOrchestrator.js";
 
 const PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 
@@ -413,6 +416,28 @@ const server = http.createServer(async (req, res) => {
       }
       res.end();
       return;
+    }
+    if (url.pathname === "/agent/framework" && req.method === "GET") {
+      return json(res, 200, agentFramework.getFramework());
+    }
+    if (url.pathname === "/agent/tools" && req.method === "GET") {
+      return json(res, 200, agentTools.toolCatalog());
+    }
+    if (url.pathname === "/agent/decide" && req.method === "POST") {
+      return json(res, 200, agentFramework.recommendAutonomy(await readBody(req)));
+    }
+    if (url.pathname === "/agent/metrics" && req.method === "GET") {
+      return json(res, 200, agentOrchestrator.orchestratorStatus());
+    }
+    if (url.pathname === "/agent/approvals" && req.method === "GET") {
+      return json(res, 200, agentTools.pendingApprovals());
+    }
+    if (url.pathname === "/agent/approvals" && req.method === "POST") {
+      return json(res, 200, await agentTools.resolveApproval(await readBody(req)));
+    }
+    if (url.pathname === "/agent/webhook-test" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await agentOrchestrator.testWebhook(body.url));
     }
     json(res, 404, { error: "not found" });
   } catch (err) {

@@ -11,6 +11,7 @@ import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
+import { AgentFramework } from "./components/AgentFramework";
 import { useDesktop } from "./providers/AppProviders";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
@@ -19,7 +20,7 @@ const NAV = [
   ["llm", "LLM", "llm", "LM Studio-style inference controls: GPU offload, sampling, KV cache, RoPE, presets."],
   ["models", "Models", "models", "Search Hugging Face, download GGUF files, and manage your local model library."],
   ["bundles", "Bundles", "bundles", "Select curated packs to use: starter chat, vision, voice, RAG, agent, privacy."],
-  ["forge", "Agent", "forge", "Autonomous agent: local vision loop (no API key) or Forge with a key."],
+  ["forge", "Agent", "forge", "Autonomous framework: observe, reason, choose, execute, verify — plus Forge."],
   ["skills", "Skills", "skills", "Personalities that shape how Chat replies — Architect, Critic, or your own packs."],
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
@@ -143,6 +144,7 @@ export default function App() {
   const [pendingImages, setPendingImages] = useState<Attachment[]>([]);
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const [forgeBudget, setForgeBudget] = useState<ContextUsage | null>(null);
+  const [forgePane, setForgePane] = useState<"run" | "framework">("run");
   const [skills, setSkills] = useState<Skill[]>([]);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [skillDraft, setSkillDraft] = useState({ name: "", tagline: "", personality: "", emoji: "○" });
@@ -934,6 +936,15 @@ export default function App() {
 
             {tab === "forge" && (
               <section className="view forge-view flow-in">
+                <div className="options-nav">
+                  <button className={forgePane === "run" ? "active" : ""} onClick={() => setForgePane("run")}>Run</button>
+                  <button className={forgePane === "framework" ? "active" : ""} onClick={() => setForgePane("framework")}>Framework</button>
+                </div>
+                {forgePane === "framework" && (
+                  <AgentFramework settings={settings} patch={patch} setTab={setTab} />
+                )}
+                {forgePane === "run" && (
+                <>
                 <div className="panel spotlight">
                   <div className="panel-head">
                     <div>
@@ -1102,10 +1113,12 @@ export default function App() {
                       {forgeEvents.map((e, i) => (
                         <div key={i} className="event-row"><span className="event-type">{e.type}</span><span className="muted">{e.name ? `${e.name} · ` : ""}{e.preview}</span></div>
                       ))}
-                      {!forgeEvents.length && <div className="muted">{localVision ? "Observe → think → act is logged so the agent knows where it is." : "Tool calls appear as the agent works."}</div>}
+                      {!forgeEvents.length && <div className="muted">{localVision ? "Observe → reason → choose → execute → verify is logged." : "Tool calls appear as the agent works."}</div>}
                     </div>
                   </div>
                 </div>
+                </>
+                )}
               </section>
             )}
 

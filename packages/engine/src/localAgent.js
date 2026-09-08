@@ -6,6 +6,17 @@ import { getSettings } from "./settings.js";
 import { completeOnce } from "./chat.js";
 import { ollamaTags, ollamaChat } from "./ollama.js";
 import { inferenceStatus } from "./inference.js";
+import { skillSystemPrompt } from "./skills.js";
+import { executeTool, sandboxRoot, validateAction, allowedToolNames, actionFingerprint } from "./agentTools.js";
+import { remember } from "./agentMemory.js";
+import { withRetry, appendMetric } from "./agentOrchestrator.js";
+import {
+  criticVerify,
+  defaultOrchestrationPlan,
+  frameworkSystemPrompt,
+  guardrailCheck,
+  notifyRun,
+} from "./agentFramework.js";
 
 const VISION_HINTS = ["moondream", "llava", "bakllava", "minicpm-v", "minicpm_v", "qwen2-vl", "qwen2vl", "vision", "vl-"];
 /** In-memory runs so cancel hits the live loop, not a stale disk copy. */
@@ -213,54 +224,6 @@ export async function observeImages(images, goal) {
   return { vision, observations };
 }
 
-function sandboxRoot(cwd) {
-  const fallback = path.join(dataDir(), "agent-workspace");
-  const root = path.resolve(String(cwd || getSettings().cursorCwd || fallback).trim() || fallback);
-  if (!fs.existsSync(root)) fs.mkdirSync(root, { recursive: true });
-  return root;
-}
-
-function safeJoin(root, rel) {
-  const target = path.resolve(root, String(rel || ".").replace(/^[/\\]+/, ""));
-  if (!target.startsWith(root)) throw new Error("Path escapes workspace");
-  return target;
-}
-
-function executeAction(root, action) {
-  const name = String(action?.name || "note");
-  const args = action?.args || {};
-  if (name === "list") {
-    const dir = safeJoin(root, args.path || ".");
-    const names = fs.readdirSync(dir).slice(0, 80);
-    if (!names.length) return "(empty folder)";
-    return names
-      .map((n) => {
-        const st = fs.statSync(path.join(dir, n));
-        return `${st.isDirectory() ? "dir" : "file"} ${n}`;
-      })
-      .join("\n");
-  }
-  if (name === "read") {
-    const file = safeJoin(root, args.path);
-    const st = fs.statSync(file);
-    if (st.size > 120000) return `File too large (${st.size} bytes). Read a smaller file.`;
-    return fs.readFileSync(file, "utf8").slice(0, 8000);
-  }
-  if (name === "write") {
-    const file = safeJoin(root, args.path);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, String(args.content || ""), "utf8");
-    return `Wrote ${file} (${String(args.content || "").length} chars)`;
-  }
-  if (name === "note") {
-    return String(args.text || args.content || "noted");
-  }
-  if (name === "finish") {
-    return String(args.summary || "done");
-  }
-  return `Unknown action ${name}`;
-}
-
 function parseThink(text) {
   const m = String(text || "").match(/\{[\s\S]*\}/);
   if (!m) {
@@ -283,71 +246,33 @@ function parseThink(text) {
   }
 }
 
-const SYSTEM = `You are Localmod's lightweight local agent. You never see raw pixels — you receive IMAGE CARDS from a computer-vision stage, plus an agent log so you know where you are in the workflow.
-
-Workflow (always follow):
-1. observe — read vision cards and workspace
-2. plan — keep a short checklist
-3. act — one action per step
-4. log — you will be shown your own log next turn
-5. finish — when the user goal is met
-
-Return JSON only:
-{
-  "thought": "what you understand now",
-  "where": "step N of the workflow / what just happened",
-  "plan": [{"id":"1","title":"...","status":"doing|todo|done"}],
-  "action": { "name": "list|read|write|note|finish", "args": { "path": "relative", "content": "...", "summary": "..." } }
-}
-
-Rules:
-- One action per step. Prefer list then read before write.
-- Stay inside the workspace. Do not request network, credentials, or system-wide files.
-- If vision is missing, still progress using the user prompt and file listing.
-- After at most the max steps, action.name must be finish.`;
-
-function defaultPlan(step = 1) {
-  return [
-    { id: "1", title: "Observe images & workspace", status: step > 1 ? "done" : "doing" },
-    { id: "2", title: "Think against the user prompt", status: step === 2 ? "doing" : step > 2 ? "done" : "todo" },
-    { id: "3", title: "Act and move forward", status: step === 3 ? "doing" : step > 3 ? "done" : "todo" },
-    { id: "4", title: "Finish with a logged summary", status: step >= 4 ? "doing" : "todo" },
-  ];
-}
+const SYSTEM = frameworkSystemPrompt();
 
 function fallbackThink({ goal, cards, step, maxSteps, lastResult }) {
-  const plan = defaultPlan(step).map((p) => (step >= 4 ? { ...p, status: "done" } : p));
+  const plan = defaultOrchestrationPlan(step);
   if (step === 1) {
     return {
-      thought:
-        "Lightweight planner: no local LLM reply yet. Listing the workspace so the agent log has a position.",
-      where: `step 1/${maxSteps} observe → list`,
+      thought: "Fallback planner: listing the workspace so the log has a position.",
+      where: "observe",
       plan,
       action: { name: "list", args: { path: "." } },
     };
   }
   if (step === 2) {
     return {
-      thought: `User goal: ${String(goal).slice(0, 280)}. Vision cards: ${String(cards).slice(0, 360) || "(none)"}. Recording a note, then I will finish.`,
-      where: `step 2/${maxSteps} think → note`,
+      thought: `User goal: ${String(goal).slice(0, 280)}. Vision: ${String(cards).slice(0, 200) || "(none)"}.`,
+      where: "reason",
       plan,
-      action: {
-        name: "note",
-        args: {
-          text: `Workspace listing:\n${String(lastResult || "").slice(0, 1500)}`,
-        },
-      },
+      action: { name: "note", args: { text: `Workspace listing:\n${String(lastResult || "").slice(0, 1500)}` } },
     };
   }
   return {
-    thought: "Workflow complete. Logs keep the observe → think → act trail so the next run knows where it left off.",
-    where: `step ${step}/${maxSteps} finish`,
-    plan: plan.map((p) => ({ ...p, status: "done" })),
+    thought: "Workflow complete. Logs keep observe → reason → choose → execute → verify.",
+    where: "verify",
+    plan: defaultOrchestrationPlan(8).map((p) => ({ ...p, status: "done" })),
     action: {
       name: "finish",
-      args: {
-        summary: `Local vision pass finished. Goal: ${String(goal).slice(0, 180)}. ${cards && cards !== "(no images attached)" ? "Vision cards were fed to the planner." : "No images attached."} Load Ollama moondream/llava or a GGUF for fuller LLM thinking.`,
-      },
+      args: { summary: `Local agent pass finished. Goal: ${String(goal).slice(0, 180)}.` },
     },
   };
 }
@@ -396,7 +321,7 @@ export async function startLocalAgent(body, onEvent) {
     llmModel: s.loadedModel || s.provider || "local",
     vision: null,
     observations: [],
-    plan: defaultPlan(1),
+    plan: defaultOrchestrationPlan(1),
     log: [],
     transcript: "",
     startedAt: Date.now(),
@@ -407,12 +332,15 @@ export async function startLocalAgent(body, onEvent) {
   liveRuns.set(run.id, run);
   persistRun(run);
   emit("session", publicLocalRun(run));
+  notifyRun("start", run).catch(() => {});
 
   const finish = (status = run.status) => {
     if (run.status === "running") run.status = status;
     run.finishedAt = run.finishedAt || Date.now();
     persistRun(run);
     liveRuns.delete(run.id);
+    remember({ scope: cwd, key: "last-run", text: `${goal.slice(0, 180)} → ${status}`, runId: run.id });
+    notifyRun(status === "error" ? "error" : "done", run).catch(() => {});
     emit("done", publicLocalRun(run));
     return publicLocalRun(run);
   };
@@ -420,7 +348,8 @@ export async function startLocalAgent(body, onEvent) {
   const aborted = () => Boolean(body.signal?.aborted) || run.status !== "running";
 
   try {
-    emit("event", { type: "status", name: "observe", preview: "Observing images…", ts: Date.now() });
+    run.plan = defaultOrchestrationPlan(2);
+    emit("event", { type: "observe", name: "observe", preview: "Observing images, memory, and workspace…", ts: Date.now() });
     const seen = await observeImages(body.images || [], goal);
     if (aborted()) return finish("cancelled");
     run.vision = { provider: seen.vision.provider, model: seen.vision.model };
@@ -431,7 +360,7 @@ export async function startLocalAgent(body, onEvent) {
       step: 0,
       phase: "observe",
       thought: `Vision via ${seen.vision.provider || "none"} ${seen.vision.model || "(metadata fallback)"}`.trim(),
-      where: "workflow/observe",
+      where: "observe",
       action: { name: "observe" },
       result: cards.slice(0, 1200),
     });
@@ -442,13 +371,16 @@ export async function startLocalAgent(body, onEvent) {
     emit("session", publicLocalRun(run));
 
     let lastResult = "";
+    const seenFp = new Map();
     for (let i = 1; i <= maxSteps; i++) {
       if (aborted()) return finish(run.status === "running" ? "cancelled" : run.status);
       run.step = i;
-      run.phase = "think";
+      appendMetric({ kind: "step", runId: run.id, step: i });
+      run.phase = "reason";
+      run.plan = defaultOrchestrationPlan(Math.min(8, 2 + i));
       const logTail = run.log
         .slice(-8)
-        .map((e) => `[${e.phase}#${e.step}] ${e.where || ""} ${e.thought || ""} → ${e.action?.name || ""} ${e.result ? String(e.result).slice(0, 240) : ""}`)
+        .map((e) => `[${e.phase}#${e.step}] ${(e.thought || "").slice(0, 100)} → ${e.action?.name || ""}`)
         .join("\n");
       const planText = (run.plan || []).map((p) => `- [${p.status}] ${p.title}`).join("\n");
       const user = [
@@ -457,25 +389,29 @@ export async function startLocalAgent(body, onEvent) {
         chatBits ? `Recent chat:\n${chatBits}` : "",
         followLog ? `Previous agent log (follow-up):\n${followLog}` : "",
         `Workspace: ${cwd}`,
-        `You are at step ${i} of ${maxSteps}.`,
-        `Workflow plan:\n${planText}`,
-        `Agent log (where you are):\n${logTail || "(empty)"}`,
+        `You are at step ${i} of ${maxSteps}. Allowed tools: ${allowedToolNames().join(", ")}.`,
+        `Orchestration:\n${planText}`,
+        `Agent log:\n${logTail || "(empty)"}`,
         `Vision cards:\n${cards}`,
       ]
         .filter(Boolean)
         .join("\n\n");
 
-      emit("event", { type: "think", name: `step ${i}`, preview: `Step ${i}: thinking…`, ts: Date.now() });
+      emit("event", { type: "reason", name: `step ${i}`, preview: `Step ${i}: reason → choose…`, ts: Date.now() });
       let parsed;
       try {
-        const once = await completeOnce({
-          vision: false,
-          signal: body.signal,
-          messages: [
-            { role: "system", content: SYSTEM },
-            { role: "user", content: user },
-          ],
-        });
+        const once = await withRetry(
+          () =>
+            completeOnce({
+              vision: false,
+              signal: body.signal,
+              messages: [
+                { role: "system", content: skillSystemPrompt(SYSTEM) },
+                { role: "user", content: user },
+              ],
+            }),
+          { retries: 1, label: "planner" }
+        );
         parsed = parseThink(once.text);
         run.llmModel = s.loadedModel || s.provider || run.llmModel;
       } catch (err) {
@@ -491,6 +427,15 @@ export async function startLocalAgent(body, onEvent) {
         });
       }
 
+      const checked = validateAction(parsed.action);
+      if (!checked.ok) {
+        emit("event", { type: "verify", name: "schema", preview: checked.error, ts: Date.now() });
+        parsed.action = { name: "note", args: { text: checked.error } };
+        parsed.thought = `${parsed.thought || ""} Hallucinated tool blocked.`;
+      } else {
+        parsed.action = checked.action;
+      }
+
       if (parsed.plan?.length) {
         run.plan = parsed.plan.map((p, idx) => ({
           id: String(p.id || idx + 1),
@@ -498,49 +443,61 @@ export async function startLocalAgent(body, onEvent) {
           status: p.status || "todo",
         }));
       }
-      run.phase = "act";
-      let result = "";
-      try {
-        result =
-          parsed.action?.name === "finish"
-            ? String(parsed.action.args?.summary || parsed.thought || "done")
-            : executeAction(cwd, parsed.action);
-      } catch (err) {
-        result = `Action failed: ${err.message || err}`;
+
+      const fp = actionFingerprint(parsed.action);
+      seenFp.set(fp, (seenFp.get(fp) || 0) + 1);
+      const rails = guardrailCheck({ run, action: parsed.action });
+      if (rails.loop.looping || seenFp.get(fp) >= 3) {
+        parsed.action = { name: "finish", args: { summary: "Stopped: same tool+args repeated (loop guard)." } };
       }
+      if (rails.budget.exceeded) {
+        parsed.action = { name: "finish", args: { summary: "Stopped: token budget exceeded." } };
+      }
+
+      run.phase = "execute";
+      const out = await executeTool(parsed.action, { cwd, runId: run.id, goal, scope: cwd });
+      const result = out.result;
       lastResult = result;
+      run.phase = "verify";
+      const verdict = await criticVerify({
+        goal,
+        thought: parsed.thought,
+        action: parsed.action,
+        result,
+        signal: body.signal,
+      });
       run.log.push({
         t: Date.now(),
         step: i,
-        phase: "act",
+        phase: "execute",
         thought: parsed.thought,
         where: parsed.where,
         action: parsed.action,
         result: String(result).slice(0, 4000),
+        critic: verdict,
       });
-      const line = `### Step ${i} — ${parsed.action?.name || "note"}\n${parsed.where ? `Where: ${parsed.where}\n` : ""}Think: ${parsed.thought}\nResult: ${String(result).slice(0, 1500)}\n\n`;
+      const line = `### Step ${i} — ${parsed.action?.name || "note"}\nWhere: ${parsed.where || "reason"}\nThink: ${parsed.thought}\nResult: ${String(result).slice(0, 1200)}\nCritic: ${verdict.pass ? "pass" : "fail"} (${verdict.score ?? "?"}) — ${verdict.critique || ""}\n\n`;
       run.transcript += line;
       emit("token", line);
-      emit("event", {
-        type: "tool",
-        name: parsed.action?.name,
-        preview: String(result).slice(0, 180),
-        ts: Date.now(),
-      });
+      emit("event", { type: "tool", name: parsed.action?.name, preview: String(result).slice(0, 180), ts: Date.now() });
+      emit("event", { type: "verify", name: verdict.pass ? "pass" : "fail", preview: verdict.critique || "", ts: Date.now() });
       persistRun(run);
       emit("session", publicLocalRun(run));
 
-      if (parsed.action?.name === "finish" || i === maxSteps) {
-        run.phase = "finish";
+      const stop = parsed.action?.name === "finish" || i === maxSteps || verdict.continue === false;
+      if (stop) {
+        run.phase = "respond";
         if (i === maxSteps && parsed.action?.name !== "finish") {
           run.transcript += `\n## Stopped at max steps (${maxSteps})\n`;
         }
+        run.plan = defaultOrchestrationPlan(8).map((p) => ({ ...p, status: "done" }));
         return finish("done");
       }
     }
 
     return finish("done");
   } catch (err) {
+    appendMetric({ kind: "error", runId: run.id, error: String(err.message || err) });
     run.error = String(err.message || err);
     emit("error", { error: run.error });
     return finish("error");

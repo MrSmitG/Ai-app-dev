@@ -79,6 +79,18 @@ const DEFAULTS = {
   agentMode: "forge",
   localAgentMaxSteps: 8,
   localAgentVisionModel: "",
+  agentHitlWrites: false,
+  agentMemoryTtlHours: 72,
+  agentMemoryMaxNotes: 80,
+  agentRatePerMin: 30,
+  agentWebhookUrl: "",
+  agentCollectionId: "",
+  agentAllowNetwork: false,
+  agentBudgetTokens: 80000,
+  agentTimeoutMs: 15000,
+  agentRetries: 2,
+  agentCacheTtlSec: 300,
+  agentHitlTimeoutMs: 120000,
   /** IDs from the Bundles tab the user has turned on */
   selectedBundleIds: [],
 };
