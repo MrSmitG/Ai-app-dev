@@ -16,10 +16,14 @@ export default defineConfig({
     host: "127.0.0.1",
     open: false,
     proxy: {
-      "/engine": {
+      // Prefix must not swallow /engineer (the suite app route).
+      "^/engine(/|$)": {
         target: "http://127.0.0.1:4781",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/engine/, ""),
+        rewrite: (p) => {
+          const stripped = p.replace(/^\/engine/, "");
+          return stripped || "/";
+        },
       },
     },
   },
