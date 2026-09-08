@@ -75,6 +75,28 @@ const DEFAULTS = {
   visionEnabled: true,
   /** Max images on a single user turn */
   maxImagesPerTurn: 8,
+  /** forge | local */
+  agentMode: "forge",
+  localAgentMaxSteps: 8,
+  localAgentVisionModel: "",
+  agentHitlWrites: false,
+  agentMemoryTtlHours: 72,
+  agentMemoryMaxNotes: 80,
+  agentRatePerMin: 30,
+  agentWebhookUrl: "",
+  agentCollectionId: "",
+  agentAllowNetwork: false,
+  agentBudgetTokens: 8000,
+  agentTimeoutMs: 15000,
+  agentRetries: 2,
+  agentCacheTtlSec: 300,
+  agentHitlTimeoutMs: 120000,
+  agentTimeoutMs: 15000,
+  agentRetries: 2,
+  agentCacheTtlSec: 300,
+  agentHitlTimeoutMs: 120000,
+  /** IDs from the Bundles tab the user has turned on */
+  selectedBundleIds: [],
 };
 
 export function getSettings() {

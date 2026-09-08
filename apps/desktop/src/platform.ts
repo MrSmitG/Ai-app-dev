@@ -12,6 +12,9 @@ declare global {
 }
 
 export function getDesktop(): LocalmodDesktop {
+  if (typeof window === "undefined") {
+    return { platform: "web", isDesktop: false };
+  }
   return (
     window.localmodDesktop || {
       platform: navigator.platform || "web",
@@ -21,5 +24,5 @@ export function getDesktop(): LocalmodDesktop {
 }
 
 export function isElectron() {
-  return Boolean(window.localmodDesktop?.isDesktop);
+  return typeof window !== "undefined" && Boolean(window.localmodDesktop?.isDesktop);
 }
