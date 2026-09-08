@@ -14,9 +14,9 @@ async function post(path, body) {
 }
 
 async function chat() {
-  const prompt = await vscode.window.showInputBox({ prompt: "Ask Localmod Keep (local engine)" });
+  const prompt = await vscode.window.showInputBox({ prompt: "Ask Localmod Editor (local engine)" });
   if (!prompt) return;
-  await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Keep…" }, async () => {
+  await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Editor…" }, async () => {
     const r = await fetch(`${ENGINE}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

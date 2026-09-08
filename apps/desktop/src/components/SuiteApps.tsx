@@ -9,6 +9,9 @@ export function SuiteHome({
 }) {
   const [data, setData] = useState<any>(null);
   const [err, setErr] = useState("");
+  const [dest, setDest] = useState("");
+  const [installOut, setInstallOut] = useState<any>(null);
+  const [busy, setBusy] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -23,6 +26,27 @@ export function SuiteHome({
     load();
   }, [load]);
 
+  async function browse() {
+    const r = await api<{ cancelled?: boolean; path?: string }>("/install/pick", { method: "POST" });
+    if (!r.cancelled && r.path) setDest(r.path);
+  }
+
+  async function runInstall(mode: string) {
+    if (!dest.trim()) {
+      setErr("Choose a folder path first (Browse works on Mac and Windows).");
+      return;
+    }
+    setBusy(mode);
+    setErr("");
+    try {
+      setInstallOut(await api<any>("/install", { method: "POST", body: JSON.stringify({ dest, mode }) }));
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusy("");
+    }
+  }
+
   const apps = data?.apps || [];
   const live = data?.live || {};
 
@@ -30,18 +54,49 @@ export function SuiteHome({
     <section className="view flow-in">
       <div className="panel spotlight">
         <div className="hero-kicker">
-          Localmod Suite <Tip text="Named apps by usage: agentic coding, BYOK, speed, IDE extensions, autonomous engineer — plus Studio for chat and models." />
+          Localmod Suite <Tip text="React apps named by job: Studio, Code, Keys, Fast, Editor, Engineer. Install them to a folder on Mac or Windows." />
         </div>
-        <h2 className="owner-name">A suite of local-first AI systems</h2>
+        <h2 className="owner-name">A suite of React apps for Mac and Windows</h2>
         <p className="muted">
-          Pick the app for the job. All of them talk to the same engine on this machine. Cloud keys are optional and never required.
+          Pick the app for the job. All files live in this repo. Install to any folder path you choose — then run the Start script for your OS.
         </p>
         <div className="muted tiny">
           Live: {live.llama ? "llama-server" : "no llama"} · Ollama tags {live.ollamaTags || 0} · provider {live.provider || "—"}
-          {live.airplane ? " · airplane" : ""} · keys { (live.keys || []).join(", ") || "none" }
+          {live.airplane ? " · airplane" : ""} · {live.platform || ""}
         </div>
       </div>
       {err && <div className="banner">{err}</div>}
+      <div className="panel">
+        <div className="section-label">Install to a file path</div>
+        <p className="muted">
+          Browse a folder on this Mac or PC. Copy the React suite files there, or drop the ready-to-run Windows / Mac download into that folder.
+        </p>
+        <label>
+          Folder
+          <div className="row">
+            <input className="grow" value={dest} onChange={(e) => setDest(e.target.value)} placeholder="C:\Apps  or  /Users/you/Applications" />
+            <button className="btn" type="button" onClick={browse}>Browse</button>
+          </div>
+        </label>
+        <div className="row wrap pad-sm">
+          <button className="btn primary" disabled={!!busy} type="button" onClick={() => runInstall("files")}>
+            {busy === "files" ? "Copying…" : "Copy all files here"}
+          </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("windows")}>
+            {busy === "windows" ? "Downloading…" : "Download Windows (Localmod.exe)"}
+          </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("mac")}>
+            {busy === "mac" ? "Downloading…" : "Download Mac (Localmod.dmg)"}
+          </button>
+        </div>
+        {installOut && (
+          <div className="banner ok">
+            {installOut.file
+              ? `Saved ${installOut.name} (${installOut.bytes} bytes) → ${installOut.dest}`
+              : `Copied ${installOut.count} paths → ${installOut.dest}. On Windows run Start Localmod.bat; on Mac run Start Localmod.command.`}
+          </div>
+        )}
+      </div>
       <div className="suite-grid">
         {apps.map((app: any) => (
           <button key={app.id} type="button" className="suite-card" onClick={() => setTab(app.id === "studio" ? "chat" : app.id)}>
@@ -49,6 +104,7 @@ export function SuiteHome({
             <div className="suite-name">{app.name}</div>
             <div className="muted tiny">{app.tagline}</div>
             <p className="muted">{app.blurb}</p>
+            {app.folder && <div className="muted tiny">Files: {app.folder}</div>}
           </button>
         ))}
       </div>
@@ -56,7 +112,7 @@ export function SuiteHome({
   );
 }
 
-export function CurrentApp({
+export function CodeApp({
   settings,
   patch,
 }: {
@@ -97,7 +153,7 @@ export function CurrentApp({
     setErr("");
     try {
       if (cwd) await patch({ cursorCwd: cwd });
-      setResult(await api<any>("/current/run", { method: "POST", body: JSON.stringify({ cwd, goal, query, apply }) }));
+      setResult(await api<any>("/code/run", { method: "POST", body: JSON.stringify({ cwd, goal, query, apply }) }));
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -108,10 +164,10 @@ export function CurrentApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Current · agentic coding</div>
+        <div className="hero-kicker">Code · agentic coding</div>
         <h2 className="owner-name">Deep context. Multi-file edits.</h2>
         <p className="muted">
-          Current indexes the workspace, searches the tree, then coordinates edits across files — an agentic partner, not a single-line completer.
+          Code indexes the workspace, searches the tree, then coordinates edits across files — an agentic partner, not a single-line completer.
         </p>
       </div>
       {err && <div className="banner">{err}</div>}
@@ -160,7 +216,7 @@ export function CurrentApp({
   );
 }
 
-export function KeyringApp({
+export function KeysApp({
   settings,
   patch,
 }: {
@@ -191,7 +247,7 @@ export function KeyringApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Keyring · bring your own keys</div>
+        <div className="hero-kicker">Keys · bring your own keys</div>
         <h2 className="owner-name">Your providers. Your keys. No lock-in.</h2>
         <p className="muted">
           Localmod is not a hosted subscription. Use llama-server or Ollama for free local inference, or paste a key you already pay for.
@@ -252,14 +308,14 @@ export function KeyringApp({
   );
 }
 
-export function PulseApp({ setTab }: { setTab: (id: string) => void }) {
+export function FastApp({ setTab }: { setTab: (id: string) => void }) {
   const [data, setData] = useState<any>(null);
   const [prompt, setPrompt] = useState("Reply with one word: pong");
   const [race, setRace] = useState<any[] | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function ping() {
-    setData(await api<any>("/pulse"));
+    setData(await api<any>("/fast"));
   }
 
   useEffect(() => {
@@ -284,16 +340,16 @@ export function PulseApp({ setTab }: { setTab: (id: string) => void }) {
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Pulse · speed</div>
+        <div className="hero-kicker">Fast · speed</div>
         <h2 className="owner-name">Local first. Lowest latency wins.</h2>
         <p className="muted">
-          Pulse pings every backend you configured and can race the same prompt. Built for people who care about round-trip time — local GGUF and Ollama included.
+          Fast pings every backend you configured and can race the same prompt. Built for people who care about round-trip time — local GGUF and Ollama included.
         </p>
       </div>
       <div className="panel">
         <div className="row wrap">
           <button className="btn primary" type="button" onClick={ping}>Ping backends</button>
-          <button className="btn" type="button" onClick={() => setTab("keyring")}>Open Keyring</button>
+          <button className="btn" type="button" onClick={() => setTab("keys")}>Open Keys</button>
         </div>
         {data?.fastest && (
           <p className="muted">
@@ -327,7 +383,7 @@ export function PulseApp({ setTab }: { setTab: (id: string) => void }) {
   );
 }
 
-export function KeepApp({
+export function EditorApp({
   settings,
   patch,
 }: {
@@ -344,7 +400,7 @@ export function KeepApp({
   async function run(apply: boolean) {
     setBusy(true);
     try {
-      setOut(await api<any>("/keep/inline", { method: "POST", body: JSON.stringify({ cwd, path: rel, instruction, apply }) }));
+      setOut(await api<any>("/editor/inline", { method: "POST", body: JSON.stringify({ cwd, path: rel, instruction, apply }) }));
     } finally {
       setBusy(false);
     }
@@ -353,26 +409,27 @@ export function KeepApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Keep · stay in your IDE</div>
-        <h2 className="owner-name">Cursor-like chat and inline edit, in the editor you already have.</h2>
+        <div className="hero-kicker">Editor · stay in your editor</div>
+        <h2 className="owner-name">Chat and inline edit in this React app or VS Code.</h2>
         <p className="muted">
-          Keep is the Localmod extension for VS Code. It talks to the engine on this machine (Ollama or a Keyring provider) so you are not locked into a proprietary chat subscription.
+          Editor is the Localmod extension for VS Code. It talks to the engine on this machine (Ollama or a Keys provider) so you are not locked into a proprietary chat subscription.
         </p>
       </div>
       <div className="forge-split">
         <div className="panel">
-          <div className="section-label">Install Keep in VS Code</div>
+          <div className="section-label">Install Editor in VS Code</div>
           <ol className="muted">
-            <li>Keep Localmod running (engine on 127.0.0.1:4781).</li>
+            <li>Leave Localmod running (engine on 127.0.0.1:4781).</li>
             <li>Optional: Tools → Local API → Start (default {port}).</li>
             <li>
               From a terminal in this repo:{" "}
               <code className="mono">code --install-extension apps/keep</code>
+              {" "}(extension files are in the repo; Editor UI files are in <code className="mono">apps/editor</code>).
             </li>
-            <li>Command Palette → “Localmod Keep: Chat”.</li>
+            <li>Command Palette → “Localmod Editor: Chat”.</li>
           </ol>
           <p className="muted tiny">
-            OpenAI-compatible base: <code>http://127.0.0.1:{port}/v1</code> — works with Keep, Continue-style clients, and anything that speaks chat completions.
+            OpenAI-compatible base: <code>http://127.0.0.1:{port}/v1</code> — works with Editor and anything that speaks chat completions.
           </p>
           <button className="btn" type="button" onClick={() => patch({}).then(() => api("/api-server/start", { method: "POST" }))}>
             Start local API
@@ -392,7 +449,7 @@ export function KeepApp({
             <button className="btn primary" disabled={busy || !cwd} type="button" onClick={() => run(false)}>Preview</button>
             <button className="btn" disabled={busy || !cwd} type="button" onClick={() => run(true)}>Apply</button>
           </div>
-          {!cwd && <div className="muted tiny">Set a workspace in Current first.</div>}
+          {!cwd && <div className="muted tiny">Set a workspace in Code first.</div>}
           {out && (
             <>
               <div className="muted tiny">{out.thought} {out.applied ? "· applied" : ""}</div>
@@ -405,7 +462,7 @@ export function KeepApp({
   );
 }
 
-export function HandsApp({
+export function EngineerApp({
   settings,
   patch,
 }: {
@@ -431,7 +488,7 @@ export function HandsApp({
     setErr("");
     try {
       if (cwd) await patch({ cursorCwd: cwd });
-      setRun(await api<any>("/hands/run", { method: "POST", body: JSON.stringify({ cwd, goal, maxSteps: 6 }) }));
+      setRun(await api<any>("/engineer/run", { method: "POST", body: JSON.stringify({ cwd, goal, maxSteps: 6 }) }));
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -442,10 +499,10 @@ export function HandsApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Hands · autonomous engineer</div>
+        <div className="hero-kicker">Engineer · autonomous engineer</div>
         <h2 className="owner-name">Read, write, run CLI, finish the job.</h2>
         <p className="muted">
-          Hands lives in this sidebar (and as a VS Code extension). It is not autocomplete: it lists files, edits them, and runs allowlisted commands like git, npm, node, and python inside your workspace.
+          Engineer lives in this sidebar (and as a VS Code extension). It is not autocomplete: it lists files, edits them, and runs allowlisted commands like git, npm, node, and python inside your workspace.
         </p>
       </div>
       {err && <div className="banner">{err}</div>}
@@ -462,10 +519,10 @@ export function HandsApp({
           <textarea rows={3} value={goal} onChange={(e) => setGoal(e.target.value)} />
         </label>
         <button className="btn primary" disabled={busy} type="button" onClick={start}>
-          {busy ? "Working…" : "Run Hands"}
+          {busy ? "Working…" : "Run Engineer"}
         </button>
         <div className="muted tiny pad-sm">
-          Also: <code className="mono">code --install-extension apps/hands</code>
+          Also: <code className="mono">code --install-extension apps/hands</code> · app files in <code className="mono">apps/engineer</code>
         </div>
       </div>
       {run && (

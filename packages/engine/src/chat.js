@@ -139,7 +139,7 @@ function openaiCompatibleBase(route, s) {
 
 async function completeCloud({ route, s, finalMessages, streamChat, citations, tune, packed, started, model, signal }) {
   if (route === "anthropic") {
-    if (!s.anthropicApiKey) throw new Error("Add an Anthropic key in Keyring.");
+    if (!s.anthropicApiKey) throw new Error("Add an Anthropic key in Keys.");
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -171,8 +171,8 @@ async function completeCloud({ route, s, finalMessages, streamChat, citations, t
     return { stream, citations, tune, provider: "openai", started, context: packed.usage };
   }
   const cfg = openaiCompatibleBase(route, s);
-  if (!cfg.base) throw new Error("Set a custom API base URL in Keyring.");
-  if (route !== "custom" && !cfg.key) throw new Error(`Add a ${route} API key in Keyring.`);
+  if (!cfg.base) throw new Error("Set a custom API base URL in Keys.");
+  if (route !== "custom" && !cfg.key) throw new Error(`Add a ${route} API key in Keys.`);
   const res = await fetch(`${cfg.base}/chat/completions`, {
     method: "POST",
     headers: {

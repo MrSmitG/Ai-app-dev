@@ -127,6 +127,7 @@ export function Icon({ name }: { name: string }) {
         </svg>
       );
     case "current":
+    case "code":
       return (
         <svg {...common}>
           <path d="M4 12h16" />
@@ -135,6 +136,7 @@ export function Icon({ name }: { name: string }) {
         </svg>
       );
     case "keyring":
+    case "keys":
       return (
         <svg {...common}>
           <circle cx="8" cy="12" r="4" />
@@ -142,12 +144,14 @@ export function Icon({ name }: { name: string }) {
         </svg>
       );
     case "pulse":
+    case "fast":
       return (
         <svg {...common}>
           <path d="M3 12h4l2-6 4 12 2-6h6" />
         </svg>
       );
     case "keep":
+    case "editor":
       return (
         <svg {...common}>
           <path d="M4 5h9a3 3 0 0 1 3 3v11H7a3 3 0 0 0-3 3z" />
@@ -155,6 +159,7 @@ export function Icon({ name }: { name: string }) {
         </svg>
       );
     case "hands":
+    case "engineer":
       return (
         <svg {...common}>
           <path d="M8 13V7a1.5 1.5 0 0 1 3 0v5" />

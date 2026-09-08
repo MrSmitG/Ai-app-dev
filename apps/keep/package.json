@@ -1,6 +1,6 @@
 {
   "name": "localmod-keep",
-  "displayName": "Localmod Keep",
+  "displayName": "Localmod Editor",
   "description": "Stay in VS Code. Chat and inline edit through the Localmod engine (Ollama or your own keys).",
   "version": "0.1.0",
   "publisher": "localmod",
@@ -10,8 +10,8 @@
   "main": "./extension.js",
   "contributes": {
     "commands": [
-      { "command": "localmod.keep.chat", "title": "Localmod Keep: Chat" },
-      { "command": "localmod.keep.edit", "title": "Localmod Keep: Inline edit selection" }
+      { "command": "localmod.keep.chat", "title": "Localmod Editor: Chat" },
+      { "command": "localmod.keep.edit", "title": "Localmod Editor: Inline edit selection" }
     ]
   }
 }

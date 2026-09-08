@@ -44,7 +44,7 @@ export async function runCli(cwd, command, { timeoutMs = 15000 } = {}) {
   if (!parts.length) return { ok: false, error: "Empty command" };
   const bin = parts[0].replace(/^.*[/\\]/, "");
   if (!ALLOW.has(bin)) return { ok: false, error: `Command not allowlisted: ${bin}` };
-  if (BLOCK.test(command)) return { ok: false, error: "Command blocked by Hands policy" };
+  if (BLOCK.test(command)) return { ok: false, error: "Command blocked by Engineer policy" };
   return new Promise((resolve) => {
     const child = spawn(parts[0], parts.slice(1), {
       cwd: root,
@@ -106,7 +106,7 @@ export async function runHands({ cwd, goal, maxSteps = 6 }) {
         messages: [
           {
             role: "system",
-            content: `You are Localmod Hands, an autonomous engineer. Workspace: ${root}
+            content: `You are Localmod Engineer, an autonomous engineer. Workspace: ${root}
 Allowed CLI: ${[...ALLOW].join(", ")}. No network, no rm, no sudo.
 Return JSON:
 {"thought":"...","action":{"name":"list|read|write|search|cli|finish","args":{}}}

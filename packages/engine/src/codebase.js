@@ -52,7 +52,7 @@ export function workspaceRoot(cwd) {
     /* still allow explicit project paths the user picked */
   }
   if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
-    throw new Error("Workspace folder not found. Set it in Current or Options.");
+    throw new Error("Workspace folder not found. Set it in Code or Options.");
   }
   return resolved;
 }

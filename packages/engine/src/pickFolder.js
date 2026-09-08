@@ -4,8 +4,8 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 /**
- * Native folder picker for Windows (PowerShell) and macOS (osascript).
- * Returns "" if cancelled or unsupported.
+ * Native folder picker: Windows (PowerShell), macOS (osascript), Linux (zenity).
+ * Returns "" if cancelled or unsupported — the UI then uses a typed path.
  */
 export async function pickFolder(prompt = "Choose a folder") {
   try {
@@ -32,6 +32,16 @@ export async function pickFolder(prompt = "Choose a folder") {
         `POSIX path of (choose folder with prompt "${safe}")`,
       ]);
       return String(stdout || "").trim().replace(/\/$/, "") || String(stdout || "").trim();
+    }
+    if (process.platform === "linux") {
+      try {
+        const { stdout } = await execFileAsync("zenity", ["--file-selection", "--directory", `--title=${prompt}`], {
+          timeout: 300000,
+        });
+        return String(stdout || "").trim();
+      } catch {
+        return "";
+      }
     }
   } catch {
     return "";

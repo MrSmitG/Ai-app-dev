@@ -63,7 +63,7 @@ If you only need to explain, use edits: []. Prefer small, real files. Stay insid
         {
           role: "system",
           content:
-            "You are Localmod Current — an agentic coding partner with the whole workspace in view. Coordinate multi-file edits. JSON only.",
+            "You are Localmod Code — an agentic coding partner with the whole workspace in view. Coordinate multi-file edits. JSON only.",
         },
         { role: "user", content: user },
       ],
@@ -75,7 +75,7 @@ If you only need to explain, use edits: []. Prefer small, real files. Stay insid
   if (!parsed) {
     usedFallback = true;
     parsed = {
-      thought: "No LLM loaded. Indexed the workspace so you can pick files. Load a model or a Keyring provider, then run Current again.",
+      thought: "No LLM loaded. Indexed the workspace so you can pick files. Load a model or a Keys provider, then run Code again.",
       edits: [],
     };
   }
@@ -111,7 +111,7 @@ export async function inlineEdit({ cwd, path: rel, instruction, apply = false })
         {
           role: "system",
           content:
-            "You are Localmod Keep inline edit. Return JSON {thought, content} where content is the FULL updated file. Do not wrap in markdown.",
+            "You are Localmod Editor inline edit. Return JSON {thought, content} where content is the FULL updated file. Do not wrap in markdown.",
         },
         {
           role: "user",

@@ -11,17 +11,17 @@ import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
-import { SuiteHome, CurrentApp, KeyringApp, PulseApp, KeepApp, HandsApp } from "./components/SuiteApps";
+import { SuiteHome, CodeApp, KeysApp, FastApp, EditorApp, EngineerApp } from "./components/SuiteApps";
 import { useDesktop } from "./providers/AppProviders";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
 const NAV = [
-  ["suite", "Suite", "suite", "Localmod suite home — named AI apps by usage."],
-  ["current", "Current", "current", "Agentic coding: repo context and multi-file edits."],
-  ["keyring", "Keyring", "keyring", "Bring your own API keys. No subscription lock-in."],
-  ["pulse", "Pulse", "pulse", "Speed: ping backends and race local vs cloud."],
-  ["keep", "Keep", "keep", "Stay in VS Code. Chat and inline edit via the local engine."],
-  ["hands", "Hands", "hands", "Autonomous engineer: files, allowlisted CLI, multi-step tasks."],
+  ["suite", "Suite", "suite", "Localmod suite — install to a folder on Mac or Windows."],
+  ["code", "Code", "code", "Agentic coding: repo context and multi-file edits."],
+  ["keys", "Keys", "keys", "Bring your own API keys. No subscription lock-in."],
+  ["fast", "Fast", "fast", "Speed: ping backends and race local vs cloud."],
+  ["editor", "Editor", "editor", "Stay in VS Code or inline-edit in this React app."],
+  ["engineer", "Engineer", "engineer", "Autonomous engineer: files, allowlisted CLI, multi-step tasks."],
   ["chat", "Studio", "chat", "Local chat with your loaded GGUF / Ollama model."],
   ["llm", "LLM", "llm", "LM Studio-style inference controls: GPU offload, sampling, KV cache, RoPE, presets."],
   ["models", "Models", "models", "Search Hugging Face, download GGUF files, and manage your local model library."],
@@ -89,7 +89,9 @@ export default function App() {
   const desktop = useDesktop();
   const initialTab = (() => {
     const seg = location.pathname.replace(/^\//, "").split("/")[0];
-    return (NAV.find(([id]) => id === seg)?.[0] || "suite") as (typeof NAV)[number][0];
+    const aliases: Record<string, string> = { current: "code", keyring: "keys", pulse: "fast", keep: "editor", hands: "engineer" };
+    const id = aliases[seg] || seg;
+    return (NAV.find(([x]) => x === id)?.[0] || "suite") as (typeof NAV)[number][0];
   })();
   const [tab, setTabState] = useState<(typeof NAV)[number][0]>(initialTab);
   const setTab = (id: (typeof NAV)[number][0]) => {
@@ -222,7 +224,9 @@ export default function App() {
 
   useEffect(() => {
     const seg = location.pathname.replace(/^\//, "").split("/")[0];
-    const id = NAV.find(([x]) => x === seg)?.[0];
+    const aliases: Record<string, string> = { current: "code", keyring: "keys", pulse: "fast", keep: "editor", hands: "engineer" };
+    const mapped = aliases[seg] || seg;
+    const id = NAV.find(([x]) => x === mapped)?.[0];
     if (id && id !== tab) setTabState(id);
   }, [location.pathname]);
 
@@ -605,9 +609,9 @@ export default function App() {
       { id: "bundles", label: "Select bundles to use", run: () => setTab("bundles") },
       { id: "harbor", label: "Load data (files / folders)", run: () => setTab("harbor") },
       { id: "forge", label: "Launch coding agent", run: () => setTab("forge") },
-      { id: "current", label: "Current — agentic multi-file edits", run: () => setTab("current") },
-      { id: "hands", label: "Hands — autonomous engineer", run: () => setTab("hands") },
-      { id: "keyring", label: "Keyring — bring your own keys", run: () => setTab("keyring") },
+      { id: "code", label: "Code — agentic multi-file edits", run: () => setTab("code") },
+      { id: "engineer", label: "Engineer — autonomous tasks", run: () => setTab("engineer") },
+      { id: "keys", label: "Keys — bring your own API keys", run: () => setTab("keys") },
       { id: "ollama", label: "Tools → Race (Ollama tags)", run: () => { setTab("tools"); setToolTab("race"); } },
     ];
     const q = paletteQ.trim().toLowerCase();
@@ -615,7 +619,7 @@ export default function App() {
   }, [paletteQ]);
 
   const title = NAV.find(([id]) => id === tab)?.[1] || "Localmod";
-  const sideTabs = tab === "chat" || tab === "forge" || tab === "skills" || tab === "current" || tab === "hands";
+  const sideTabs = tab === "chat" || tab === "forge" || tab === "skills" || tab === "code" || tab === "engineer";
 
   return (
     <div className="shell">
@@ -730,18 +734,18 @@ export default function App() {
             {error && <div className="banner error flow-in">{error}<button className="btn ghost" onClick={() => setError("")}>Dismiss</button></div>}
 
             {tab === "suite" && <SuiteHome setTab={setTab} />}
-            {tab === "current" && <CurrentApp settings={settings} patch={patch} />}
-            {tab === "keyring" && <KeyringApp settings={settings} patch={patch} />}
-            {tab === "pulse" && <PulseApp setTab={setTab} />}
-            {tab === "keep" && <KeepApp settings={settings} patch={patch} />}
-            {tab === "hands" && <HandsApp settings={settings} patch={patch} />}
+            {tab === "code" && <CodeApp settings={settings} patch={patch} />}
+            {tab === "keys" && <KeysApp settings={settings} patch={patch} />}
+            {tab === "fast" && <FastApp setTab={setTab} />}
+            {tab === "editor" && <EditorApp settings={settings} patch={patch} />}
+            {tab === "engineer" && <EngineerApp settings={settings} patch={patch} />}
 
             {tab === "chat" && (
               <section className="view chat-view">
                 <div className="messages">
                   {!(thread?.messages || []).length && (
                     <div className="hero-empty flow-in">
-                      <div className="hero-kicker">Chat <Tip text="Local conversation with llama-server or Ollama. Brand nickname: Pulse." /></div>
+                      <div className="hero-kicker">Chat <Tip text="Local conversation with llama-server or Ollama. Brand nickname: Fast." /></div>
                       <h1>Talk to a local model</h1>
                       <p>Load a GGUF from Models, tune it in LLM, pick a Skill, attach Data, then chat.</p>
                       <div className="row">

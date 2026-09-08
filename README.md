@@ -1,19 +1,29 @@
 # Localmod
 
-A **React** desktop suite you download and run. Six named apps — Studio, Current, Keyring, Pulse, Keep, Hands — covering chat, agentic coding, BYOK, speed, IDE extensions, and an autonomous engineer. No Node.js required for the downloaded app.
+A **React** desktop suite you download and run on **Windows and macOS**. Six named apps — Studio, Code, Keys, Fast, Editor, Engineer — covering chat, agentic coding, BYOK, speed, IDE extensions, and an autonomous engineer. No Node.js required for the downloaded app.
 
 This is original MIT-licensed software. It is not a fork of LM Studio, Cursor, or G0DM0D3.
 
 ## Suite
 
-| App | Usage |
-|---|---|
-| **Studio** | Local chat, models, RAG, voice |
-| **Current** | Agentic coding — full-repo context, multi-file edits |
-| **Keyring** | Bring your own keys (llama, Ollama, OpenAI, Anthropic, OpenRouter, custom) |
-| **Pulse** | Speed — ping backends, race local vs cloud |
-| **Keep** | Stay in VS Code — chat + inline edit via the local engine |
-| **Hands** | Autonomous engineer — files, allowlisted CLI, multi-step tasks |
+| App | Usage | Files in this repo |
+|---|---|---|
+| **Studio** | Local chat, models, RAG, voice | `apps/desktop` |
+| **Code** | Agentic coding — full-repo context, multi-file edits | `apps/code` |
+| **Keys** | Bring your own keys (llama, Ollama, OpenAI, Anthropic, OpenRouter, custom) | `apps/keys` |
+| **Fast** | Speed — ping backends, race local vs cloud | `apps/fast` |
+| **Editor** | Stay in VS Code — chat + inline edit via the local engine | `apps/editor` |
+| **Engineer** | Autonomous engineer — files, allowlisted CLI, multi-step tasks | `apps/engineer` |
+
+## Install to a folder
+
+In the app open **Suite**, type or browse a folder path, then:
+
+- **Copy all files here** — copies this React suite into `{folder}/Localmod/` (Mac and Windows)
+- **Download Windows** — saves `Localmod.exe` into that folder
+- **Download Mac** — saves `Localmod.dmg` into that folder
+
+Then run `Start Localmod.bat` (Windows) or `Start Localmod.command` (macOS). Each app folder also has its own Start script.
 
 ## Download and run
 
@@ -107,6 +117,8 @@ Remote machines: `ssh -L 8080:127.0.0.1:8080 user@box` then point Localmod at lo
 
 ## Layout
 
-- `apps/desktop` — React + Electron desktop UI
-- `packages/engine` — control plane (inference, HF, RAG, API, MCP, context, voice)
+- `apps/desktop` — React + Electron desktop UI (Studio)
+- `apps/code`, `apps/keys`, `apps/fast`, `apps/editor`, `apps/engineer` — named React apps + Start scripts
+- `apps/keep`, `apps/hands` — VS Code extensions used by Editor and Engineer
+- `packages/engine` — control plane (inference, HF, RAG, API, MCP, context, voice, install-to-path)
 - `apps/cli` — `localmodd`

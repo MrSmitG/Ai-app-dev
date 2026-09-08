@@ -4,7 +4,7 @@ const ENGINE = process.env.LOCALMOD_ENGINE || "http://127.0.0.1:4781";
 
 async function run() {
   const goal = await vscode.window.showInputBox({
-    prompt: "What should Hands do in this workspace?",
+    prompt: "What should Engineer do in this workspace?",
     placeHolder: "List files and run git status",
   });
   if (!goal) return;
@@ -13,7 +13,7 @@ async function run() {
     vscode.window.showErrorMessage("Open a folder first.");
     return;
   }
-  await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Hands working…" }, async () => {
+  await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Engineer working…" }, async () => {
     const res = await fetch(`${ENGINE}/hands/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
