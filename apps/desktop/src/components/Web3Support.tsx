@@ -18,6 +18,7 @@ type OutboxItem = { hash: string; kind: "donate" | "message"; note: string; at: 
 
 function loadOutbox(): OutboxItem[] {
   try {
+    if (typeof localStorage === "undefined") return [];
     const raw = localStorage.getItem(OUTBOX_KEY);
     const rows = raw ? JSON.parse(raw) : [];
     return Array.isArray(rows) ? rows.slice(0, 12) : [];

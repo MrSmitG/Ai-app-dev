@@ -1292,7 +1292,7 @@ export default function App() {
                   <div className="panel-title">Localmod</div>
                   <div className="muted">{PRODUCT.blurb}</div>
                   <div className="muted tiny">
-                    Runtime: {desktop.isDesktop ? `Desktop (${desktop.platform})` : "Browser"} · React + Electron-ready
+                    Runtime: {desktop.isDesktop ? `Desktop (${desktop.platform})` : "Browser"} · React Router 7 framework
                     {desktop.versions?.electron ? ` · Electron ${desktop.versions.electron}` : ""}
                   </div>
                 </div>

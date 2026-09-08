@@ -444,7 +444,7 @@ function spawnUi() {
   const desktop = path.resolve(path.dirname(here), "../../../apps/desktop");
   console.log(`Starting React UI from ${desktop}`);
   console.log("Open http://localhost:1420 in your browser if it does not open automatically.");
-  const child = spawn("npx", ["vite", "--open"], {
+  const child = spawn("npx", ["react-router", "dev"], {
     cwd: desktop,
     stdio: "inherit",
     shell: true,

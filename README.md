@@ -1,6 +1,6 @@
 # Localmod
 
-Local-first **React + Electron** desktop studio for open-weight models (Windows, macOS, Linux). Chat with smart context (pie meter), Loki-style memory tree pivots, LM Studio-style LLM controls, Hugging Face GGUF downloads, agents, skills, Harbor data, voice, images, local RAG, OpenAI-style API, MCP, and Ollama race.
+Local-first **React Router 7** framework app (SPA) plus an Electron shell for open-weight models (Windows, macOS, Linux). Chat with smart context (pie meter), Loki-style memory tree pivots, LM Studio-style LLM controls, Hugging Face GGUF downloads, agents, skills, Harbor data, voice, images, local RAG, OpenAI-style API, MCP, and Ollama race.
 
 This is original MIT-licensed software. It is not a fork of LM Studio or G0DM0D3.
 
@@ -34,7 +34,7 @@ npm run desktop
 
 That starts:
 1. Local engine (`http://127.0.0.1:4781`)
-2. React UI (Vite on `1420`)
+2. React Router 7 UI (`http://127.0.0.1:1420`)
 3. **Electron** desktop window
 
 Browser-only (no Electron window — use this in Cloud Agents):
@@ -71,8 +71,8 @@ OpenAI-style API (when started from the UI or CLI): `http://127.0.0.1:4782/v1/ch
 
 ## Stack
 
-- **React 19** + Vite + React Router (`HashRouter` for Electron)
-- **Electron** shell for Mac + Windows (supported desktop path)
+- **React 19** + **React Router 7** (framework mode, SPA) in `apps/desktop`
+- **Electron** shell for Mac + Windows (loads the React app)
 - **Node engine** sidecar for inference, HF, RAG, voice, agents
 
 ## Inference

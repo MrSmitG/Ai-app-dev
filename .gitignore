@@ -3,6 +3,7 @@ dist/
 /build/
 /release/
 .next/
+.react-router/
 .venv/
 __pycache__/
 *.log

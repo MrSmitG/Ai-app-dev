@@ -6,7 +6,7 @@ directories:
   output: release
   buildResources: apps/desktop/build
 files:
-  - apps/desktop/dist/**/*
+  - apps/desktop/dist/client/**/*
   - apps/desktop/electron/**/*
   - apps/desktop/package.json
   - package.json

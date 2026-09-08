@@ -11,6 +11,56 @@ const UI_PORT = Number(process.env.LOCALMOD_UI_PORT || 1420);
 let mainWindow = null;
 let splashWindow = null;
 let engineProc = null;
+let uiServer = null;
+
+const UI_MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".woff2": "font/woff2",
+  ".map": "application/json",
+};
+
+function uiDist() {
+  return path.join(__dirname, "../dist/client");
+}
+
+function startPackagedUi() {
+  if (isDev) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const dist = uiDist();
+    uiServer = http.createServer((req, res) => {
+      try {
+        const u = new URL(req.url || "/", "http://127.0.0.1");
+        let rel = decodeURIComponent(u.pathname);
+        if (rel === "/") rel = "/index.html";
+        let file = path.normalize(path.join(dist, rel));
+        if (!file.startsWith(dist)) {
+          res.writeHead(403);
+          res.end();
+          return;
+        }
+        if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+          file = path.join(dist, "index.html");
+        }
+        const ext = path.extname(file);
+        res.writeHead(200, { "Content-Type": UI_MIME[ext] || "application/octet-stream" });
+        fs.createReadStream(file).pipe(res);
+      } catch (err) {
+        res.writeHead(500);
+        res.end(String(err.message || err));
+      }
+    });
+    uiServer.once("error", (err) => {
+      if (err.code === "EADDRINUSE") resolve();
+      else reject(err);
+    });
+    uiServer.listen(UI_PORT, "127.0.0.1", () => resolve());
+  });
+}
 
 function engineEntry() {
   if (app.isPackaged) {
@@ -155,7 +205,9 @@ async function createWindow() {
     await waitForUrl(`http://127.0.0.1:${UI_PORT}/`);
     await mainWindow.loadURL(`http://127.0.0.1:${UI_PORT}/`);
   } else {
-    await mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    await startPackagedUi();
+    await waitForUrl(`http://127.0.0.1:${UI_PORT}/`);
+    await mainWindow.loadURL(`http://127.0.0.1:${UI_PORT}/`);
   }
 
   mainWindow.on("closed", () => {
