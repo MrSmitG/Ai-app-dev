@@ -144,7 +144,10 @@ export default function App() {
   const [pendingImages, setPendingImages] = useState<Attachment[]>([]);
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const [forgeBudget, setForgeBudget] = useState<ContextUsage | null>(null);
-  const [forgePane, setForgePane] = useState<"run" | "framework" | "guide">("framework");
+  const [forgePane, setForgePane] = useState<"run" | "framework" | "guide">(() => {
+    const p = new URLSearchParams(location.search).get("pane");
+    return p === "framework" || p === "guide" || p === "run" ? p : "run";
+  });
   const [skills, setSkills] = useState<Skill[]>([]);
   const [activeSkill, setActiveSkill] = useState<Skill | null>(null);
   const [skillDraft, setSkillDraft] = useState({ name: "", tagline: "", personality: "", emoji: "○" });
@@ -937,9 +940,9 @@ export default function App() {
             {tab === "forge" && (
               <section className="view forge-view flow-in">
                 <div className="seg">
-                  <button className={forgePane === "run" ? "active" : ""} onClick={() => setForgePane("run")}>Run</button>
-                  <button className={forgePane === "framework" ? "active" : ""} onClick={() => setForgePane("framework")}>Framework</button>
-                  <button className={forgePane === "guide" ? "active" : ""} onClick={() => setForgePane("guide")}>Guide</button>
+                  <button className={forgePane === "run" ? "active" : ""} onClick={() => { setForgePane("run"); navigate("/forge"); }}>Run</button>
+                  <button className={forgePane === "framework" ? "active" : ""} onClick={() => { setForgePane("framework"); navigate("/forge?pane=framework"); }}>Framework</button>
+                  <button className={forgePane === "guide" ? "active" : ""} onClick={() => { setForgePane("guide"); navigate("/forge?pane=guide"); }}>Guide</button>
                 </div>
                 {(forgePane === "framework" || forgePane === "guide") && (
                   <AgentFramework settings={settings} patch={patch} setTab={setTab} pane={forgePane} />
