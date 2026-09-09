@@ -1,10 +1,10 @@
 # The Trench
 
-Paper-and-ink one-file editor. Own React app.
+Paper one-file editor. Own React app on port 1425.
 
 ```bash
 npm install
 npm run trench
 ```
 
-http://127.0.0.1:1425
+Windows: `Start-Windows.bat` · macOS: `Start-macOS.command` · Linux: `Start-Linux.sh`

@@ -1,12 +1,10 @@
 # Blackwhale
 
-Chat messenger — a full-bleed ocean UI. This is **not** a reskin of the Localmod hub.
+Ocean chat messenger. Own React app on port 1421.
 
 ```bash
-npm install
+npm install          # repo root
 npm run blackwhale
 ```
 
-http://127.0.0.1:1421
-
-Own files: `src/App.tsx`, `src/styles.css`, `src/engine.ts`, `index.html`.
+Windows: `Start-Windows.bat` · macOS: `Start-macOS.command` · Linux: `Start-Linux.sh`

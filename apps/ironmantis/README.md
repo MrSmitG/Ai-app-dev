@@ -1,10 +1,10 @@
 # Ironmantis
 
-Phosphor terminal for autonomous file + CLI work. Own React app.
+Phosphor autonomous terminal. Own React app on port 1426.
 
 ```bash
 npm install
 npm run ironmantis
 ```
 
-http://127.0.0.1:1426
+Windows: `Start-Windows.bat` · macOS: `Start-macOS.command` · Linux: `Start-Linux.sh`

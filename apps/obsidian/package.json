@@ -7,7 +7,8 @@
   "scripts": {
     "setup": "npm install --prefix ../..",
     "start": "vite --host 127.0.0.1 --strictPort",
-    "dev": "vite --host 127.0.0.1 --strictPort"
+    "dev": "vite --host 127.0.0.1 --strictPort",
+    "build": "vite build"
   },
   "dependencies": {
     "react": "^19.1.0",

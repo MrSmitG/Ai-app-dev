@@ -4,6 +4,7 @@ dist/
 /release/
 .next/
 .react-router/
+.vite/
 .venv/
 __pycache__/
 *.log

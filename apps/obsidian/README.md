@@ -1,10 +1,10 @@
 # Obsidian
 
-Stone-tablet API key vault. Own React app.
+Stone-tablet API key vault. Own React app on port 1423.
 
 ```bash
 npm install
 npm run obsidian
 ```
 
-http://127.0.0.1:1423
+Windows: `Start-Windows.bat` · macOS: `Start-macOS.command` · Linux: `Start-Linux.sh`

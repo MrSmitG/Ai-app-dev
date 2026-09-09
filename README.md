@@ -53,32 +53,32 @@ Requires **Node.js 20+**.
 
 ```bash
 npm install
+```
+
+Start **one React app at a time** (the first command also starts the engine on `:4781`):
+
+```bash
+npm run blackwhale     # :1421 chat messenger
+npm run nightweaver    # :1422 three-column IDE
+npm run obsidian       # :1423 API-key vault
+npm run mako           # :1424 latency HUD
+npm run trench         # :1425 one-file editor
+npm run ironmantis     # :1426 autonomous terminal
+```
+
+Or double-click `Start-Windows.bat` / `Start-macOS.command` / `Start-Linux.sh` inside an app folder.
+
+```bash
+npm run check:apps     # confirm all six setups
+npm run build:apps     # production-build all six
+```
+
+Hub (React Router + optional Electron):
+
+```bash
 npm --prefix apps/desktop install
-npm run desktop
-```
-
-That starts:
-1. Local engine (`http://127.0.0.1:4781`)
-2. React Router 7 UI (`http://127.0.0.1:1420`)
-3. **Electron** desktop window
-
-Browser-only (no Electron window — use this in Cloud Agents):
-
-```bash
-npm run dev:web
-```
-
-### Six React apps (one at a time)
-
-After `npm install`, each app is its own Vite + React setup (`apps/<name>/package.json` + `src/App.tsx`). Tasks are split: chat, coding, keys, speed, editor, autonomous.
-
-```bash
-npm run blackwhale     # :1421 chat
-npm run nightweaver    # :1422 multi-file code
-npm run obsidian       # :1423 API keys
-npm run mako           # :1424 ping / race
-npm run trench         # :1425 one-file edit
-npm run ironmantis     # :1426 autonomous CLI
+npm run dev:web      # browser hub on :1420
+npm run desktop      # Electron window
 ```
 
 ### Package installers

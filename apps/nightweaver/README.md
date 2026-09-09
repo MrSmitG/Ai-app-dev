@@ -1,10 +1,10 @@
 # Nightweaver
 
-Three-column coding IDE (tree · plan · log). Own React app.
+Three-column coding IDE. Own React app on port 1422.
 
 ```bash
 npm install
 npm run nightweaver
 ```
 
-http://127.0.0.1:1422
+Windows: `Start-Windows.bat` · macOS: `Start-macOS.command` · Linux: `Start-Linux.sh`

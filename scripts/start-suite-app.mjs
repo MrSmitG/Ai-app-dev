@@ -2,6 +2,7 @@
 /** Start one Localmod React app (engine + this app's Vite). Start another the same way. */
 import { spawn } from "node:child_process";
 import { createConnection } from "node:net";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -59,6 +60,11 @@ if (!(await portOpen(4781))) {
 }
 
 const dir = path.join(repo, app.folder);
+const viteJs = path.join(repo, "node_modules", "vite", "bin", "vite.js");
+if (!fs.existsSync(viteJs)) {
+  console.error("Run npm install at the repo root first, then npm run " + app.id);
+  process.exit(1);
+}
 console.log(`Starting ${app.name} → http://127.0.0.1:${app.port}`);
 console.log(
   `Start another when you want: ${APPS.filter((a) => a.id !== app.id)
@@ -66,10 +72,9 @@ console.log(
     .join(" · ")}`
 );
 
-const vite = spawn("npx", ["vite", "--host", "127.0.0.1", "--port", String(app.port), "--strictPort"], {
+const vite = spawn(process.execPath, [viteJs, "--host", "127.0.0.1", "--port", String(app.port), "--strictPort"], {
   cwd: dir,
   stdio: "inherit",
-  shell: process.platform === "win32",
 });
 
 if (await waitPort(app.port, 40000)) {
