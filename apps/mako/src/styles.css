@@ -1,0 +1,115 @@
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: "Oswald", Impact, sans-serif;
+  color: #fff5f0;
+  background: #140404;
+  overflow: auto;
+}
+
+.mk {
+  min-height: 100%;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 40, 40, 0.04) 3px),
+    radial-gradient(circle at 80% 20%, rgba(255, 60, 40, 0.25), transparent 40%),
+    #140404;
+  padding: 28px 32px 64px;
+}
+.mk-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 4px solid #ff2a1a;
+  padding-bottom: 12px;
+}
+.mk-top h1 {
+  font-size: 64px;
+  line-height: 0.9;
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mk-top p {
+  font-family: "Share Tech Mono", monospace;
+  color: #ff8a7a;
+  margin: 0;
+  font-size: 13px;
+}
+.mk-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 28px 0;
+  align-items: center;
+}
+.mk-num {
+  font-size: 120px;
+  line-height: 0.85;
+  color: #ff2a1a;
+  margin: 0;
+}
+.mk-num small { display: block; font-size: 18px; color: #ff8a7a; letter-spacing: 0.2em; }
+.mk-lanes { display: flex; flex-direction: column; gap: 10px; }
+.lane {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 14px;
+}
+.lane .bar {
+  height: 14px;
+  background: #3a1010;
+  position: relative;
+  overflow: hidden;
+}
+.lane .bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff2a1a, #ffc107);
+}
+.lane.dead .bar > i { background: #4a2020; width: 8% !important; }
+button {
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: #ff2a1a;
+  color: #140404;
+  border: 0;
+  padding: 12px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+button.ghost {
+  background: transparent;
+  color: #ff2a1a;
+  border: 2px solid #ff2a1a;
+}
+button:disabled { opacity: 0.4; }
+.mk-race {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.mk-race input {
+  flex: 1;
+  font-family: "Share Tech Mono", monospace;
+  background: #1a0808;
+  border: 2px solid #5a2020;
+  color: #fff5f0;
+  padding: 12px;
+}
+.mk-fin {
+  margin-top: 24px;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 14px;
+}
+.mk-fin div {
+  display: grid;
+  grid-template-columns: 160px 80px 1fr;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #3a1010;
+}

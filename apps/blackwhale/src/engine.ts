@@ -1,0 +1,55 @@
+export function engineBase() {
+  if (typeof window !== "undefined" && (window as { localmodDesktop?: { isDesktop?: boolean } }).localmodDesktop?.isDesktop) {
+    return "http://127.0.0.1:4781";
+  }
+  return import.meta.env.VITE_ENGINE_URL || "/engine";
+}
+
+export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${engineBase()}${path}`, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { error?: string }).error || res.statusText);
+  return data as T;
+}
+
+async function streamSse(
+  path: string,
+  body: unknown,
+  handlers: Record<string, (data: unknown) => void>,
+  signal?: AbortSignal
+) {
+  const res = await fetch(`${engineBase()}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok || !res.body) throw new Error(await res.text());
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let carry = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    carry += decoder.decode(value, { stream: true });
+    const parts = carry.split("\n\n");
+    carry = parts.pop() || "";
+    for (const block of parts) {
+      const ev = /event: (\w+)/.exec(block)?.[1];
+      const payload = block.split("data: ").slice(1).join("data: ");
+      if (!ev) continue;
+      try {
+        handlers[ev]?.(JSON.parse(payload));
+      } catch {
+        handlers[ev]?.(payload);
+      }
+    }
+  }
+}
+
+export function streamChat(body: unknown, onChunk: (s: string) => void, signal?: AbortSignal) {
+  return streamSse("/chat", body, { token: (d) => onChunk(String(d)) }, signal);
+}

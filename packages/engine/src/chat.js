@@ -7,7 +7,7 @@ import { appendIntegrity } from "./integrity.js";
 import { skillSystemPrompt } from "./skills.js";
 import { contentToText, packMessages, toOllamaMessages } from "./context.js";
 
-export async function completeChat({ messages, collectionId, provider, model, signal, vision }) {
+export async function completeChat({ messages, collectionId, provider, model, signal, vision, stream }) {
   const s = getSettings();
   const systemPrompt = skillSystemPrompt(s.systemPrompt);
   let params = {
@@ -66,13 +66,19 @@ export async function completeChat({ messages, collectionId, provider, model, si
   });
   const finalMessages = packed.messages;
 
+  const streamChat = stream !== undefined ? Boolean(stream) : s.streamChat !== false;
   const useOllama = provider === "ollama" || s.provider === "ollama";
   const started = Date.now();
+  const route = provider || s.provider || "llama";
+  if (["openai", "anthropic", "openrouter", "custom"].includes(route)) {
+    if (s.airplane) throw new Error("Airplane mode blocks cloud providers. Use llama or Ollama, or turn airplane off.");
+    return completeCloud({ route, s, finalMessages, streamChat, citations, tune, packed, started, model, signal });
+  }
   if (useOllama) {
     const res = await ollamaChat({
       model: model || s.loadedModel || "llama3.2",
       messages: toOllamaMessages(finalMessages),
-      stream: s.streamChat !== false,
+      stream: streamChat,
       params,
     });
     return { stream: res.body, citations, tune, provider: "ollama", started, context: packed.usage };
@@ -81,7 +87,7 @@ export async function completeChat({ messages, collectionId, provider, model, si
   const body = {
     model: model || "local",
     messages: finalMessages,
-    stream: s.streamChat !== false,
+    stream: streamChat,
     temperature: params.temperature,
     top_p: params.topP,
     top_k: params.topK,
@@ -111,6 +117,135 @@ export async function completeChat({ messages, collectionId, provider, model, si
     throw new Error(t || `Inference failed (${res.status})`);
   }
   return { stream: res.body, citations, tune, provider: "llama", started, context: packed.usage };
+}
+
+function openaiCompatibleBase(route, s) {
+  if (route === "openai") return { base: "https://api.openai.com/v1", key: s.openaiApiKey, model: s.openaiModel || "gpt-4o-mini" };
+  if (route === "openrouter") {
+    return {
+      base: "https://openrouter.ai/api/v1",
+      key: s.openrouterApiKey,
+      model: s.openrouterModel || "openai/gpt-4o-mini",
+      extra: { "HTTP-Referer": "https://localmod.app", "X-Title": "Localmod" },
+    };
+  }
+  return {
+    base: String(s.customApiBase || "").replace(/\/$/, ""),
+    key: s.customApiKey || "",
+    model: s.customApiModel || "local",
+    extra: {},
+  };
+}
+
+async function completeCloud({ route, s, finalMessages, streamChat, citations, tune, packed, started, model, signal }) {
+  if (route === "anthropic") {
+    if (!s.anthropicApiKey) throw new Error("Add an Anthropic key in Keys.");
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": s.anthropicApiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: model || s.anthropicModel || "claude-sonnet-4-20250514",
+        max_tokens: s.maxTokens > 0 ? s.maxTokens : 2048,
+        stream: false,
+        messages: finalMessages
+          .filter((m) => m.role !== "system")
+          .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) })),
+        system: finalMessages.find((m) => m.role === "system")?.content,
+      }),
+      signal,
+    });
+    if (!res.ok) throw new Error((await res.text()) || `Anthropic failed (${res.status})`);
+    const j = await res.json();
+    const text = (j.content || []).map((c) => c.text || "").join("");
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`));
+        c.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+        c.close();
+      },
+    });
+    return { stream, citations, tune, provider: "openai", started, context: packed.usage };
+  }
+  const cfg = openaiCompatibleBase(route, s);
+  if (!cfg.base) throw new Error("Set a custom API base URL in Keys.");
+  if (route !== "custom" && !cfg.key) throw new Error(`Add a ${route} API key in Keys.`);
+  const res = await fetch(`${cfg.base}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cfg.key ? { Authorization: `Bearer ${cfg.key}` } : {}),
+      ...(cfg.extra || {}),
+    },
+    body: JSON.stringify({
+      model: model || cfg.model,
+      messages: finalMessages,
+      stream: streamChat,
+      temperature: s.temperature,
+    }),
+    signal,
+  });
+  if (!res.ok) throw new Error((await res.text()) || `${route} failed (${res.status})`);
+  return { stream: res.body, citations, tune, provider: "openai", started, context: packed.usage };
+}
+
+/** Consume a chat completion stream into a single string (Ollama JSONL or OpenAI SSE). */
+export async function collectChatText(stream, provider) {
+  if (!stream) return "";
+  const decoder = new TextDecoder();
+  let buf = "";
+  let full = "";
+  for await (const chunk of stream) {
+    buf += decoder.decode(chunk, { stream: true });
+    if (provider === "ollama") {
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const t = JSON.parse(line).message?.content || "";
+          if (t) full += t;
+        } catch {
+          /* ignore */
+        }
+      }
+    } else {
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim();
+        if (!data || data === "[DONE]") continue;
+        try {
+          const t = JSON.parse(data).choices?.[0]?.delta?.content || "";
+          if (t) full += t;
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }
+  if (provider === "ollama") {
+    const rest = buf.trim();
+    if (rest) {
+      try {
+        const t = JSON.parse(rest).message?.content || "";
+        if (t) full += t;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  return full.trim();
+}
+
+export async function completeOnce(opts) {
+  const result = await completeChat({ ...opts, stream: true });
+  const text = await collectChatText(result.stream, result.provider);
+  return { text, provider: result.provider, citations: result.citations, context: result.context };
 }
 
 export function logTurn({ provider, model, prompt, response }) {

@@ -1,0 +1,24 @@
+{
+  "name": "@localmod/ironmantis",
+  "private": true,
+  "version": "0.2.2",
+  "type": "module",
+  "description": "Ironmantis — phosphor autonomous terminal. Separate React app on :1426.",
+  "scripts": {
+    "setup": "npm install --prefix ../..",
+    "start": "vite --host 127.0.0.1 --strictPort",
+    "dev": "vite --host 127.0.0.1 --strictPort",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.4"
+  }
+}

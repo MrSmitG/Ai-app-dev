@@ -109,11 +109,77 @@ export function Icon({ name }: { name: string }) {
           <path d="M19 11a7 7 0 0 1-14 0M12 18v3" />
         </svg>
       );
-    case "about":
+    case "bundles":
       return (
         <svg {...common}>
-          <circle cx="12" cy="8" r="3.5" />
-          <path d="M6 19c1.2-3 3.5-4.5 6-4.5s4.8 1.5 6 4.5" />
+          <path d="M3 7.5 12 3l9 4.5-9 4.5L3 7.5z" />
+          <path d="M3 12.5 12 17l9-4.5" />
+          <path d="M3 16.5 12 21l9-4.5" />
+        </svg>
+      );
+    case "suite":
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+      );
+    case "current":
+    case "code":
+    case "nightweaver":
+      return (
+        <svg {...common}>
+          <path d="M4 12h16" />
+          <path d="M14 6l6 6-6 6" />
+          <path d="M4 6v12" />
+        </svg>
+      );
+    case "keyring":
+    case "keys":
+    case "obsidian":
+      return (
+        <svg {...common}>
+          <circle cx="8" cy="12" r="4" />
+          <path d="M12 12h9M18 12v3M21 12v2" />
+        </svg>
+      );
+    case "pulse":
+    case "fast":
+    case "mako":
+      return (
+        <svg {...common}>
+          <path d="M3 12h4l2-6 4 12 2-6h6" />
+        </svg>
+      );
+    case "keep":
+    case "editor":
+    case "trench":
+      return (
+        <svg {...common}>
+          <path d="M4 5h9a3 3 0 0 1 3 3v11H7a3 3 0 0 0-3 3z" />
+          <path d="M16 8h4v13H10" />
+        </svg>
+      );
+    case "hands":
+    case "engineer":
+    case "ironmantis":
+      return (
+        <svg {...common}>
+          <path d="M8 13V7a1.5 1.5 0 0 1 3 0v5" />
+          <path d="M11 12V6a1.5 1.5 0 0 1 3 0v6" />
+          <path d="M14 12V8a1.5 1.5 0 0 1 3 0v8.5a4.5 4.5 0 0 1-4.5 4.5H12a5 5 0 0 1-5-5v-3" />
+        </svg>
+      );
+    case "blackwhale":
+    case "studio":
+      return (
+        <svg {...common}>
+          <path d="M3 13c4-8 14-8 18 0" />
+          <path d="M4 13c1 4 6 6 8 6s7-2 8-6" />
+          <circle cx="8" cy="12" r="0.8" />
+          <path d="M20 12l3-2" />
         </svg>
       );
     case "info":

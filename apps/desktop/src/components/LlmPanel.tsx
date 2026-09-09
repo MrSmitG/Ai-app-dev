@@ -120,7 +120,7 @@ export function LlmPanel({
           <button className="btn" disabled={!hw?.inference?.running} onClick={async () => { await api("/inference/stop", { method: "POST" }); refresh(); }}>
             Unload
           </button>
-          <button className="btn primary" onClick={() => setTab("chat")}>Open Chat</button>
+          <button className="btn primary" onClick={() => setTab("blackwhale")}>Open Blackwhale</button>
         </div>
       </div>
 

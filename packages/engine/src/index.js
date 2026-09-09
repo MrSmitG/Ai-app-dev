@@ -20,6 +20,14 @@ import * as cursorAgent from "./cursorAgent.js";
 import * as skills from "./skills.js";
 import * as voice from "./voice.js";
 import * as contextMod from "./context.js";
+import * as bundles from "./bundles.js";
+import * as localAgent from "./localAgent.js";
+import * as suite from "./suite.js";
+import * as codebase from "./codebase.js";
+import * as providers from "./providers.js";
+import * as currentAgent from "./currentAgent.js";
+import * as handsAgent from "./handsAgent.js";
+import * as install from "./install.js";
 
 const PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 
@@ -120,6 +128,15 @@ const cancelCursorRun = grab(cursorAgent, "cancelCursorRun");
 const getCursorRun = grab(cursorAgent, "getCursorRun");
 const cursorHistory = grab(cursorAgent, "cursorHistory");
 const pickCursorCwd = grab(cursorAgent, "pickCursorCwd");
+const listBundles = grab(bundles, "listBundles");
+const useBundle = grab(bundles, "useBundle");
+const stopUsingBundle = grab(bundles, "stopUsingBundle");
+const setBundleEnabled = grab(bundles, "setBundleEnabled");
+const startLocalAgent = grab(localAgent, "startLocalAgent");
+const localAgentHistory = grab(localAgent, "localAgentHistory");
+const getLocalAgentRun = grab(localAgent, "getLocalAgentRun");
+const cancelLocalAgent = grab(localAgent, "cancelLocalAgent");
+const localAgentStatus = grab(localAgent, "localAgentStatus");
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -325,22 +342,58 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/mcp/permission" && req.method === "POST") return json(res, 200, await resolvePermission(await readBody(req)));
     if (url.pathname === "/mcp/audit") return json(res, 200, mcpAudit());
     if (url.pathname === "/race" && req.method === "POST") return json(res, 200, await raceModels(await readBody(req)));
+    if (url.pathname === "/bundles" && req.method === "GET") return json(res, 200, await listBundles());
+    if (url.pathname === "/bundles/use" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await useBundle(body.id, { download: body.download !== false }));
+    }
+    if (url.pathname === "/bundles/stop" && req.method === "POST") {
+      return json(res, 200, stopUsingBundle((await readBody(req)).id));
+    }
+    if (url.pathname === "/bundles/toggle" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await setBundleEnabled(body.id, !!body.enabled, { download: body.download !== false }));
+    }
     if (url.pathname === "/voice" && req.method === "GET") return json(res, 200, voiceStatus());
     if (url.pathname === "/voice/transcribe" && req.method === "POST") return json(res, 200, await transcribeWhisper(await readBody(req)));
-    if (url.pathname === "/cursor" && req.method === "GET") return json(res, 200, cursorStatus());
-    if (url.pathname === "/forge" && req.method === "GET") return json(res, 200, cursorStatus());
+    if (url.pathname === "/cursor" && req.method === "GET") {
+      const local = localAgentStatus();
+      const cur = cursorStatus();
+      return json(res, 200, { ...cur, local, configured: Boolean(cur.configured || local.configured) });
+    }
+    if (url.pathname === "/forge" && req.method === "GET") {
+      const local = localAgentStatus();
+      const cur = cursorStatus();
+      return json(res, 200, { ...cur, local, configured: Boolean(cur.configured || local.configured) });
+    }
     if (url.pathname === "/cursor/models" && req.method === "GET") return json(res, 200, await listCursorModels());
     if (url.pathname === "/forge/models" && req.method === "GET") return json(res, 200, await listCursorModels());
     if (url.pathname === "/cursor/agents" && req.method === "GET") return json(res, 200, await listCursorAgents());
     if (url.pathname === "/forge/agents" && req.method === "GET") return json(res, 200, await listCursorAgents());
-    if (url.pathname === "/cursor/history" && req.method === "GET") return json(res, 200, cursorHistory());
-    if (url.pathname === "/forge/history" && req.method === "GET") return json(res, 200, cursorHistory());
+    if (url.pathname === "/cursor/history" && req.method === "GET") {
+      return json(res, 200, [...localAgentHistory(), ...cursorHistory()]);
+    }
+    if (url.pathname === "/forge/history" && req.method === "GET") {
+      return json(res, 200, [...localAgentHistory(), ...cursorHistory()]);
+    }
     if (url.pathname === "/cursor/pick-cwd" && req.method === "POST") return json(res, 200, await pickCursorCwd());
     if (url.pathname === "/forge/pick-cwd" && req.method === "POST") return json(res, 200, await pickCursorCwd());
-    if (url.pathname === "/cursor/run" && req.method === "GET") return json(res, 200, getCursorRun(url.searchParams.get("id")));
-    if (url.pathname === "/forge/run" && req.method === "GET") return json(res, 200, getCursorRun(url.searchParams.get("id")));
-    if (url.pathname === "/cursor/cancel" && req.method === "POST") return json(res, 200, await cancelCursorRun((await readBody(req)).id));
-    if (url.pathname === "/forge/cancel" && req.method === "POST") return json(res, 200, await cancelCursorRun((await readBody(req)).id));
+    if (url.pathname === "/cursor/run" && req.method === "GET") {
+      const id = url.searchParams.get("id");
+      return json(res, 200, getLocalAgentRun(id) || getCursorRun(id));
+    }
+    if (url.pathname === "/forge/run" && req.method === "GET") {
+      const id = url.searchParams.get("id");
+      return json(res, 200, getLocalAgentRun(id) || getCursorRun(id));
+    }
+    if (url.pathname === "/cursor/cancel" && req.method === "POST") {
+      const id = (await readBody(req)).id;
+      return json(res, 200, cancelLocalAgent(id) || (await cancelCursorRun(id)));
+    }
+    if (url.pathname === "/forge/cancel" && req.method === "POST") {
+      const id = (await readBody(req)).id;
+      return json(res, 200, cancelLocalAgent(id) || (await cancelCursorRun(id)));
+    }
     if ((url.pathname === "/cursor/run" || url.pathname === "/forge/run") && req.method === "POST") {
       const body = await readBody(req);
       res.writeHead(200, {
@@ -351,13 +404,67 @@ const server = http.createServer(async (req, res) => {
       const write = (event, data) => {
         res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
       };
+      const runtime = body.runtime || getSettings().cursorRuntime || "local";
+      const localMode = runtime === "local-vision" || getSettings().agentMode === "local";
+      const ac = new AbortController();
+      const onClose = () => ac.abort();
+      req.on("close", onClose);
       try {
-        await startCursorRun(body, (msg) => write(msg.type, msg.data));
+        if (localMode) await startLocalAgent({ ...body, signal: ac.signal }, (msg) => write(msg.type, msg.data));
+        else await startCursorRun(body, (msg) => write(msg.type, msg.data));
       } catch (err) {
         write("error", { error: String(err.message || err) });
+      } finally {
+        req.off("close", onClose);
       }
       res.end();
       return;
+    }
+    if (url.pathname === "/suite" && req.method === "GET") {
+      return json(res, 200, await suite.suiteStatus());
+    }
+    if (url.pathname === "/install" && req.method === "GET") {
+      return json(res, 200, install.installManifest());
+    }
+    if (url.pathname === "/install/pick" && req.method === "POST") {
+      return json(res, 200, await install.pickInstallDir());
+    }
+    if (url.pathname === "/install" && req.method === "POST") {
+      return json(res, 200, await install.install(await readBody(req)));
+    }
+    if (url.pathname === "/providers" && req.method === "GET") {
+      return json(res, 200, { providers: providers.listProviders() });
+    }
+    if (url.pathname === "/providers/ping" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await providers.pingProvider(body.id || body.provider));
+    }
+    if ((url.pathname === "/pulse" || url.pathname === "/fast" || url.pathname === "/mako") && req.method === "GET") {
+      return json(res, 200, await providers.pulseBackends());
+    }
+    if (url.pathname === "/codebase/tree" && req.method === "GET") {
+      return json(res, 200, codebase.listTree(url.searchParams.get("cwd")));
+    }
+    if (url.pathname === "/codebase/search" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, codebase.searchCode(body.cwd, body.query));
+    }
+    if (url.pathname === "/codebase/read" && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, codebase.readFileRel(body.cwd, body.path));
+    }
+    if ((url.pathname === "/current/run" || url.pathname === "/code/run" || url.pathname === "/nightweaver/run") && req.method === "POST") {
+      return json(res, 200, await currentAgent.runCurrent(await readBody(req)));
+    }
+    if ((url.pathname === "/keep/inline" || url.pathname === "/editor/inline" || url.pathname === "/trench/inline") && req.method === "POST") {
+      return json(res, 200, await currentAgent.inlineEdit(await readBody(req)));
+    }
+    if ((url.pathname === "/hands/run" || url.pathname === "/engineer/run" || url.pathname === "/ironmantis/run") && req.method === "POST") {
+      return json(res, 200, await handsAgent.runHands(await readBody(req)));
+    }
+    if ((url.pathname === "/hands/cli" || url.pathname === "/engineer/cli" || url.pathname === "/ironmantis/cli") && req.method === "POST") {
+      const body = await readBody(req);
+      return json(res, 200, await handsAgent.runCli(body.cwd, body.command));
     }
     json(res, 404, { error: "not found" });
   } catch (err) {
@@ -389,7 +496,7 @@ function spawnUi() {
   const desktop = path.resolve(path.dirname(here), "../../../apps/desktop");
   console.log(`Starting React UI from ${desktop}`);
   console.log("Open http://localhost:1420 in your browser if it does not open automatically.");
-  const child = spawn("npx", ["vite", "--open"], {
+  const child = spawn("npx", ["react-router", "dev"], {
     cwd: desktop,
     stdio: "inherit",
     shell: true,
@@ -401,7 +508,7 @@ const here = fileURLToPath(import.meta.url);
 const launchedDirectly = String(process.argv[1] || "")
   .replace(/\\/g, "/")
   .toLowerCase()
-  .endsWith("packages/engine/src/index.js");
+  .endsWith("/engine/src/index.js");
 const spawnVite =
   process.argv.includes("--spawn-vite") || process.argv.includes("--spawn-vite");
 if (launchedDirectly || spawnVite) {

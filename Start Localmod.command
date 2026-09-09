@@ -1,15 +1,22 @@
 #!/bin/bash
+# Download the ready-to-run React desktop app from GitHub. No Node.js or npm.
+set -euo pipefail
 cd "$(dirname "$0")"
-export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
-if ! command -v node >/dev/null 2>&1; then
-  echo "Install Node.js 20+ from https://nodejs.org then run this again."
-  read -r _
-  exit 1
+URL="https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg"
+DIR="${HOME}/Library/Application Support/Localmod"
+APP="${DIR}/Localmod.dmg"
+if [[ -f "./Localmod.dmg" ]]; then
+  APP="$(pwd)/Localmod.dmg"
 fi
-if [ ! -d node_modules ]; then
-  echo "Installing dependencies..."
-  npm install
+if [[ -d "/Applications/Localmod.app" ]]; then
+  open -a Localmod
+  exit 0
 fi
-echo "Starting Localmod desktop app for macOS..."
-echo "Engine + React UI + Electron window. Keep this terminal open."
-npm run desktop
+mkdir -p "$DIR"
+if [[ ! -f "$APP" ]]; then
+  echo "Downloading Localmod for macOS..."
+  echo "$URL"
+  curl -fL --retry 3 --retry-delay 2 -o "$APP" "$URL"
+fi
+open "$APP"
+echo "Drag Localmod to Applications if asked, then click the Localmod icon."
