@@ -1,6 +1,6 @@
 import { PRODUCT } from "../web3";
 
-function OsMark({ id }: { id: "windows" | "mac" | "linux" }) {
+function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
   if (id === "windows") {
     return (
       <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden>
@@ -14,6 +14,16 @@ function OsMark({ id }: { id: "windows" | "mac" | "linux" }) {
         <path
           fill="currentColor"
           d="M16.4 12.4c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.9-3.5.9s-1.8-.8-3-.8c-1.6 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 2.9 2.3 1.2 0 1.6-.8 3-.8s1.8.8 3 .8 2-.1 2.9-2.3c1-1.4 1.4-2.7 1.4-2.8-.1 0-2.7-1-2.7-4.4zM14.7 5.3c.6-.8 1.1-1.9.9-3-1 .1-2.1.7-2.8 1.5-.6.7-1.2 1.9-.9 2.9 1.1.1 2.2-.5 2.8-1.4z"
+        />
+      </svg>
+    );
+  }
+  if (id === "android") {
+    return (
+      <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden>
+        <path
+          fill="currentColor"
+          d="M17.6 9.48c.5 0 .9.4.9.9v6.24c0 .5-.4.9-.9.9h-.12v1.98c0 .55-.45 1-1 1s-1-.45-1-1v-1.98H9.52v1.98c0 .55-.45 1-1 1s-1-.45-1-1v-1.98h-.12c-.5 0-.9-.4-.9-.9V10.38c0-.5.4-.9.9-.9zM7.96 7.28 6.74 5.16c-.18-.32-.08-.64.24-.82.32-.18.64-.08.82.24L9 6.74c.9-.42 1.92-.66 3-.66s2.1.24 3 .66l1.2-2.16c.18-.32.5-.42.82-.24.32.18.42.5.24.82L16.04 7.28C17.66 8.24 18.76 9.96 19 12H5c.24-2.04 1.34-3.76 2.96-4.72zM9.2 11.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm5.6 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6z"
         />
       </svg>
     );
@@ -49,6 +59,13 @@ const TILES = [
     file: "Localmod.AppImage",
     href: PRODUCT.downloads.linux,
     hint: "Download, then double-click the Localmod icon.",
+  },
+  {
+    id: "android" as const,
+    label: "Android",
+    file: "Localmod.apk",
+    href: PRODUCT.downloads.android,
+    hint: "Download, allow unknown apps, then tap Localmod.apk to install.",
   },
 ];
 

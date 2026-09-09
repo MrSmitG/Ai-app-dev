@@ -24,6 +24,7 @@ In the app open **Suite**, type or browse a folder path, then:
 - **Copy all files here** — copies this React suite into `{folder}/Localmod/` (Mac and Windows)
 - **Download Windows** — saves `Localmod.exe` into that folder
 - **Download Mac** — saves `Localmod.dmg` into that folder
+- **Download Android** — saves `Localmod.apk` into that folder
 
 Then run `Start Localmod.bat` (Windows) or `Start Localmod.command` (macOS). Each app folder also has its own Start script.
 
@@ -38,10 +39,11 @@ If you cloned this repo, double-click **Start Localmod** instead — it download
 | **[Windows](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe)** | Click the Windows icon / this link. Then click `Localmod.exe` (or the desktop Localmod shortcut). |
 | **[macOS](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg)** | Click the Apple icon. Open the DMG, drag Localmod to Applications, click the icon. |
 | **[Linux](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage)** | Click the Linux icon. Then double-click `Localmod.AppImage`. |
+| **[Android](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.apk)** | Click the Android icon / this link. Allow unknown apps, then tap `Localmod.apk`. |
 
-In the app, **About** shows the same three OS icons.
+In the app, **About** shows the same four OS icons.
 
-If a download 404s, the latest GitHub Release is still building. Tag `v0.2.0` (or newer) so Actions can attach `Localmod.exe`, `Localmod.dmg`, and `Localmod.AppImage`.
+If a download 404s, the latest GitHub Release is still building. Tag `v0.2.3` (or newer) so Actions can attach `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and `Localmod.apk`.
 
 ## Why not a public blockchain
 
@@ -87,6 +89,7 @@ npm run desktop      # Electron window
 npm run build:win    # Localmod.exe + Localmod-Setup.exe
 npm run build:mac    # Localmod.dmg (run on a Mac)
 npm run build:linux  # Localmod.AppImage
+npm run build:android # Localmod.apk (needs Android SDK)
 ```
 
 Artifacts land in `release/`. GitHub Actions on `v*` tags uploads those stable names.

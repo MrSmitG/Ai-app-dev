@@ -24,6 +24,7 @@ export const PRODUCT = {
     windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
     mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
     linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
+    android: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.apk",
   },
 } as const;
 

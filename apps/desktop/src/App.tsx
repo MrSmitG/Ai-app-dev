@@ -31,7 +31,7 @@ const NAV = [
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
   ["settings", "Options", "settings", "API keys, privacy vault, Ollama URL, and developer settings."],
-  ["about", "About", "about", "Click your OS icon to download Localmod from GitHub. Then click the Localmod icon to run."],
+  ["about", "About", "about", "Click your OS icon to download Localmod from GitHub (Windows, Mac, Linux, Android). Then open the file."],
 ] as const;
 
 const MODEL_TABS = [
@@ -1455,6 +1455,8 @@ export default function App() {
           <a className="status-link" href={PRODUCT.downloads.mac} download="Localmod.dmg">macOS</a>
           <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.linux} download="Localmod.AppImage">Linux</a>
+          <span className="dot" />
+          <a className="status-link" href={PRODUCT.downloads.android} download="Localmod.apk">Android</a>
           <span className="grow" />
           <span>{forge.activeRuns ? `${forge.activeRuns} agent run(s)` : "Ready"}</span>
         </footer>

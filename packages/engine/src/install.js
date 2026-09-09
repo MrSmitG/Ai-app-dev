@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { pickFolder } from "./pickFolder.js";
 import { SUITE_APPS } from "./suite.js";
 
-const SKIP = new Set(["node_modules", ".git", "dist", "release", "build", "squashfs-root", "coverage"]);
+const SKIP = new Set(["node_modules", ".git", "dist", "release", "build", "squashfs-root", "coverage", ".gradle"]);
 
 export function repoRoot() {
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -38,6 +38,7 @@ const TREE = [
   "apps/ironmantis",
   "apps/keep",
   "apps/hands",
+  "apps/android",
   "apps/cli",
   "packages/engine/src",
   "packages/engine/package.json",
@@ -53,6 +54,7 @@ export function installManifest() {
       windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
       mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
       linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
+      android: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.apk",
     },
   };
 }
@@ -130,6 +132,7 @@ export async function downloadBinary(dest, platform) {
     windows: { name: "Localmod.exe", url: installManifest().downloads.windows },
     mac: { name: "Localmod.dmg", url: installManifest().downloads.mac },
     linux: { name: "Localmod.AppImage", url: installManifest().downloads.linux },
+    android: { name: "Localmod.apk", url: installManifest().downloads.android },
   };
   const spec = files[platform] || files.windows;
   const out = path.join(target, spec.name);

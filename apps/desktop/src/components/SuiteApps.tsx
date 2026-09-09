@@ -90,6 +90,9 @@ export function SuiteHome({
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("mac")}>
             {busy === "mac" ? "Downloading…" : "Download Mac (Localmod.dmg)"}
           </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("android")}>
+            {busy === "android" ? "Downloading…" : "Download Android (Localmod.apk)"}
+          </button>
         </div>
         {installOut && (
           <div className="banner ok">

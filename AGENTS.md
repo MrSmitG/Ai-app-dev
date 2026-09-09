@@ -31,6 +31,7 @@ If `npm ci` fails with a lockfile mismatch, run `npm install` / `npm --prefix ap
 - No dedicated lint or unit-test scripts in root `package.json` yet.
 - UI build: `npm run build`
 - Desktop installers (local): `npm run build:win` / `npm run build:mac` (needs electron-builder; mac DMG should be built on a Mac)
+- Android APK: `npm run build:android` (needs Android SDK; GitHub Release workflow attaches `Localmod.apk`)
 
 ### Non-obvious gotchas
 
