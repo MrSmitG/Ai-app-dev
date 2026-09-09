@@ -63,7 +63,7 @@ export default function App() {
     }
   }
 
-  const files: string[] = (tree?.files || []).slice(0, 80);
+  const files: { path?: string; kind?: string }[] = (tree?.files || []).slice(0, 80);
 
   return (
     <div className="nw">
@@ -91,11 +91,15 @@ export default function App() {
             Tree {tree ? `· ${tree.files?.length || 0}` : ""}
           </div>
           {!files.length && <div className="muted" style={{ color: "#8b7aa8", fontSize: 12 }}>Index a folder to spin the web.</div>}
-          {files.map((f) => (
-            <div key={f} className="nw-path" title={f}>
-              {f}
-            </div>
-          ))}
+          {files.map((f) => {
+            const p = f.path || "";
+            return (
+              <div key={p} className="nw-path" title={p}>
+                {p}
+                {f.kind === "dir" ? "/" : ""}
+              </div>
+            );
+          })}
         </aside>
         <section className="nw-main">
           <div className="nw-k">Spin a web</div>
