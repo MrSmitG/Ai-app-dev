@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Build Localmod.apk (React UI in an Android WebView) into release/. */
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,7 +12,6 @@ const mipmap = path.join(android, "app", "src", "main", "res", "mipmap-xxxhdpi")
 const dist = path.join(root, "apps", "desktop", "dist", "client");
 const outDir = path.join(root, "release");
 const apkOut = path.join(outDir, "Localmod.apk");
-const gradlew = path.join(android, process.platform === "win32" ? "gradlew.bat" : "gradlew");
 const wrapperJar = path.join(android, "gradle", "wrapper", "gradle-wrapper.jar");
 
 function run(cmd, cwd = root) {
@@ -49,8 +48,15 @@ if (!existsSync(sdk)) {
 writeFileSync(path.join(android, "local.properties"), `sdk.dir=${String(sdk).replace(/\\/g, "\\\\")}\n`);
 
 console.log("Packaging Localmod.apk …");
-const gradleCmd = process.platform === "win32" ? "gradlew.bat" : "./gradlew";
-run(`${gradleCmd} :app:assembleRelease --no-daemon`, android);
+const java = process.env.JAVA_HOME
+  ? path.join(process.env.JAVA_HOME, "bin", process.platform === "win32" ? "java.exe" : "java")
+  : "java";
+const gradle = spawnSync(
+  java,
+  ["-classpath", wrapperJar, "org.gradle.wrapper.GradleWrapperMain", ":app:assembleRelease", "--no-daemon"],
+  { cwd: android, stdio: "inherit", env: process.env }
+);
+if (gradle.status !== 0) process.exit(gradle.status || 1);
 
 const built = path.join(android, "app", "build", "outputs", "apk", "release", "app-release.apk");
 if (!existsSync(built)) throw new Error("Gradle did not produce app-release.apk");
