@@ -725,3 +725,51 @@ a.download-icon-only svg { width: 26px; height: 26px; }
 @media (max-width: 720px) {
   .suite-grid { grid-template-columns: 1fr; }
 }
+
+.solo-body { overflow: auto !important; }
+.solo-shell {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 55%),
+    var(--bg);
+}
+.solo-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+  padding: 18px 22px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.solo-mark {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.solo-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+.solo-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.solo-link.on, .solo-link:hover { color: var(--text); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.solo-main { padding: 8px 12px 24px; }
+.solo-foot { padding: 12px 22px 18px; border-top: 1px solid var(--line); }
+.blackwhale-stream { display: grid; gap: 12px; min-height: 220px; }
+.msg { padding: 10px 12px; border-radius: 12px; background: var(--bg-soft); border: 1px solid var(--line); }
+.msg.user { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+
+html[data-app="blackwhale"] { --bg: #050b12; --accent: #5eead4; --accent-2: #67e8f9; --accent-text: #a5f3fc; }
+html[data-app="nightweaver"] { --bg: #080614; --accent: #a78bfa; --accent-2: #c4b5fd; --accent-text: #ddd6fe; }
+html[data-app="obsidian"] { --bg: #0a0a0b; --accent: #e5e7eb; --accent-2: #9ca3af; --accent-text: #f9fafb; }
+html[data-app="mako"] { --bg: #041018; --accent: #38bdf8; --accent-2: #7dd3fc; --accent-text: #e0f2fe; }
+html[data-app="trench"] { --bg: #03070c; --accent: #f59e0b; --accent-2: #fbbf24; --accent-text: #fde68a; }
+html[data-app="ironmantis"] { --bg: #080c06; --accent: #84cc16; --accent-2: #a3e635; --accent-text: #d9f99d; }

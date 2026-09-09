@@ -1,0 +1,11 @@
+{
+  "name": "@localmod/obsidian",
+  "private": true,
+  "version": "0.2.2",
+  "type": "module",
+  "description": "Obsidian — Dark, unbreakable, and highly secure. The vault for your tokens.",
+  "scripts": {
+    "start": "vite --host 127.0.0.1 --strictPort",
+    "dev": "vite --host 127.0.0.1 --strictPort"
+  }
+}

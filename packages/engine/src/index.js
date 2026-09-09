@@ -439,10 +439,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       return json(res, 200, await providers.pingProvider(body.id || body.provider));
     }
-    if (url.pathname === "/pulse" && req.method === "GET") {
-      return json(res, 200, await providers.pulseBackends());
-    }
-    if (url.pathname === "/fast" && req.method === "GET") {
+    if ((url.pathname === "/pulse" || url.pathname === "/fast" || url.pathname === "/mako") && req.method === "GET") {
       return json(res, 200, await providers.pulseBackends());
     }
     if (url.pathname === "/codebase/tree" && req.method === "GET") {
@@ -456,16 +453,16 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       return json(res, 200, codebase.readFileRel(body.cwd, body.path));
     }
-    if ((url.pathname === "/current/run" || url.pathname === "/code/run") && req.method === "POST") {
+    if ((url.pathname === "/current/run" || url.pathname === "/code/run" || url.pathname === "/nightweaver/run") && req.method === "POST") {
       return json(res, 200, await currentAgent.runCurrent(await readBody(req)));
     }
-    if ((url.pathname === "/keep/inline" || url.pathname === "/editor/inline") && req.method === "POST") {
+    if ((url.pathname === "/keep/inline" || url.pathname === "/editor/inline" || url.pathname === "/trench/inline") && req.method === "POST") {
       return json(res, 200, await currentAgent.inlineEdit(await readBody(req)));
     }
-    if ((url.pathname === "/hands/run" || url.pathname === "/engineer/run") && req.method === "POST") {
+    if ((url.pathname === "/hands/run" || url.pathname === "/engineer/run" || url.pathname === "/ironmantis/run") && req.method === "POST") {
       return json(res, 200, await handsAgent.runHands(await readBody(req)));
     }
-    if ((url.pathname === "/hands/cli" || url.pathname === "/engineer/cli") && req.method === "POST") {
+    if ((url.pathname === "/hands/cli" || url.pathname === "/engineer/cli" || url.pathname === "/ironmantis/cli") && req.method === "POST") {
       const body = await readBody(req);
       return json(res, 200, await handsAgent.runCli(body.cwd, body.command));
     }

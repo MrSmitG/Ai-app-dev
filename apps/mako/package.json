@@ -1,0 +1,11 @@
+{
+  "name": "@localmod/mako",
+  "private": true,
+  "version": "0.2.2",
+  "type": "module",
+  "description": "Mako — The fastest shark in the ocean. Built for high-speed execution and racing.",
+  "scripts": {
+    "start": "vite --host 127.0.0.1 --strictPort",
+    "dev": "vite --host 127.0.0.1 --strictPort"
+  }
+}

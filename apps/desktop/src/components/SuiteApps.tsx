@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { api } from "../api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, streamChat } from "../api";
 import { Tip } from "./ui";
 
 export function SuiteHome({
@@ -54,11 +54,12 @@ export function SuiteHome({
     <section className="view flow-in">
       <div className="panel spotlight">
         <div className="hero-kicker">
-          Localmod Suite <Tip text="React apps named by job: Studio, Code, Keys, Fast, Editor, Engineer. Install them to a folder on Mac or Windows." />
+          Localmod <Tip text="Six React apps: Blackwhale, Nightweaver, Obsidian, Mako, The Trench, Ironmantis. Start one, then another." />
         </div>
-        <h2 className="owner-name">A suite of React apps for Mac and Windows</h2>
+        <h2 className="owner-name">Apex names. Six React apps. Start one.</h2>
         <p className="muted">
-          Pick the app for the job. All files live in this repo. Install to any folder path you choose — then run the Start script for your OS.
+          Each app is its own React process. Run <code className="mono">npm run blackwhale</code>, then{" "}
+          <code className="mono">npm run nightweaver</code>, and so on — or open a card here in the hub.
         </p>
         <div className="muted tiny">
           Live: {live.llama ? "llama-server" : "no llama"} · Ollama tags {live.ollamaTags || 0} · provider {live.provider || "—"}
@@ -99,12 +100,16 @@ export function SuiteHome({
       </div>
       <div className="suite-grid">
         {apps.map((app: any) => (
-          <button key={app.id} type="button" className="suite-card" onClick={() => setTab(app.id === "studio" ? "chat" : app.id)}>
+          <button key={app.id} type="button" className="suite-card" onClick={() => setTab(app.id)}>
             <div className="suite-usage">{app.usage}</div>
             <div className="suite-name">{app.name}</div>
             <div className="muted tiny">{app.tagline}</div>
             <p className="muted">{app.blurb}</p>
-            {app.folder && <div className="muted tiny">Files: {app.folder}</div>}
+            {app.folder && (
+              <div className="muted tiny">
+                Files: {app.folder} · port {app.port} · {app.start}
+              </div>
+            )}
           </button>
         ))}
       </div>
@@ -112,7 +117,86 @@ export function SuiteHome({
   );
 }
 
-export function CodeApp({
+export function BlackwhaleApp({ settings }: { settings: any }) {
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const end = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, busy]);
+
+  async function send() {
+    const text = input.trim();
+    if (!text || busy) return;
+    const next = [...messages, { role: "user", content: text }, { role: "assistant", content: "" }];
+    setMessages(next);
+    setInput("");
+    setBusy(true);
+    setErr("");
+    try {
+      await streamChat(
+        {
+          messages: next.filter((m) => m.content),
+          provider: settings.provider || "llama",
+          model: settings.loadedModel,
+        },
+        (tok) => {
+          next[next.length - 1].content += tok;
+          setMessages([...next]);
+        }
+      );
+    } catch (e: any) {
+      setErr(e.message || "Blackwhale could not reach a model.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="view flow-in">
+      <div className="panel spotlight">
+        <div className="hero-kicker">Blackwhale · chat</div>
+        <h2 className="owner-name">Deep-sea communication hub.</h2>
+        <p className="muted">
+          A massive basin where every signal centralizes. Talk to a local model — everything surfaces here.
+        </p>
+      </div>
+      {err && <div className="banner">{err}</div>}
+      <div className="panel blackwhale-stream">
+        {messages.length === 0 && <p className="muted">The water is still. Send the first ping.</p>}
+        {messages.map((m, i) => (
+          <div key={i} className={`msg ${m.role}`}>
+            <div className="suite-usage">{m.role === "user" ? "You" : "Blackwhale"}</div>
+            <div>{m.content || (busy && i === messages.length - 1 ? "…" : "")}</div>
+          </div>
+        ))}
+        <div ref={end} />
+      </div>
+      <div className="panel">
+        <label>
+          Message
+          <div className="row">
+            <input
+              className="grow"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Speak into the dark…"
+            />
+            <button className="btn primary" disabled={busy} type="button" onClick={send}>
+              {busy ? "Sounding…" : "Send"}
+            </button>
+          </div>
+        </label>
+      </div>
+    </section>
+  );
+}
+
+export function NightweaverApp({
   settings,
   patch,
 }: {
@@ -164,10 +248,10 @@ export function CodeApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Code · agentic coding</div>
-        <h2 className="owner-name">Deep context. Multi-file edits.</h2>
+        <div className="hero-kicker">Nightweaver · agentic coding</div>
+        <h2 className="owner-name">Unseen. Spinning webs of code.</h2>
         <p className="muted">
-          Code indexes the workspace, searches the tree, then coordinates edits across files — an agentic partner, not a single-line completer.
+          Nightweaver indexes the workspace, searches the tree, then coordinates edits across files — an autonomous weaver, not a single-line completer.
         </p>
       </div>
       {err && <div className="banner">{err}</div>}
@@ -200,7 +284,7 @@ export function CodeApp({
       </div>
       {result && (
         <div className="panel">
-          <div className="section-label">Plan</div>
+          <div className="section-label">Web</div>
           <p>{result.thought}</p>
           {(result.edits || []).length === 0 && <div className="muted">No file edits proposed.</div>}
           {(result.edits || []).map((e: any) => (
@@ -216,7 +300,7 @@ export function CodeApp({
   );
 }
 
-export function KeysApp({
+export function ObsidianApp({
   settings,
   patch,
 }: {
@@ -247,10 +331,10 @@ export function KeysApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Keys · bring your own keys</div>
-        <h2 className="owner-name">Your providers. Your keys. No lock-in.</h2>
+        <div className="hero-kicker">Obsidian · API keys</div>
+        <h2 className="owner-name">Dark. Unbreakable. The vault.</h2>
         <p className="muted">
-          Localmod is not a hosted subscription. Use llama-server or Ollama for free local inference, or paste a key you already pay for.
+          Your most sensitive access tokens stay here. Local inference, or a key you already pay for — never a lock-in.
         </p>
       </div>
       <div className="suite-grid">
@@ -308,7 +392,7 @@ export function KeysApp({
   );
 }
 
-export function FastApp({ setTab }: { setTab: (id: string) => void }) {
+export function MakoApp({ openApp }: { openApp: (id: string) => void }) {
   const [data, setData] = useState<any>(null);
   const [prompt, setPrompt] = useState("Reply with one word: pong");
   const [race, setRace] = useState<any[] | null>(null);
@@ -340,16 +424,16 @@ export function FastApp({ setTab }: { setTab: (id: string) => void }) {
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Fast · speed</div>
-        <h2 className="owner-name">Local first. Lowest latency wins.</h2>
+        <div className="hero-kicker">Mako · speed</div>
+        <h2 className="owner-name">Fastest in the water.</h2>
         <p className="muted">
-          Fast pings every backend you configured and can race the same prompt. Built for people who care about round-trip time — local GGUF and Ollama included.
+          Built purely for high-speed execution and racing. Ping every backend. The lowest latency wins.
         </p>
       </div>
       <div className="panel">
         <div className="row wrap">
           <button className="btn primary" type="button" onClick={ping}>Ping backends</button>
-          <button className="btn" type="button" onClick={() => setTab("keys")}>Open Keys</button>
+          <button className="btn" type="button" onClick={() => openApp("obsidian")}>Open Obsidian</button>
         </div>
         {data?.fastest && (
           <p className="muted">
@@ -383,7 +467,7 @@ export function FastApp({ setTab }: { setTab: (id: string) => void }) {
   );
 }
 
-export function EditorApp({
+export function TrenchApp({
   settings,
   patch,
 }: {
@@ -409,34 +493,34 @@ export function EditorApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Editor · stay in your editor</div>
-        <h2 className="owner-name">Chat and inline edit in this React app or VS Code.</h2>
+        <div className="hero-kicker">The Trench · editor</div>
+        <h2 className="owner-name">Dive in. Do not leave until it is done.</h2>
         <p className="muted">
-          Editor is the Localmod extension for VS Code. It talks to the engine on this machine (Ollama or a Keys provider) so you are not locked into a proprietary chat subscription.
+          An immersive, high-pressure environment for inline edit and chat — here in this React app or from VS Code.
         </p>
       </div>
       <div className="forge-split">
         <div className="panel">
-          <div className="section-label">Install Editor in VS Code</div>
+          <div className="section-label">Install The Trench in VS Code</div>
           <ol className="muted">
             <li>Leave Localmod running (engine on 127.0.0.1:4781).</li>
             <li>Optional: Tools → Local API → Start (default {port}).</li>
             <li>
               From a terminal in this repo:{" "}
               <code className="mono">code --install-extension apps/keep</code>
-              {" "}(extension files are in the repo; Editor UI files are in <code className="mono">apps/editor</code>).
+              {" "}(extension files are in the repo; The Trench UI is in <code className="mono">apps/trench</code>).
             </li>
             <li>Command Palette → “Localmod Editor: Chat”.</li>
           </ol>
           <p className="muted tiny">
-            OpenAI-compatible base: <code>http://127.0.0.1:{port}/v1</code> — works with Editor and anything that speaks chat completions.
+            OpenAI-compatible base: <code>http://127.0.0.1:{port}/v1</code>
           </p>
           <button className="btn" type="button" onClick={() => patch({}).then(() => api("/api-server/start", { method: "POST" }))}>
             Start local API
           </button>
         </div>
         <div className="panel">
-          <div className="section-label">Inline edit (here in Studio)</div>
+          <div className="section-label">Inline edit (in The Trench)</div>
           <label>
             Workspace-relative file
             <input value={rel} onChange={(e) => setRel(e.target.value)} />
@@ -449,7 +533,7 @@ export function EditorApp({
             <button className="btn primary" disabled={busy || !cwd} type="button" onClick={() => run(false)}>Preview</button>
             <button className="btn" disabled={busy || !cwd} type="button" onClick={() => run(true)}>Apply</button>
           </div>
-          {!cwd && <div className="muted tiny">Set a workspace in Code first.</div>}
+          {!cwd && <div className="muted tiny">Set a workspace in Nightweaver first.</div>}
           {out && (
             <>
               <div className="muted tiny">{out.thought} {out.applied ? "· applied" : ""}</div>
@@ -462,7 +546,7 @@ export function EditorApp({
   );
 }
 
-export function EngineerApp({
+export function IronmantisApp({
   settings,
   patch,
 }: {
@@ -499,10 +583,10 @@ export function EngineerApp({
   return (
     <section className="view flow-in">
       <div className="panel spotlight">
-        <div className="hero-kicker">Engineer · autonomous engineer</div>
-        <h2 className="owner-name">Read, write, run CLI, finish the job.</h2>
+        <div className="hero-kicker">Ironmantis · autonomous</div>
+        <h2 className="owner-name">Ruthless precision. Finish the job.</h2>
         <p className="muted">
-          Engineer lives in this sidebar (and as a VS Code extension). It is not autocomplete: it lists files, edits them, and runs allowlisted commands like git, npm, node, and python inside your workspace.
+          A hyper-efficient autonomous builder: list files, edit them, run allowlisted commands (git, npm, node, python) inside the folder you pick.
         </p>
       </div>
       {err && <div className="banner">{err}</div>}
@@ -519,10 +603,10 @@ export function EngineerApp({
           <textarea rows={3} value={goal} onChange={(e) => setGoal(e.target.value)} />
         </label>
         <button className="btn primary" disabled={busy} type="button" onClick={start}>
-          {busy ? "Working…" : "Run Engineer"}
+          {busy ? "Striking…" : "Run Ironmantis"}
         </button>
         <div className="muted tiny pad-sm">
-          Also: <code className="mono">code --install-extension apps/hands</code> · app files in <code className="mono">apps/engineer</code>
+          Also: <code className="mono">code --install-extension apps/hands</code> · app files in <code className="mono">apps/ironmantis</code>
         </div>
       </div>
       {run && (
@@ -539,3 +623,10 @@ export function EngineerApp({
     </section>
   );
 }
+
+export const CodeApp = NightweaverApp;
+export const KeysApp = ObsidianApp;
+export const FastApp = MakoApp;
+export const EditorApp = TrenchApp;
+export const HandsApp = IronmantisApp;
+export const EngineerApp = IronmantisApp;

@@ -1,7 +1,7 @@
-# Localmod Engineer (VS Code)
+# Localmod Engineer (VS Code) — Ironmantis
 
-VS Code extension for the **Engineer** app. Autonomous file + CLI tasks through the local engine.
+VS Code extension for **Ironmantis**. Autonomous file + CLI tasks through the local engine.
 
 Install: `code --install-extension apps/hands`
 
-The React UI for Engineer lives in `apps/engineer`.
+The React app lives in `apps/ironmantis` (`npm run ironmantis`).

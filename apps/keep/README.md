@@ -1,7 +1,7 @@
-# Localmod Editor (VS Code)
+# Localmod Editor (VS Code) — The Trench
 
-VS Code extension for the **Editor** app. Chat and inline-edit through the local engine.
+VS Code extension for **The Trench**. Chat and inline-edit through the local engine.
 
 Install: `code --install-extension apps/keep`
 
-The React UI for Editor lives in `apps/editor`.
+The React app lives in `apps/trench` (`npm run trench`).

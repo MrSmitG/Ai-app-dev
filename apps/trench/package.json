@@ -1,0 +1,11 @@
+{
+  "name": "@localmod/trench",
+  "private": true,
+  "version": "0.2.2",
+  "type": "module",
+  "description": "The Trench — Deep work. Dive in and do not leave until the job is done.",
+  "scripts": {
+    "start": "vite --host 127.0.0.1 --strictPort",
+    "dev": "vite --host 127.0.0.1 --strictPort"
+  }
+}

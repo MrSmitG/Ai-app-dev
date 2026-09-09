@@ -11,18 +11,18 @@ import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
-import { SuiteHome, CodeApp, KeysApp, FastApp, EditorApp, EngineerApp } from "./components/SuiteApps";
+import { SuiteHome, BlackwhaleApp, NightweaverApp, ObsidianApp, MakoApp, TrenchApp, IronmantisApp } from "./components/SuiteApps";
 import { useDesktop } from "./providers/AppProviders";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
 const NAV = [
-  ["suite", "Suite", "suite", "Localmod suite — install to a folder on Mac or Windows."],
-  ["code", "Code", "code", "Agentic coding: repo context and multi-file edits."],
-  ["keys", "Keys", "keys", "Bring your own API keys. No subscription lock-in."],
-  ["fast", "Fast", "fast", "Speed: ping backends and race local vs cloud."],
-  ["editor", "Editor", "editor", "Stay in VS Code or inline-edit in this React app."],
-  ["engineer", "Engineer", "engineer", "Autonomous engineer: files, allowlisted CLI, multi-step tasks."],
-  ["chat", "Studio", "chat", "Local chat with your loaded GGUF / Ollama model."],
+  ["suite", "Suite", "suite", "Six React apps. Start one, then another."],
+  ["blackwhale", "Blackwhale", "blackwhale", "Deep-sea communication hub — chat where everything centralizes."],
+  ["nightweaver", "Nightweaver", "nightweaver", "Unseen agent spinning webs of code across the repo."],
+  ["obsidian", "Obsidian", "obsidian", "Dark vault for API keys. Unbreakable."],
+  ["mako", "Mako", "mako", "Fastest in the water — ping and race backends."],
+  ["trench", "The Trench", "trench", "Deep work. Dive in and do not leave until it is done."],
+  ["ironmantis", "Ironmantis", "ironmantis", "Autonomous builder. Ruthless precision."],
   ["llm", "LLM", "llm", "LM Studio-style inference controls: GPU offload, sampling, KV cache, RoPE, presets."],
   ["models", "Models", "models", "Search Hugging Face, download GGUF files, and manage your local model library."],
   ["bundles", "Bundles", "bundles", "Select curated packs to use: starter chat, vision, voice, RAG, agent, privacy."],
@@ -89,7 +89,20 @@ export default function App() {
   const desktop = useDesktop();
   const initialTab = (() => {
     const seg = location.pathname.replace(/^\//, "").split("/")[0];
-    const aliases: Record<string, string> = { current: "code", keyring: "keys", pulse: "fast", keep: "editor", hands: "engineer" };
+    const aliases: Record<string, string> = {
+      studio: "blackwhale",
+      chat: "blackwhale",
+      code: "nightweaver",
+      current: "nightweaver",
+      keys: "obsidian",
+      keyring: "obsidian",
+      fast: "mako",
+      pulse: "mako",
+      editor: "trench",
+      keep: "trench",
+      engineer: "ironmantis",
+      hands: "ironmantis",
+    };
     const id = aliases[seg] || seg;
     return (NAV.find(([x]) => x === id)?.[0] || "suite") as (typeof NAV)[number][0];
   })();
@@ -224,7 +237,20 @@ export default function App() {
 
   useEffect(() => {
     const seg = location.pathname.replace(/^\//, "").split("/")[0];
-    const aliases: Record<string, string> = { current: "code", keyring: "keys", pulse: "fast", keep: "editor", hands: "engineer" };
+    const aliases: Record<string, string> = {
+      studio: "blackwhale",
+      chat: "blackwhale",
+      code: "nightweaver",
+      current: "nightweaver",
+      keys: "obsidian",
+      keyring: "obsidian",
+      fast: "mako",
+      pulse: "mako",
+      editor: "trench",
+      keep: "trench",
+      engineer: "ironmantis",
+      hands: "ironmantis",
+    };
     const mapped = aliases[seg] || seg;
     const id = NAV.find(([x]) => x === mapped)?.[0];
     if (id && id !== tab) setTabState(id);
@@ -272,7 +298,7 @@ export default function App() {
     };
     persist([t, ...threads.map((x) => (t.main ? { ...x, main: false } : x))]);
     setActive(t.id);
-    setTab("chat");
+    setTab("blackwhale");
   }
 
   function pivotFromMessage(msgIndex: number) {
@@ -609,9 +635,9 @@ export default function App() {
       { id: "bundles", label: "Select bundles to use", run: () => setTab("bundles") },
       { id: "harbor", label: "Load data (files / folders)", run: () => setTab("harbor") },
       { id: "forge", label: "Launch coding agent", run: () => setTab("forge") },
-      { id: "code", label: "Code — agentic multi-file edits", run: () => setTab("code") },
-      { id: "engineer", label: "Engineer — autonomous tasks", run: () => setTab("engineer") },
-      { id: "keys", label: "Keys — bring your own API keys", run: () => setTab("keys") },
+      { id: "nightweaver", label: "Nightweaver — agentic multi-file edits", run: () => setTab("nightweaver") },
+      { id: "ironmantis", label: "Ironmantis — autonomous tasks", run: () => setTab("ironmantis") },
+      { id: "obsidian", label: "Obsidian — API key vault", run: () => setTab("obsidian") },
       { id: "ollama", label: "Tools → Race (Ollama tags)", run: () => { setTab("tools"); setToolTab("race"); } },
     ];
     const q = paletteQ.trim().toLowerCase();
@@ -619,7 +645,7 @@ export default function App() {
   }, [paletteQ]);
 
   const title = NAV.find(([id]) => id === tab)?.[1] || "Localmod";
-  const sideTabs = tab === "chat" || tab === "forge" || tab === "skills" || tab === "code" || tab === "engineer";
+  const sideTabs = tab === "blackwhale" || tab === "forge" || tab === "skills" || tab === "nightweaver" || tab === "ironmantis";
 
   return (
     <div className="shell">
@@ -666,7 +692,7 @@ export default function App() {
         <div className={`stage ${sideTabs ? "with-side" : ""}`}>
           {sideTabs && (
             <nav className="sidebar flow-in">
-              {tab === "chat" && (
+              {tab === "blackwhale" && (
                 <>
                   <div className="side-head">
                     <span>
@@ -734,19 +760,19 @@ export default function App() {
             {error && <div className="banner error flow-in">{error}<button className="btn ghost" onClick={() => setError("")}>Dismiss</button></div>}
 
             {tab === "suite" && <SuiteHome setTab={setTab} />}
-            {tab === "code" && <CodeApp settings={settings} patch={patch} />}
-            {tab === "keys" && <KeysApp settings={settings} patch={patch} />}
-            {tab === "fast" && <FastApp setTab={setTab} />}
-            {tab === "editor" && <EditorApp settings={settings} patch={patch} />}
-            {tab === "engineer" && <EngineerApp settings={settings} patch={patch} />}
+            {tab === "nightweaver" && <NightweaverApp settings={settings} patch={patch} />}
+            {tab === "obsidian" && <ObsidianApp settings={settings} patch={patch} />}
+            {tab === "mako" && <MakoApp openApp={(id) => setTab(id as (typeof NAV)[number][0])} />}
+            {tab === "trench" && <TrenchApp settings={settings} patch={patch} />}
+            {tab === "ironmantis" && <IronmantisApp settings={settings} patch={patch} />}
 
-            {tab === "chat" && (
+            {tab === "blackwhale" && (
               <section className="view chat-view">
                 <div className="messages">
                   {!(thread?.messages || []).length && (
                     <div className="hero-empty flow-in">
-                      <div className="hero-kicker">Chat <Tip text="Local conversation with llama-server or Ollama. Brand nickname: Fast." /></div>
-                      <h1>Talk to a local model</h1>
+                      <div className="hero-kicker">Blackwhale <Tip text="Deep-sea communication hub. Local conversation with llama-server or Ollama." /></div>
+                      <h1>Everything centralizes here</h1>
                       <p>Load a GGUF from Models, tune it in LLM, pick a Skill, attach Data, then chat.</p>
                       <div className="row">
                         <button className="btn primary" onClick={() => setTab("bundles")}>Choose a bundle</button>
@@ -929,7 +955,7 @@ export default function App() {
                           <button className="btn primary" onClick={async () => {
                             await patch({ loadedModel: m.path });
                             await api("/inference/start", { method: "POST", body: JSON.stringify({ modelPath: m.path }) });
-                            refresh(); setTab("chat");
+                            refresh(); setTab("blackwhale");
                           }}>Load in Chat</button>
                         </div>
                       ))}
@@ -1188,7 +1214,7 @@ export default function App() {
                       <option value="">Select collection</option>
                       {collections.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.docs} docs</option>)}
                     </select>
-                    <button className="btn" disabled={!collectionId} onClick={() => { setTab("chat"); }}>Use in Chat</button>
+                    <button className="btn" disabled={!collectionId} onClick={() => { setTab("blackwhale"); }}>Use in Chat</button>
                   </div>
                   <div className="row">
                     <input className="grow" value={dataPath} onChange={(e) => setDataPath(e.target.value)} placeholder="D:\docs or C:\repo\README.md" />

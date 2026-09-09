@@ -128,6 +128,7 @@ export function Icon({ name }: { name: string }) {
       );
     case "current":
     case "code":
+    case "nightweaver":
       return (
         <svg {...common}>
           <path d="M4 12h16" />
@@ -137,6 +138,7 @@ export function Icon({ name }: { name: string }) {
       );
     case "keyring":
     case "keys":
+    case "obsidian":
       return (
         <svg {...common}>
           <circle cx="8" cy="12" r="4" />
@@ -145,6 +147,7 @@ export function Icon({ name }: { name: string }) {
       );
     case "pulse":
     case "fast":
+    case "mako":
       return (
         <svg {...common}>
           <path d="M3 12h4l2-6 4 12 2-6h6" />
@@ -152,6 +155,7 @@ export function Icon({ name }: { name: string }) {
       );
     case "keep":
     case "editor":
+    case "trench":
       return (
         <svg {...common}>
           <path d="M4 5h9a3 3 0 0 1 3 3v11H7a3 3 0 0 0-3 3z" />
@@ -160,11 +164,22 @@ export function Icon({ name }: { name: string }) {
       );
     case "hands":
     case "engineer":
+    case "ironmantis":
       return (
         <svg {...common}>
           <path d="M8 13V7a1.5 1.5 0 0 1 3 0v5" />
           <path d="M11 12V6a1.5 1.5 0 0 1 3 0v6" />
           <path d="M14 12V8a1.5 1.5 0 0 1 3 0v8.5a4.5 4.5 0 0 1-4.5 4.5H12a5 5 0 0 1-5-5v-3" />
+        </svg>
+      );
+    case "blackwhale":
+    case "studio":
+      return (
+        <svg {...common}>
+          <path d="M3 13c4-8 14-8 18 0" />
+          <path d="M4 13c1 4 6 6 8 6s7-2 8-6" />
+          <circle cx="8" cy="12" r="0.8" />
+          <path d="M20 12l3-2" />
         </svg>
       );
     case "info":

@@ -1,0 +1,11 @@
+{
+  "name": "@localmod/blackwhale",
+  "private": true,
+  "version": "0.2.2",
+  "type": "module",
+  "description": "Blackwhale — A massive, deep-sea communication hub where everything centralizes.",
+  "scripts": {
+    "start": "vite --host 127.0.0.1 --strictPort",
+    "dev": "vite --host 127.0.0.1 --strictPort"
+  }
+}

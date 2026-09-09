@@ -17,7 +17,7 @@ export const WEB3 = {
 export const PRODUCT = {
   name: "Localmod",
   blurb:
-    "A local-first suite of React apps: Studio, Code, Keys, Fast, Editor, and Engineer. Install to a folder on Mac or Windows. MIT licensed. Chats stay local unless you choose a cloud key.",
+    "A local-first suite of React apps: Blackwhale, Nightweaver, Obsidian, Mako, The Trench, and Ironmantis. Start one, then another. MIT licensed.",
   releasesUrl: "https://github.com/mrsmitg/ai-app-dev/releases/latest",
   /** Stable names so GitHub /releases/latest/download/Localmod.exe always works. */
   downloads: {

@@ -39,7 +39,7 @@ If `npm ci` fails with a lockfile mismatch, run `npm install` / `npm --prefix ap
 - Chat vault lives under `~/.localmod/`. Save chats as `{ "threads": [...] }`.
 - New engine modules include context meter, Cursor agent, skills, voice, folder picker, and **bundles** (`GET /bundles`, `POST /bundles/use`).
 - Bundles tab lets users turn on curated packs (starter chat, vision, voice, RAG, agent, privacy). Chat-model packs are exclusive; feature packs stack.
-- Suite apps: Code (multi-file agentic edits), Keys (BYOK), Fast (latency race), Editor and Engineer (React apps under `apps/editor` / `apps/engineer`; VS Code extensions under `apps/keep` and `apps/hands`).
+- Suite apps (each is a standalone React app): Blackwhale (chat), Nightweaver (agentic coding), Obsidian (API keys), Mako (speed), The Trench (editor), Ironmantis (autonomous). Start one with `npm run blackwhale`, then another with `npm run nightweaver`, and so on (ports 1421–1426). VS Code extensions remain under `apps/keep` and `apps/hands`.
 - Suite tab installs to a chosen folder path on Mac and Windows (`GET /install`, `POST /install/pick`, `POST /install`).
 - Full chat completions need `llama-server` or Ollama. Without a loaded model, vault / RAG / settings / UI still work.
 - Do not commit Hugging Face tokens or vault passphrases.
