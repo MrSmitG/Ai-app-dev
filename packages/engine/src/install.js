@@ -41,6 +41,7 @@ const TREE = [
   "apps/cli",
   "packages/engine/src",
   "packages/engine/package.json",
+  "packages/suite-kit",
 ];
 
 export function installManifest() {

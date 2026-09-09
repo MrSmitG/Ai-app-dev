@@ -1,28 +1,45 @@
 # The Trench
 
-Deep work. Dive in and do not leave until the job is done.
+Deep-work editor
 
-Inline edit in this React app, or install the VS Code extension. High-pressure focus.
+This is a **standalone Vite + React** app. It only does this app's work.
 
-This is a **standalone React app**. Start it by itself — then start the next one when you want.
+## Setup
 
-## Start this app
+From the Localmod repo root (installs React/Vite once):
 
-From the repo root:
+```bash
+npm install
+npm --prefix apps/desktop install
+```
+
+Then start **this** app:
 
 ```bash
 npm run trench
 ```
 
-- Windows: double-click `Start-Windows.bat`
-- macOS: double-click `Start-macOS.command`
+Or from this folder:
 
-Opens `http://127.0.0.1:1425`. The shared engine stays on `127.0.0.1:4781`.
+```bash
+npx vite --host 127.0.0.1 --strictPort
+```
 
-Then start another:
+- Windows: `Start-Windows.bat`
+- macOS: `Start-macOS.command`
 
-- `npm run blackwhale` → Blackwhale (`:1421`)
-- `npm run nightweaver` → Nightweaver (`:1422`)
-- `npm run obsidian` → Obsidian (`:1423`)
-- `npm run mako` → Mako (`:1424`)
-- `npm run ironmantis` → Ironmantis (`:1426`)
+UI: `http://127.0.0.1:1425` · engine: `http://127.0.0.1:4781`
+
+## This app's tasks
+
+- Inline-edit one file
+- Preview / apply
+- Local API for VS Code
+
+## Not this app
+
+- Multi-file plans → Nightweaver
+- Autonomous CLI → Ironmantis
+- General chat → Blackwhale
+
+Start another app when you want it (`npm run blackwhale`, `npm run nightweaver`, …).

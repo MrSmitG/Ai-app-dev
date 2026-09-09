@@ -772,4 +772,16 @@ html[data-app="nightweaver"] { --bg: #080614; --accent: #a78bfa; --accent-2: #c4
 html[data-app="obsidian"] { --bg: #0a0a0b; --accent: #e5e7eb; --accent-2: #9ca3af; --accent-text: #f9fafb; }
 html[data-app="mako"] { --bg: #041018; --accent: #38bdf8; --accent-2: #7dd3fc; --accent-text: #e0f2fe; }
 html[data-app="trench"] { --bg: #03070c; --accent: #f59e0b; --accent-2: #fbbf24; --accent-text: #fde68a; }
-html[data-app="ironmantis"] { --bg: #080c06; --accent: #84cc16; --accent-2: #a3e635; --accent-text: #d9f99d; }
+.task-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 4px 10px 8px;
+}
+.task-list { margin: 0; padding-left: 18px; }
+.task-list.does li { color: var(--text); }
+.task-list.not li { color: var(--muted); }
+.task-list a { color: var(--accent-text); }
+@media (max-width: 900px) {
+  .task-board { grid-template-columns: 1fr; }
+}

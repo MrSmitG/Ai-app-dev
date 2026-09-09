@@ -1,28 +1,46 @@
 # Blackwhale
 
-A massive, deep-sea communication hub where everything centralizes.
+Chat — deep-sea hub
 
-Talk to a local model. Chat, models, RAG, and voice gather in one dark basin.
+This is a **standalone Vite + React** app. It only does this app's work.
 
-This is a **standalone React app**. Start it by itself — then start the next one when you want.
+## Setup
 
-## Start this app
+From the Localmod repo root (installs React/Vite once):
 
-From the repo root:
+```bash
+npm install
+npm --prefix apps/desktop install
+```
+
+Then start **this** app:
 
 ```bash
 npm run blackwhale
 ```
 
-- Windows: double-click `Start-Windows.bat`
-- macOS: double-click `Start-macOS.command`
+Or from this folder:
 
-Opens `http://127.0.0.1:1421`. The shared engine stays on `127.0.0.1:4781`.
+```bash
+npx vite --host 127.0.0.1 --strictPort
+```
 
-Then start another:
+- Windows: `Start-Windows.bat`
+- macOS: `Start-macOS.command`
 
-- `npm run nightweaver` → Nightweaver (`:1422`)
-- `npm run obsidian` → Obsidian (`:1423`)
-- `npm run mako` → Mako (`:1424`)
-- `npm run trench` → The Trench (`:1425`)
-- `npm run ironmantis` → Ironmantis (`:1426`)
+UI: `http://127.0.0.1:1421` · engine: `http://127.0.0.1:4781`
+
+## This app's tasks
+
+- Chat with the loaded model
+- Keep the thread on this machine
+
+## Not this app
+
+- Multi-file coding → Nightweaver
+- API keys → Obsidian
+- Races → Mako
+- Inline edit → The Trench
+- CLI loops → Ironmantis
+
+Start another app when you want it (`npm run blackwhale`, `npm run nightweaver`, …).

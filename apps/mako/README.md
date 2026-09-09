@@ -1,28 +1,45 @@
 # Mako
 
-The fastest shark in the ocean. Built for high-speed execution and racing.
+Speed / race
 
-Ping every backend. Race the same prompt. Local GGUF and Ollama first.
+This is a **standalone Vite + React** app. It only does this app's work.
 
-This is a **standalone React app**. Start it by itself — then start the next one when you want.
+## Setup
 
-## Start this app
+From the Localmod repo root (installs React/Vite once):
 
-From the repo root:
+```bash
+npm install
+npm --prefix apps/desktop install
+```
+
+Then start **this** app:
 
 ```bash
 npm run mako
 ```
 
-- Windows: double-click `Start-Windows.bat`
-- macOS: double-click `Start-macOS.command`
+Or from this folder:
 
-Opens `http://127.0.0.1:1424`. The shared engine stays on `127.0.0.1:4781`.
+```bash
+npx vite --host 127.0.0.1 --strictPort
+```
 
-Then start another:
+- Windows: `Start-Windows.bat`
+- macOS: `Start-macOS.command`
 
-- `npm run blackwhale` → Blackwhale (`:1421`)
-- `npm run nightweaver` → Nightweaver (`:1422`)
-- `npm run obsidian` → Obsidian (`:1423`)
-- `npm run trench` → The Trench (`:1425`)
-- `npm run ironmantis` → Ironmantis (`:1426`)
+UI: `http://127.0.0.1:1424` · engine: `http://127.0.0.1:4781`
+
+## This app's tasks
+
+- Ping backends
+- Race one prompt
+- Show lowest latency
+
+## Not this app
+
+- Entering keys → Obsidian
+- Chat threads → Blackwhale
+- CLI → Ironmantis
+
+Start another app when you want it (`npm run blackwhale`, `npm run nightweaver`, …).

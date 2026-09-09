@@ -105,6 +105,13 @@ export function SuiteHome({
             <div className="suite-name">{app.name}</div>
             <div className="muted tiny">{app.tagline}</div>
             <p className="muted">{app.blurb}</p>
+            {Array.isArray(app.does) && (
+              <ul className="muted tiny" style={{ margin: 0, paddingLeft: 16 }}>
+                {app.does.map((d: string) => (
+                  <li key={d}>{d}</li>
+                ))}
+              </ul>
+            )}
             {app.folder && (
               <div className="muted tiny">
                 Files: {app.folder} · port {app.port} · {app.start}

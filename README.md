@@ -68,6 +68,19 @@ Browser-only (no Electron window — use this in Cloud Agents):
 npm run dev:web
 ```
 
+### Six React apps (one at a time)
+
+After `npm install`, each app is its own Vite + React setup (`apps/<name>/package.json` + `src/App.tsx`). Tasks are split: chat, coding, keys, speed, editor, autonomous.
+
+```bash
+npm run blackwhale     # :1421 chat
+npm run nightweaver    # :1422 multi-file code
+npm run obsidian       # :1423 API keys
+npm run mako           # :1424 ping / race
+npm run trench         # :1425 one-file edit
+npm run ironmantis     # :1426 autonomous CLI
+```
+
 ### Package installers
 
 ```bash
@@ -120,7 +133,8 @@ Remote machines: `ssh -L 8080:127.0.0.1:8080 user@box` then point Localmod at lo
 ## Layout
 
 - `apps/desktop` — hub (Suite + all six surfaces in one window)
-- `apps/blackwhale`, `apps/nightweaver`, `apps/obsidian`, `apps/mako`, `apps/trench`, `apps/ironmantis` — six standalone React apps
+- `apps/blackwhale`, `apps/nightweaver`, `apps/obsidian`, `apps/mako`, `apps/trench`, `apps/ironmantis` — six Vite + React apps, each with its own `package.json`, `src/App.tsx`, and task list
+- `packages/suite-kit` — shared engine client + app shell for those six
 - `apps/keep`, `apps/hands` — VS Code extensions used by The Trench and Ironmantis
 - `packages/engine` — control plane (inference, HF, RAG, API, MCP, context, voice, install-to-path)
 - `apps/cli` — `localmodd`
