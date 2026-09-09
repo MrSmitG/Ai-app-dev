@@ -1,0 +1,90 @@
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: "Share Tech Mono", "IBM Plex Mono", monospace;
+  color: #7cff7c;
+  background: #020402;
+  overflow: hidden;
+}
+
+.im {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 255, 70, 0.03) 0px,
+    rgba(0, 255, 70, 0.03) 1px,
+    transparent 2px,
+    transparent 4px
+  ),
+  #020402;
+}
+.im::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.45) 100%);
+}
+.im-head {
+  padding: 16px 20px 8px;
+  border-bottom: 1px solid #1d5a1d;
+}
+.im-head h1 {
+  font-family: "VT323", monospace;
+  font-size: 42px;
+  margin: 0;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 12px #3cff3c;
+}
+.im-head p { margin: 4px 0 0; color: #4aad4a; font-size: 13px; }
+.im-prompt {
+  padding: 12px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: start;
+  border-bottom: 1px solid #1d5a1d;
+}
+.im-prompt textarea, .im-prompt input {
+  width: 100%;
+  font: inherit;
+  color: #7cff7c;
+  background: #031003;
+  border: 1px solid #1d5a1d;
+  padding: 8px;
+  outline: none;
+  caret-color: #7cff7c;
+}
+.im-prompt textarea { min-height: 64px; resize: vertical; }
+.im-actions { display: flex; flex-direction: column; gap: 8px; }
+button {
+  font: inherit;
+  background: #031003;
+  color: #7cff7c;
+  border: 1px solid #7cff7c;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+button.go { background: #7cff7c; color: #020402; }
+button:disabled { opacity: 0.35; }
+.im-log {
+  overflow: auto;
+  padding: 16px 20px 40px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.im-log .ln { margin: 0 0 8px; white-space: pre-wrap; }
+.im-log .ln::before { content: "> "; color: #3cff3c; }
+.im-blink {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: #7cff7c;
+  margin-left: 4px;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+.im-err { color: #ff6b4a; }

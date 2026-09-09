@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@suite/shell";
-import { api } from "@suite/api";
-import { useEngine } from "@suite/useEngine";
+import { api } from "./engine";
 
 export default function App() {
-  const { err } = useEngine();
   const [data, setData] = useState<any>(null);
   const [prompt, setPrompt] = useState("Reply with one word: pong");
   const [race, setRace] = useState<any[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
   async function ping() {
-    setData(await api<any>("/mako"));
+    try {
+      setData(await api<any>("/mako"));
+      setErr("");
+    } catch (e: any) {
+      setErr(e.message || "no signal");
+    }
   }
 
   useEffect(() => {
+    document.title = "Mako";
     ping();
   }, []);
 
@@ -28,54 +32,60 @@ export default function App() {
       if (!runners.length) runners.push({ provider: "ollama", model: "" }, { provider: "llama", model: "" });
       const out = await api<any>("/race", { method: "POST", body: JSON.stringify({ prompt, runners }) });
       setRace(Array.isArray(out) ? out : out.results || []);
+    } catch (e: any) {
+      setErr(e.message);
     } finally {
       setBusy(false);
     }
   }
 
+  const results: any[] = data?.results || [];
+  const maxMs = Math.max(1, ...results.filter((r) => r.ok).map((r) => r.ms || 1));
+
   return (
-    <AppShell appId="mako" error={err}>
-      <section className="view flow-in">
-        <div className="panel spotlight">
-          <div className="hero-kicker">Mako · speed only</div>
-          <h2 className="owner-name">Fastest in the water.</h2>
-          <p className="muted">This React app only pings and races. Put keys in Obsidian. Chat in Blackwhale.</p>
-        </div>
-        <div className="panel">
-          <div className="row wrap">
-            <button className="btn primary" type="button" onClick={ping}>Ping backends</button>
-          </div>
-          {data?.fastest && (
-            <p className="muted">
-              Fastest right now: <strong>{data.fastest.id}</strong> ({data.fastest.ms}ms)
-            </p>
-          )}
-          <div className="suite-grid pad-sm">
-            {(data?.results || []).map((r: any) => (
-              <div key={r.id} className={`suite-card ${r.ok ? "on" : ""}`}>
-                <div className="suite-name">{r.id}</div>
-                <div className="muted tiny">{r.ok ? `${r.ms}ms ${r.detail || ""}` : r.error || `HTTP ${r.status}`}</div>
+    <div className="mk">
+      <header className="mk-top">
+        <h1>Mako</h1>
+        <p>{err || "FASTEST IN THE WATER"}</p>
+      </header>
+      <div className="mk-hero">
+        <p className="mk-num">
+          {data?.fastest?.ms ?? "—"}
+          <small>{data?.fastest ? `${data.fastest.id} MS` : "PING FIRST"}</small>
+        </p>
+        <div className="mk-lanes">
+          {results.map((r) => (
+            <div key={r.id} className={`lane ${r.ok ? "" : "dead"}`}>
+              <span>{r.id}</span>
+              <div className="bar">
+                <i style={{ width: r.ok ? `${Math.max(8, (r.ms / maxMs) * 100)}%` : "8%" }} />
               </div>
-            ))}
-          </div>
+              <span>{r.ok ? `${r.ms}ms` : "DNF"}</span>
+            </div>
+          ))}
+          {!results.length && <div className="lane">No backends yet.</div>}
         </div>
-        <div className="panel">
-          <label>
-            Race prompt
-            <input value={prompt} onChange={(e) => setPrompt(e.target.value)} />
-          </label>
-          <button className="btn" disabled={busy} type="button" onClick={runRace}>Race live backends</button>
-          {race &&
-            race.map((r: any, i: number) => (
-              <div key={i} className="event-row">
-                <span className="event-type">
-                  {r.provider} {r.ms}ms
-                </span>
-                <span className="muted">{r.ok ? String(r.text || "").slice(0, 160) : r.error}</span>
-              </div>
-            ))}
+      </div>
+      <button type="button" onClick={ping}>
+        Ping backends
+      </button>
+      <div className="mk-race">
+        <input value={prompt} onChange={(e) => setPrompt(e.target.value)} aria-label="Race prompt" />
+        <button className="ghost" disabled={busy} type="button" onClick={runRace}>
+          {busy ? "Racing" : "Race"}
+        </button>
+      </div>
+      {race && (
+        <div className="mk-fin">
+          {race.map((r, i) => (
+            <div key={i}>
+              <span>{r.provider}</span>
+              <span>{r.ms}ms</span>
+              <span>{r.ok ? String(r.text || "").slice(0, 120) : r.error}</span>
+            </div>
+          ))}
         </div>
-      </section>
-    </AppShell>
+      )}
+    </div>
   );
 }

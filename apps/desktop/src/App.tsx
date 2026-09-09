@@ -11,7 +11,7 @@ import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
 import { BundlesPanel, type BundleRow } from "./components/BundlesPanel";
-import { SuiteHome, BlackwhaleApp, NightweaverApp, ObsidianApp, MakoApp, TrenchApp, IronmantisApp } from "./components/SuiteApps";
+import { SuiteHome, NightweaverApp, ObsidianApp, MakoApp, TrenchApp, IronmantisApp } from "./components/SuiteApps";
 import { useDesktop } from "./providers/AppProviders";
 
 /** Primary labels stay familiar. Brand nicknames only in tips. */
@@ -645,7 +645,7 @@ export default function App() {
   }, [paletteQ]);
 
   const title = NAV.find(([id]) => id === tab)?.[1] || "Localmod";
-  const sideTabs = tab === "blackwhale" || tab === "forge" || tab === "skills" || tab === "nightweaver" || tab === "ironmantis";
+  const sideTabs = tab === "blackwhale" || tab === "forge" || tab === "skills";
 
   return (
     <div className="shell">
@@ -760,20 +760,20 @@ export default function App() {
             {error && <div className="banner error flow-in">{error}<button className="btn ghost" onClick={() => setError("")}>Dismiss</button></div>}
 
             {tab === "suite" && <SuiteHome setTab={setTab} />}
-            {tab === "nightweaver" && <NightweaverApp settings={settings} patch={patch} />}
-            {tab === "obsidian" && <ObsidianApp settings={settings} patch={patch} />}
-            {tab === "mako" && <MakoApp openApp={(id) => setTab(id as (typeof NAV)[number][0])} />}
-            {tab === "trench" && <TrenchApp settings={settings} patch={patch} />}
-            {tab === "ironmantis" && <IronmantisApp settings={settings} patch={patch} />}
+            {tab === "nightweaver" && <NightweaverApp />}
+            {tab === "obsidian" && <ObsidianApp />}
+            {tab === "mako" && <MakoApp />}
+            {tab === "trench" && <TrenchApp />}
+            {tab === "ironmantis" && <IronmantisApp />}
 
             {tab === "blackwhale" && (
               <section className="view chat-view">
                 <div className="messages">
                   {!(thread?.messages || []).length && (
                     <div className="hero-empty flow-in">
-                      <div className="hero-kicker">Blackwhale <Tip text="Deep-sea communication hub. Local conversation with llama-server or Ollama." /></div>
+                      <div className="hero-kicker">Studio chat <Tip text="This hub still chats here. The dedicated Blackwhale React app is a different product on port 1421 (npm run blackwhale)." /></div>
                       <h1>Everything centralizes here</h1>
-                      <p>Load a GGUF from Models, tune it in LLM, pick a Skill, attach Data, then chat.</p>
+                      <p>Load a GGUF from Models, tune it in LLM, pick a Skill, attach Data, then chat. Or start the separate Blackwhale app: npm run blackwhale.</p>
                       <div className="row">
                         <button className="btn primary" onClick={() => setTab("bundles")}>Choose a bundle</button>
                         <button className="btn" onClick={() => setTab("models")}>Get models</button>

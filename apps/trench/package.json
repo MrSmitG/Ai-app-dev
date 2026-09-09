@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.2.2",
   "type": "module",
-  "description": "The Trench — Deep-work editor. Standalone React app.",
+  "description": "The Trench — paper one-file editor. Separate React app on :1425.",
   "scripts": {
     "setup": "npm install --prefix ../..",
     "start": "vite --host 127.0.0.1 --strictPort",

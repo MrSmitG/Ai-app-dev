@@ -15,7 +15,7 @@ This is original MIT-licensed software. It is not a fork of LM Studio, Cursor, o
 | **The Trench** | Editor — deep work | `apps/trench` | `npm run trench` → `:1425` |
 | **Ironmantis** | Autonomous builder | `apps/ironmantis` | `npm run ironmantis` → `:1426` |
 
-Each app is its own React process. The shared engine stays on `127.0.0.1:4781`. Double-click `Start-Windows.bat` or `Start-macOS.command` inside an app folder to launch just that app.
+Each app is a **different React product** (own `App.tsx`, CSS, fonts, layout) — not one shell with six titles. The engine stays on `127.0.0.1:4781`. Double-click `Start-Windows.bat` or `Start-macOS.command` inside an app folder to launch just that app.
 
 ## Install to a folder
 
@@ -132,9 +132,13 @@ Remote machines: `ssh -L 8080:127.0.0.1:8080 user@box` then point Localmod at lo
 
 ## Layout
 
-- `apps/desktop` — hub (Suite + all six surfaces in one window)
-- `apps/blackwhale`, `apps/nightweaver`, `apps/obsidian`, `apps/mako`, `apps/trench`, `apps/ironmantis` — six Vite + React apps, each with its own `package.json`, `src/App.tsx`, and task list
-- `packages/suite-kit` — shared engine client + app shell for those six
+- `apps/desktop` — Localmod hub (install + studio chat + models). Cards launch the six apps on their own ports.
+- `apps/blackwhale` — chat messenger (port 1421)
+- `apps/nightweaver` — three-column coding IDE (port 1422)
+- `apps/obsidian` — API-key vault (port 1423)
+- `apps/mako` — latency race HUD (port 1424)
+- `apps/trench` — one-file paper editor (port 1425)
+- `apps/ironmantis` — autonomous CRT terminal (port 1426)
 - `apps/keep`, `apps/hands` — VS Code extensions used by The Trench and Ironmantis
 - `packages/engine` — control plane (inference, HF, RAG, API, MCP, context, voice, install-to-path)
 - `apps/cli` — `localmodd`

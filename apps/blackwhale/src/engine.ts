@@ -1,8 +1,8 @@
 export function engineBase() {
-  if (typeof window !== "undefined" && (window as any).localmodDesktop?.isDesktop) {
+  if (typeof window !== "undefined" && (window as { localmodDesktop?: { isDesktop?: boolean } }).localmodDesktop?.isDesktop) {
     return "http://127.0.0.1:4781";
   }
-  return (import.meta as any).env?.VITE_ENGINE_URL || "/engine";
+  return import.meta.env.VITE_ENGINE_URL || "/engine";
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -18,7 +18,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 async function streamSse(
   path: string,
   body: unknown,
-  handlers: Record<string, (data: any) => void>,
+  handlers: Record<string, (data: unknown) => void>,
   signal?: AbortSignal
 ) {
   const res = await fetch(`${engineBase()}${path}`, {
@@ -39,28 +39,17 @@ async function streamSse(
     carry = parts.pop() || "";
     for (const block of parts) {
       const ev = /event: (\w+)/.exec(block)?.[1];
-      const data = block.split("data: ").slice(1).join("data: ");
+      const payload = block.split("data: ").slice(1).join("data: ");
       if (!ev) continue;
       try {
-        handlers[ev]?.(JSON.parse(data));
+        handlers[ev]?.(JSON.parse(payload));
       } catch {
-        handlers[ev]?.(data);
+        handlers[ev]?.(payload);
       }
     }
   }
 }
 
 export function streamChat(body: unknown, onChunk: (s: string) => void, signal?: AbortSignal) {
-  let meta: unknown = null;
-  return streamSse(
-    "/chat",
-    body,
-    {
-      meta: (d) => {
-        meta = d;
-      },
-      token: onChunk,
-    },
-    signal
-  ).then(() => meta);
+  return streamSse("/chat", body, { token: (d) => onChunk(String(d)) }, signal);
 }

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.2.2",
   "type": "module",
-  "description": "Mako — Speed / race. Standalone React app.",
+  "description": "Mako — latency race HUD. Separate React app on :1424.",
   "scripts": {
     "setup": "npm install --prefix ../..",
     "start": "vite --host 127.0.0.1 --strictPort",

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.2.2",
   "type": "module",
-  "description": "Ironmantis — Autonomous builder. Standalone React app.",
+  "description": "Ironmantis — phosphor autonomous terminal. Separate React app on :1426.",
   "scripts": {
     "setup": "npm install --prefix ../..",
     "start": "vite --host 127.0.0.1 --strictPort",

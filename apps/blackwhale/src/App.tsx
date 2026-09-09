@@ -1,24 +1,41 @@
-import { useEffect, useRef, useState } from "react";
-import { AppShell } from "@suite/shell";
-import { api, streamChat } from "@suite/api";
-import { useEngine } from "@suite/useEngine";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { api, streamChat } from "./engine";
+
+type Msg = { role: "user" | "assistant"; content: string };
 
 export default function App() {
-  const { settings, err } = useEngine();
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [engineOk, setEngineOk] = useState(true);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [sendErr, setSendErr] = useState("");
   const end = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    document.title = "Blackwhale";
+    const tick = async () => {
+      try {
+        setSettings(await api<Record<string, unknown>>("/settings"));
+        setEngineOk(true);
+      } catch {
+        setEngineOk(false);
+      }
+    };
+    tick();
+    const t = setInterval(tick, 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, busy]);
 
-  async function send() {
+  async function send(e?: FormEvent) {
+    e?.preventDefault();
     const text = input.trim();
     if (!text || busy) return;
-    const next = [...messages, { role: "user", content: text }, { role: "assistant", content: "" }];
+    const next: Msg[] = [...messages, { role: "user", content: text }, { role: "assistant", content: "" }];
     setMessages(next);
     setInput("");
     setBusy(true);
@@ -41,50 +58,46 @@ export default function App() {
           threads: [{ id: "blackwhale", title: "Blackwhale", messages: next, main: true }],
         }),
       }).catch(() => {});
-    } catch (e: any) {
-      setSendErr(e.message || "Blackwhale could not reach a model.");
+    } catch (err: unknown) {
+      setSendErr(err instanceof Error ? err.message : "Blackwhale could not reach a model.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <AppShell appId="blackwhale" error={err}>
-      <section className="view flow-in">
-        <div className="panel spotlight">
-          <div className="hero-kicker">Blackwhale · chat only</div>
-          <h2 className="owner-name">Deep-sea communication hub.</h2>
-          <p className="muted">This React app’s only job is conversation. Keys, code, and CLI live in the other five apps.</p>
-        </div>
-        {sendErr && <div className="banner">{sendErr}</div>}
-        <div className="panel blackwhale-stream">
-          {messages.length === 0 && <p className="muted">The water is still. Send the first ping.</p>}
-          {messages.map((m, i) => (
-            <div key={i} className={`msg ${m.role}`}>
-              <div className="suite-usage">{m.role === "user" ? "You" : "Blackwhale"}</div>
-              <div>{m.content || (busy && i === messages.length - 1 ? "…" : "")}</div>
-            </div>
-          ))}
-          <div ref={end} />
-        </div>
-        <div className="panel">
-          <label>
-            Message
-            <div className="row">
-              <input
-                className="grow"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && send()}
-                placeholder="Speak into the dark…"
-              />
-              <button className="btn primary" disabled={busy} type="button" onClick={send}>
-                {busy ? "Sounding…" : "Send"}
-              </button>
-            </div>
-          </label>
-        </div>
-      </section>
-    </AppShell>
+    <div className="bw">
+      <header className="bw-mark">
+        <h1>Blackwhale</h1>
+        <span>
+          <i className={`bw-live ${engineOk ? "" : "off"}`} />
+          {engineOk ? "sounding" : "engine dark"}
+        </span>
+      </header>
+      <div className="bw-stream">
+        {messages.length === 0 && <p className="bw-empty">The basin is still. Send the first ping.</p>}
+        {messages.map((m, i) => (
+          <article key={i} className={`bw-msg ${m.role}`}>
+            <div className="bw-who">{m.role === "user" ? "Surface" : "Blackwhale"}</div>
+            <div>{m.content || (busy && i === messages.length - 1 ? "…" : "")}</div>
+          </article>
+        ))}
+        <div ref={end} />
+      </div>
+      {sendErr && <div className="bw-err">{sendErr}</div>}
+      <div className="bw-dock">
+        <form onSubmit={send}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Speak into the dark…"
+            aria-label="Message"
+          />
+          <button type="submit" disabled={busy}>
+            {busy ? "Sounding" : "Send"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

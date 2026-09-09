@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@suite/shell";
-import { api } from "@suite/api";
-import { useEngine } from "@suite/useEngine";
+import { api } from "./engine";
 
 const ALLOWED = "git, ls, dir, pwd, npm, node, npx, python, python3, pip, cargo, go, rg, grep";
 
 export default function App() {
-  const { settings, patch, err } = useEngine();
+  const [settings, setSettings] = useState<any>({});
   const [cwd, setCwd] = useState("");
   const [goal, setGoal] = useState("List the top-level files and run git status.");
   const [run, setRun] = useState<any>(null);
@@ -14,8 +12,23 @@ export default function App() {
   const [localErr, setLocalErr] = useState("");
 
   useEffect(() => {
-    setCwd(settings.cursorCwd || cwd);
-  }, [settings.cursorCwd]);
+    document.title = "Ironmantis";
+    (async () => {
+      try {
+        const s = await api<any>("/settings");
+        setSettings(s);
+        setCwd(s.cursorCwd || "");
+      } catch (e: any) {
+        setLocalErr(e.message || "NO CARRIER");
+      }
+    })();
+  }, []);
+
+  async function patch(partial: Record<string, unknown>) {
+    const next = await api<any>("/settings", { method: "POST", body: JSON.stringify(partial) });
+    setSettings(next);
+    return next;
+  }
 
   async function pick() {
     const r = await api<{ cancelled?: boolean; path?: string }>("/forge/pick-cwd", { method: "POST" });
@@ -39,47 +52,55 @@ export default function App() {
   }
 
   return (
-    <AppShell appId="ironmantis" error={err}>
-      <section className="view flow-in">
-        <div className="panel spotlight">
-          <div className="hero-kicker">Ironmantis · autonomous only</div>
-          <h2 className="owner-name">Ruthless precision. Finish the job.</h2>
-          <p className="muted">This React app runs multi-step file + CLI work. Single-file polish is The Trench. Chat is Blackwhale.</p>
+    <div className="im">
+      <header className="im-head">
+        <h1>IRONMANTIS</h1>
+        <p>
+          AUTONOMOUS // ALLOWLIST {ALLOWED}
+          {settings.loadedModel ? ` // MODEL ${settings.loadedModel}` : ""}
+        </p>
+      </header>
+      <div className="im-prompt">
+        <div>
+          <input value={cwd} onChange={(e) => setCwd(e.target.value)} placeholder="CWD" aria-label="Workspace" />
+          <textarea value={goal} onChange={(e) => setGoal(e.target.value)} aria-label="Task" />
         </div>
-        {localErr && <div className="banner">{localErr}</div>}
-        <div className="panel">
-          <label>
-            Workspace
-            <div className="row">
-              <input className="grow" value={cwd} onChange={(e) => setCwd(e.target.value)} />
-              <button className="btn" type="button" onClick={pick}>Browse</button>
-            </div>
-          </label>
-          <label>
-            Task
-            <textarea rows={3} value={goal} onChange={(e) => setGoal(e.target.value)} />
-          </label>
-          <button className="btn primary" disabled={busy} type="button" onClick={start}>
-            {busy ? "Striking…" : "Run Ironmantis"}
+        <div className="im-actions">
+          <button type="button" onClick={pick}>
+            CWD
           </button>
-          <div className="muted tiny pad-sm">Allowlisted CLI: {ALLOWED}</div>
+          <button className="go" disabled={busy} type="button" onClick={start}>
+            {busy ? "STRIKE…" : "EXECUTE"}
+          </button>
         </div>
-        {run && (
-          <div className="panel">
-            <div className="section-label">
-              Log · {run.status} · {run.steps} steps
-            </div>
-            {(run.log || []).map((e: any) => (
-              <div key={e.step} className="event-row">
-                <span className="event-type">{e.action?.name}</span>
-                <span className="muted">
-                  {e.thought} — {String(e.result || "").slice(0, 220)}
-                </span>
-              </div>
-            ))}
+      </div>
+      <div className="im-log">
+        {localErr && <div className="ln im-err">{localErr}</div>}
+        {!run && !localErr && (
+          <div className="ln">
+            waiting for target{busy ? "" : ""}
+            <span className="im-blink" />
           </div>
         )}
-      </section>
-    </AppShell>
+        {run && (
+          <>
+            <div className="ln">
+              status {run.status} // {run.steps} steps
+            </div>
+            {(run.log || []).map((e: any) => (
+              <div key={e.step} className="ln">
+                [{e.step}] {e.action?.name}
+                {"\n"}
+                {e.thought} — {String(e.result || "").slice(0, 400)}
+              </div>
+            ))}
+            <div className="ln">
+              done
+              <span className="im-blink" />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
