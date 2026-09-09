@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Build Localmod.apk (React UI in an Android WebView) into release/. */
+/** Build one APK per suite React app into release/blackwhale.apk … */
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { execSync, spawnSync } from "node:child_process";
 import path from "node:path";
@@ -9,10 +9,18 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const android = path.join(root, "apps", "android");
 const assets = path.join(android, "app", "src", "main", "assets");
 const mipmap = path.join(android, "app", "src", "main", "res", "mipmap-xxxhdpi");
-const dist = path.join(root, "apps", "desktop", "dist", "client");
 const outDir = path.join(root, "release");
-const apkOut = path.join(outDir, "Localmod.apk");
 const wrapperJar = path.join(android, "gradle", "wrapper", "gradle-wrapper.jar");
+const viteJs = path.join(root, "node_modules", "vite", "bin", "vite.js");
+
+const APPS = [
+  { id: "blackwhale", name: "Blackwhale", folder: "apps/blackwhale" },
+  { id: "nightweaver", name: "Nightweaver", folder: "apps/nightweaver" },
+  { id: "obsidian", name: "Obsidian", folder: "apps/obsidian" },
+  { id: "mako", name: "Mako", folder: "apps/mako" },
+  { id: "trench", name: "The Trench", folder: "apps/trench" },
+  { id: "ironmantis", name: "Ironmantis", folder: "apps/ironmantis" },
+];
 
 function run(cmd, cwd = root) {
   execSync(cmd, { cwd, stdio: "inherit", env: { ...process.env, npm_config_update_notifier: "false" } });
@@ -25,20 +33,10 @@ if (!existsSync(wrapperJar)) {
   );
 }
 
-console.log("Building React UI …");
-run("npm --prefix apps/desktop run build");
-if (!existsSync(path.join(dist, "index.html"))) {
-  throw new Error("Desktop UI build missing apps/desktop/dist/client/index.html");
+if (!existsSync(viteJs)) {
+  console.error("Run npm install at the repo root first.");
+  process.exit(1);
 }
-
-rmSync(assets, { recursive: true, force: true });
-mkdirSync(assets, { recursive: true });
-cpSync(dist, assets, { recursive: true });
-writeFileSync(path.join(assets, ".gitkeep"), "");
-
-mkdirSync(mipmap, { recursive: true });
-const icon = path.join(root, "apps", "desktop", "build", "icon.png");
-if (existsSync(icon)) cpSync(icon, path.join(mipmap, "ic_launcher.png"));
 
 const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || path.join(process.env.HOME || "", "Android", "Sdk");
 if (!existsSync(sdk)) {
@@ -47,19 +45,51 @@ if (!existsSync(sdk)) {
 }
 writeFileSync(path.join(android, "local.properties"), `sdk.dir=${String(sdk).replace(/\\/g, "\\\\")}\n`);
 
-console.log("Packaging Localmod.apk …");
+mkdirSync(mipmap, { recursive: true });
+const icon = path.join(root, "apps", "desktop", "build", "icon.png");
+if (existsSync(icon)) cpSync(icon, path.join(mipmap, "ic_launcher.png"));
+
 const java = process.env.JAVA_HOME
   ? path.join(process.env.JAVA_HOME, "bin", process.platform === "win32" ? "java.exe" : "java")
   : "java";
-const gradle = spawnSync(
-  java,
-  ["-classpath", wrapperJar, "org.gradle.wrapper.GradleWrapperMain", ":app:assembleRelease", "--no-daemon"],
-  { cwd: android, stdio: "inherit", env: process.env }
-);
-if (gradle.status !== 0) process.exit(gradle.status || 1);
 
-const built = path.join(android, "app", "build", "outputs", "apk", "release", "app-release.apk");
-if (!existsSync(built)) throw new Error("Gradle did not produce app-release.apk");
 mkdirSync(outDir, { recursive: true });
-cpSync(built, apkOut);
-console.log("Wrote", apkOut);
+
+for (const app of APPS) {
+  const appDir = path.join(root, app.folder);
+  const dist = path.join(appDir, "dist");
+  console.log(`\nBuilding ${app.name} (${app.id}.apk) …`);
+  const ui = spawnSync(process.execPath, [viteJs, "build", "--base", "./"], { cwd: appDir, stdio: "inherit" });
+  if (ui.status !== 0) process.exit(ui.status || 1);
+  if (!existsSync(path.join(dist, "index.html"))) {
+    throw new Error(`${app.folder}/dist/index.html missing`);
+  }
+
+  rmSync(assets, { recursive: true, force: true });
+  mkdirSync(assets, { recursive: true });
+  cpSync(dist, assets, { recursive: true });
+  writeFileSync(path.join(assets, ".gitkeep"), "");
+
+  const gradle = spawnSync(
+    java,
+    [
+      "-classpath",
+      wrapperJar,
+      "org.gradle.wrapper.GradleWrapperMain",
+      ":app:assembleRelease",
+      `-PsuiteApp=${app.id}`,
+      `-PsuiteName=${app.name}`,
+    ],
+    { cwd: android, stdio: "inherit", env: process.env }
+  );
+  if (gradle.status !== 0) process.exit(gradle.status || 1);
+
+  const built = path.join(android, "app", "build", "outputs", "apk", "release", "app-release.apk");
+  if (!existsSync(built)) throw new Error(`Gradle did not produce app-release.apk for ${app.id}`);
+  const apkOut = path.join(outDir, `${app.id}.apk`);
+  cpSync(built, apkOut);
+  console.log("Wrote", apkOut);
+}
+
+console.log("\nAPKs:");
+for (const app of APPS) console.log(`  release/${app.id}.apk`);

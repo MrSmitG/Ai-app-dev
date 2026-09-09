@@ -6,7 +6,7 @@ import { Icon, LabelWithTip, LocationBar, Tip, bytes } from "./components/ui";
 import { LlmPanel } from "./components/LlmPanel";
 import { DownloadIcons } from "./components/DownloadIcons";
 import { Web3Support } from "./components/Web3Support";
-import { PRODUCT } from "./web3";
+import { PRODUCT, SUITE_APKS } from "./web3";
 import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
@@ -31,7 +31,7 @@ const NAV = [
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
   ["settings", "Options", "settings", "API keys, privacy vault, Ollama URL, and developer settings."],
-  ["about", "About", "about", "Click your OS icon to download Localmod from GitHub (Windows, Mac, Linux, Android). Then open the file."],
+  ["about", "About", "about", "Click your OS icon to download Localmod from GitHub (Windows, Mac, Linux). Android is one APK per app: blackwhale.apk, nightweaver.apk, and so on."],
 ] as const;
 
 const MODEL_TABS = [
@@ -1456,7 +1456,14 @@ export default function App() {
           <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.linux} download="Localmod.AppImage">Linux</a>
           <span className="dot" />
-          <a className="status-link" href={PRODUCT.downloads.android} download="Localmod.apk">Android</a>
+          {SUITE_APKS.map((app) => (
+            <span key={app.id} className="apk-status">
+              <a className="status-link" href={PRODUCT.downloads.apks[app.id]} download={app.file}>
+                {app.file}
+              </a>
+              <span className="dot" />
+            </span>
+          ))}
           <span className="grow" />
           <span>{forge.activeRuns ? `${forge.activeRuns} agent run(s)` : "Ready"}</span>
         </footer>

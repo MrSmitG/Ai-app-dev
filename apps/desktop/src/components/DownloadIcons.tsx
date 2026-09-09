@@ -1,4 +1,4 @@
-import { PRODUCT } from "../web3";
+import { PRODUCT, SUITE_APKS } from "../web3";
 
 function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
   if (id === "windows") {
@@ -38,7 +38,7 @@ function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
   );
 }
 
-const TILES = [
+const DESKTOP_TILES = [
   {
     id: "windows" as const,
     label: "Windows",
@@ -60,26 +60,36 @@ const TILES = [
     href: PRODUCT.downloads.linux,
     hint: "Download, then double-click the Localmod icon.",
   },
-  {
-    id: "android" as const,
-    label: "Android",
-    file: "Localmod.apk",
-    href: PRODUCT.downloads.android,
-    hint: "Download, allow unknown apps, then tap Localmod.apk to install.",
-  },
 ];
+
+const APK_TILES = SUITE_APKS.map((app) => ({
+  id: app.id,
+  label: app.name,
+  file: app.file,
+  href: PRODUCT.downloads.apks[app.id],
+  hint: `Allow unknown apps, then tap ${app.file} to install. Installs next to the other Localmod apps.`,
+}));
 
 export function DownloadIcons({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <div className="owner-card compact">
         <div className="section-label">Get the app</div>
-        <div className="muted tiny">Click an icon — GitHub download, then run Localmod.</div>
+        <div className="muted tiny">Desktop binaries, then one APK per React app.</div>
         <div className="download-icon-row">
-          {TILES.map((t) => (
+          {DESKTOP_TILES.map((t) => (
             <a key={t.id} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
               <OsMark id={t.id} />
               <span className="sr-only">{t.label}</span>
+            </a>
+          ))}
+        </div>
+        <div className="download-icon-row">
+          {APK_TILES.map((t) => (
+            <a key={t.id} className="download-icon-only apk" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
+              <OsMark id="android" />
+              <span className="apk-mini-name">{t.id}</span>
+              <span className="sr-only">{t.file}</span>
             </a>
           ))}
         </div>
@@ -95,11 +105,28 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
         This is the Localmod React app. Files come from GitHub Releases. After the download finishes, click the
         Localmod icon — no Node.js, Git, or terminal.
       </p>
-      <div className="download-grid">
-        {TILES.map((t) => (
+      <div className="download-grid desktop">
+        {DESKTOP_TILES.map((t) => (
           <a key={t.id} className="download-tile" href={t.href} download={t.file}>
             <span className="download-os-icon">
               <OsMark id={t.id} />
+            </span>
+            <span className="download-os-name">{t.label}</span>
+            <span className="muted tiny">{t.file}</span>
+            <span className="muted tiny">{t.hint}</span>
+          </a>
+        ))}
+      </div>
+      <div className="section-label">Android APKs</div>
+      <p className="muted">
+        One installable app each. They sit side by side on the launcher: <code className="mono">blackwhale.apk</code>,{" "}
+        <code className="mono">nightweaver.apk</code>, and so on.
+      </p>
+      <div className="download-grid apk-grid">
+        {APK_TILES.map((t) => (
+          <a key={t.id} className="download-tile" href={t.href} download={t.file}>
+            <span className="download-os-icon">
+              <OsMark id="android" />
             </span>
             <span className="download-os-name">{t.label}</span>
             <span className="muted tiny">{t.file}</span>

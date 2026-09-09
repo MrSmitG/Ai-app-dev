@@ -1,11 +1,28 @@
 # Localmod Android
 
-Sideload **Localmod.apk** from GitHub Releases. The APK is the React UI in a WebView (About, Suite, settings). Full local inference still runs on Windows / macOS / Linux.
+Sideload **one APK per React app** from GitHub Releases. Each APK is that app’s UI in a WebView. They install side by side (`com.localmod.blackwhale`, `com.localmod.nightweaver`, …). Full local inference still runs on Windows / macOS / Linux.
+
+| APK | App |
+|---|---|
+| `blackwhale.apk` | Chat |
+| `nightweaver.apk` | Agentic coding |
+| `obsidian.apk` | API keys |
+| `mako.apk` | Speed / race |
+| `trench.apk` | Editor |
+| `ironmantis.apk` | Autonomous builder |
 
 ```bash
 npm install
-npm --prefix apps/desktop install
 npm run build:android
 ```
 
-Output: `release/Localmod.apk`
+Output:
+
+```
+release/blackwhale.apk
+release/nightweaver.apk
+release/obsidian.apk
+release/mako.apk
+release/trench.apk
+release/ironmantis.apk
+```

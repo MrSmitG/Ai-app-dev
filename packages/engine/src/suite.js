@@ -5,6 +5,8 @@ import { ollamaTags } from "./ollama.js";
 import { apiStatus } from "./apiServer.js";
 import { listProviders } from "./providers.js";
 
+export const RELEASE_DL = "https://github.com/mrsmitg/ai-app-dev/releases/latest/download";
+
 export const SUITE_APPS = [
   {
     id: "blackwhale",
@@ -17,6 +19,7 @@ export const SUITE_APPS = [
     folder: "apps/blackwhale",
     port: 1421,
     start: "npm run blackwhale",
+    apk: "blackwhale.apk",
     group: "studio",
     aliases: ["studio", "chat"],
   },
@@ -31,6 +34,7 @@ export const SUITE_APPS = [
     folder: "apps/nightweaver",
     port: 1422,
     start: "npm run nightweaver",
+    apk: "nightweaver.apk",
     group: "ide",
     aliases: ["code", "current"],
   },
@@ -45,6 +49,7 @@ export const SUITE_APPS = [
     folder: "apps/obsidian",
     port: 1423,
     start: "npm run obsidian",
+    apk: "obsidian.apk",
     group: "ide",
     aliases: ["keys", "keyring"],
   },
@@ -59,6 +64,7 @@ export const SUITE_APPS = [
     folder: "apps/mako",
     port: 1424,
     start: "npm run mako",
+    apk: "mako.apk",
     group: "ide",
     aliases: ["fast", "pulse"],
   },
@@ -73,6 +79,7 @@ export const SUITE_APPS = [
     folder: "apps/trench",
     port: 1425,
     start: "npm run trench",
+    apk: "trench.apk",
     group: "extension",
     aliases: ["editor", "keep"],
   },
@@ -87,10 +94,15 @@ export const SUITE_APPS = [
     folder: "apps/ironmantis",
     port: 1426,
     start: "npm run ironmantis",
+    apk: "ironmantis.apk",
     group: "extension",
     aliases: ["engineer", "hands"],
   },
 ];
+
+export function suiteApkUrl(file) {
+  return `${RELEASE_DL}/${file}`;
+}
 
 export async function suiteStatus() {
   const s = getSettings();

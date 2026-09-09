@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
+import { PRODUCT, SUITE_APKS } from "../web3";
 import { Tip } from "./ui";
 
 export function SuiteHome({
@@ -91,8 +92,21 @@ export function SuiteHome({
             {busy === "mac" ? "Downloading…" : "Download Mac (Localmod.dmg)"}
           </button>
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("android")}>
-            {busy === "android" ? "Downloading…" : "Download Android (Localmod.apk)"}
+            {busy === "android" ? "Downloading…" : "Download all Android APKs"}
           </button>
+        </div>
+        <div className="row wrap pad-sm">
+          {SUITE_APKS.map((app) => (
+            <button
+              key={app.id}
+              className="btn"
+              disabled={!!busy}
+              type="button"
+              onClick={() => runInstall(app.id)}
+            >
+              {busy === app.id ? "Downloading…" : app.file}
+            </button>
+          ))}
         </div>
         {installOut && (
           <div className="banner ok">
@@ -104,29 +118,37 @@ export function SuiteHome({
       </div>
       <div className="suite-grid">
         {apps.map((app: any) => (
-          <button
-            key={app.id}
-            type="button"
-            className="suite-card"
-            onClick={() => window.open(`http://127.0.0.1:${app.port}`, "_blank", "noopener")}
-          >
-            <div className="suite-usage">{app.usage}</div>
-            <div className="suite-name">{app.name}</div>
-            <div className="muted tiny">{app.tagline}</div>
-            <p className="muted">{app.blurb}</p>
-            {Array.isArray(app.does) && (
-              <ul className="muted tiny" style={{ margin: 0, paddingLeft: 16 }}>
-                {app.does.map((d: string) => (
-                  <li key={d}>{d}</li>
-                ))}
-              </ul>
-            )}
-            {app.folder && (
-              <div className="muted tiny">
-                Own React app in {app.folder} · {app.start} · http://127.0.0.1:{app.port}
-              </div>
-            )}
-          </button>
+          <div key={app.id} className="suite-card">
+            <button
+              type="button"
+              className="suite-card-open"
+              onClick={() => window.open(`http://127.0.0.1:${app.port}`, "_blank", "noopener")}
+            >
+              <div className="suite-usage">{app.usage}</div>
+              <div className="suite-name">{app.name}</div>
+              <div className="muted tiny">{app.tagline}</div>
+              <p className="muted">{app.blurb}</p>
+              {Array.isArray(app.does) && (
+                <ul className="muted tiny" style={{ margin: 0, paddingLeft: 16 }}>
+                  {app.does.map((d: string) => (
+                    <li key={d}>{d}</li>
+                  ))}
+                </ul>
+              )}
+              {app.folder && (
+                <div className="muted tiny">
+                  Own React app in {app.folder} · {app.start} · http://127.0.0.1:{app.port}
+                </div>
+              )}
+            </button>
+            <a
+              className="btn suite-apk-link"
+              href={PRODUCT.downloads.apks[app.id as keyof typeof PRODUCT.downloads.apks]}
+              download={`${app.id}.apk`}
+            >
+              {app.apk || `${app.id}.apk`}
+            </a>
+          </div>
         ))}
       </div>
     </section>

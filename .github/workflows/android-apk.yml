@@ -23,9 +23,15 @@ jobs:
         run: |
           npm ci
           npm --prefix apps/desktop ci
-      - name: Build Localmod.apk
+      - name: Build suite APKs
         run: npm run build:android
       - uses: actions/upload-artifact@v4
         with:
-          name: Localmod.apk
-          path: release/Localmod.apk
+          name: suite-apks
+          path: |
+            release/blackwhale.apk
+            release/nightweaver.apk
+            release/obsidian.apk
+            release/mako.apk
+            release/trench.apk
+            release/ironmantis.apk

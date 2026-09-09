@@ -14,6 +14,22 @@ export const WEB3 = {
   solana: String(import.meta.env.VITE_WEB3_SOLANA || ACCOUNT.solana || "").trim(),
 } as const;
 
+const RELEASE_DL = "https://github.com/mrsmitg/ai-app-dev/releases/latest/download";
+
+/** One sideload APK per React app. Names match GitHub Release assets. */
+export const SUITE_APKS = [
+  { id: "blackwhale", name: "Blackwhale", file: "blackwhale.apk" },
+  { id: "nightweaver", name: "Nightweaver", file: "nightweaver.apk" },
+  { id: "obsidian", name: "Obsidian", file: "obsidian.apk" },
+  { id: "mako", name: "Mako", file: "mako.apk" },
+  { id: "trench", name: "The Trench", file: "trench.apk" },
+  { id: "ironmantis", name: "Ironmantis", file: "ironmantis.apk" },
+] as const;
+
+export function apkDownloadUrl(file: string) {
+  return `${RELEASE_DL}/${file}`;
+}
+
 export const PRODUCT = {
   name: "Localmod",
   blurb:
@@ -21,10 +37,13 @@ export const PRODUCT = {
   releasesUrl: "https://github.com/mrsmitg/ai-app-dev/releases/latest",
   /** Stable names so GitHub /releases/latest/download/Localmod.exe always works. */
   downloads: {
-    windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
-    mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
-    linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
-    android: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.apk",
+    windows: `${RELEASE_DL}/Localmod.exe`,
+    mac: `${RELEASE_DL}/Localmod.dmg`,
+    linux: `${RELEASE_DL}/Localmod.AppImage`,
+    apks: Object.fromEntries(SUITE_APKS.map((a) => [a.id, apkDownloadUrl(a.file)])) as Record<
+      (typeof SUITE_APKS)[number]["id"],
+      string
+    >,
   },
 } as const;
 

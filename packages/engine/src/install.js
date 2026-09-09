@@ -3,7 +3,7 @@ import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { pickFolder } from "./pickFolder.js";
-import { SUITE_APPS } from "./suite.js";
+import { SUITE_APPS, suiteApkUrl } from "./suite.js";
 
 const SKIP = new Set(["node_modules", ".git", "dist", "release", "build", "squashfs-root", "coverage", ".gradle"]);
 
@@ -54,7 +54,7 @@ export function installManifest() {
       windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
       mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
       linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
-      android: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.apk",
+      apks: Object.fromEntries(SUITE_APPS.map((a) => [a.id, suiteApkUrl(a.apk)])),
     },
   };
 }
@@ -132,7 +132,6 @@ export async function downloadBinary(dest, platform) {
     windows: { name: "Localmod.exe", url: installManifest().downloads.windows },
     mac: { name: "Localmod.dmg", url: installManifest().downloads.mac },
     linux: { name: "Localmod.AppImage", url: installManifest().downloads.linux },
-    android: { name: "Localmod.apk", url: installManifest().downloads.android },
   };
   const spec = files[platform] || files.windows;
   const out = path.join(target, spec.name);
@@ -150,9 +149,43 @@ export async function downloadBinary(dest, platform) {
   return { dest: target, file: out, bytes: buf.length, name: spec.name };
 }
 
+async function saveUrl(dest, name, url) {
+  const out = path.join(dest, name);
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) throw new Error(`Download failed (${res.status}) for ${name}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(out, buf);
+  return { file: out, bytes: buf.length, name };
+}
+
+export async function downloadApks(dest, appId) {
+  const target = assertDest(dest);
+  fs.mkdirSync(target, { recursive: true });
+  const apps = appId ? SUITE_APPS.filter((a) => a.id === appId) : SUITE_APPS;
+  if (!apps.length) throw new Error(`Unknown Android app: ${appId}`);
+  const saved = [];
+  let bytes = 0;
+  for (const app of apps) {
+    const one = await saveUrl(target, app.apk, suiteApkUrl(app.apk));
+    saved.push(one);
+    bytes += one.bytes;
+  }
+  return {
+    dest: target,
+    file: saved[saved.length - 1].file,
+    bytes,
+    name: saved.map((s) => s.name).join(", "),
+    files: saved,
+  };
+}
+
 export async function install({ dest, mode = "files", platform }) {
   if (mode === "windows" || platform === "windows") return downloadBinary(dest, "windows");
   if (mode === "mac" || platform === "mac") return downloadBinary(dest, "mac");
   if (mode === "linux" || platform === "linux") return downloadBinary(dest, "linux");
+  if (mode === "android" || platform === "android") return downloadApks(dest);
+  if (String(mode || "").startsWith("apk:")) return downloadApks(dest, String(mode).slice(4));
+  const suiteApp = SUITE_APPS.find((a) => a.id === mode);
+  if (suiteApp) return downloadApks(dest, suiteApp.id);
   return copyFiles(dest);
 }
