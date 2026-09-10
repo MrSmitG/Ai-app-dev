@@ -23,6 +23,8 @@ extraResources:
     to: engine/package.json
   - from: build/engine-pack/node_modules
     to: engine/node_modules
+  - from: build/suite-pack
+    to: suite
 asar: true
 icon: apps/desktop/build/icon.png
 win:
@@ -48,6 +50,7 @@ nsis:
   shortcutName: Localmod
   uninstallDisplayName: Localmod
   artifactName: Localmod-Setup.exe
+  include: installer.nsh
 portable:
   artifactName: Localmod.exe
 publish:

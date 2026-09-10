@@ -1450,6 +1450,8 @@ export default function App() {
           <span className="dot" />
           <span>Click an OS icon to download</span>
           <span className="dot" />
+          <a className="status-link" href={PRODUCT.downloads.setup} download="Localmod-Setup.exe">Windows setup</a>
+          <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.windows} download="Localmod.exe">Windows</a>
           <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.mac} download="Localmod.dmg">macOS</a>

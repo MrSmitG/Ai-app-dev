@@ -1,3 +1,3 @@
 @echo off
 cd /d "%~dp0\..\.."
-node scripts/start-suite-app.mjs blackwhale
+call "%~dp0..\..\scripts\start-windows.cmd" blackwhale

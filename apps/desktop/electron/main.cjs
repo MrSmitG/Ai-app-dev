@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, Menu, dialog } = require("electron");
+const { app, BrowserWindow, shell, Menu, dialog, ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
@@ -8,10 +8,20 @@ const isDev = !app.isPackaged;
 const ENGINE_PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
 const UI_PORT = Number(process.env.LOCALMOD_UI_PORT || 1420);
 
+const SUITE = [
+  { id: "blackwhale", name: "Blackwhale", port: 1421 },
+  { id: "nightweaver", name: "Nightweaver", port: 1422 },
+  { id: "obsidian", name: "Obsidian", port: 1423 },
+  { id: "mako", name: "Mako", port: 1424 },
+  { id: "trench", name: "The Trench", port: 1425 },
+  { id: "ironmantis", name: "Ironmantis", port: 1426 },
+];
+
 let mainWindow = null;
 let splashWindow = null;
 let engineProc = null;
-let uiServer = null;
+const servers = [];
+const suiteWindows = new Map();
 let uiPort = UI_PORT;
 
 const UI_MIME = {
@@ -25,13 +35,32 @@ const UI_MIME = {
   ".map": "application/json",
 };
 
+function requestedApps(argv = process.argv) {
+  const ids = [];
+  for (const a of argv) {
+    if (String(a).startsWith("--app=")) ids.push(String(a).slice(6).toLowerCase());
+  }
+  return ids;
+}
+
+function suiteById(id) {
+  return SUITE.find((a) => a.id === id || a.name.toLowerCase() === String(id || "").toLowerCase());
+}
+
+function suiteByPort(port) {
+  return SUITE.find((a) => a.port === Number(port));
+}
+
 function uiDist() {
   return path.join(__dirname, "../dist/client");
 }
 
-function startPackagedUi() {
-  if (isDev) return Promise.resolve();
-  const dist = uiDist();
+function suiteRoot() {
+  if (app.isPackaged) return path.join(process.resourcesPath, "suite");
+  return path.join(__dirname, "../../../build/suite-pack");
+}
+
+function listenStatic(dist, preferredPort) {
   const index = path.join(dist, "index.html");
   if (!fs.existsSync(index)) {
     return Promise.reject(new Error(`Packaged React app missing at ${dist}`));
@@ -67,18 +96,35 @@ function startPackagedUi() {
         } catch {
           /* ignore */
         }
-        if (err.code === "EADDRINUSE" && port !== 0) bind(0).then(resolve, reject);
-        else reject(err);
+        if (err.code === "EADDRINUSE" && port === preferredPort) {
+          resolve({ server: null, port: preferredPort, reused: true });
+          return;
+        }
+        reject(err);
       };
       server.once("error", onError);
       server.listen(port, "127.0.0.1", () => {
         server.off("error", onError);
-        uiServer = server;
-        uiPort = server.address().port;
-        resolve();
+        servers.push(server);
+        resolve({ server, port: server.address().port, reused: false });
       });
     });
-  return bind(UI_PORT);
+  return bind(preferredPort);
+}
+
+async function startPackagedUi() {
+  if (isDev) return;
+  const hub = await listenStatic(uiDist(), UI_PORT);
+  uiPort = hub.port;
+  const root = suiteRoot();
+  for (const spec of SUITE) {
+    const dist = path.join(root, spec.id);
+    if (!fs.existsSync(path.join(dist, "index.html"))) {
+      console.log(`Suite pack missing ${spec.id}`);
+      continue;
+    }
+    await listenStatic(dist, spec.port);
+  }
 }
 
 function engineEntry() {
@@ -190,7 +236,39 @@ function closeSplash() {
   splashWindow = null;
 }
 
-async function createWindow() {
+function attachOpenHandler(win) {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const u = new URL(url);
+      if (u.hostname === "127.0.0.1" || u.hostname === "localhost") {
+        const spec = suiteByPort(u.port);
+        if (spec) {
+          openSuiteWindow(spec);
+          return { action: "deny" };
+        }
+      }
+    } catch {
+      /* fall through */
+    }
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+}
+
+function browserPrefs() {
+  return {
+    preload: path.join(__dirname, "preload.cjs"),
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true,
+  };
+}
+
+async function createHubWindow() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.focus();
+    return mainWindow;
+  }
   const isMac = process.platform === "darwin";
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -202,29 +280,19 @@ async function createWindow() {
     show: false,
     autoHideMenuBar: !isMac,
     titleBarStyle: isMac ? "hiddenInset" : "default",
-    webPreferences: {
-      preload: path.join(__dirname, "preload.cjs"),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
+    webPreferences: browserPrefs(),
   });
 
   mainWindow.once("ready-to-show", () => {
     closeSplash();
     mainWindow?.show();
   });
-
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: "deny" };
-  });
+  attachOpenHandler(mainWindow);
 
   if (isDev) {
     await waitForUrl(`http://127.0.0.1:${UI_PORT}/`);
     await mainWindow.loadURL(`http://127.0.0.1:${UI_PORT}/`);
   } else {
-    await startPackagedUi();
     await waitForUrl(`http://127.0.0.1:${uiPort}/`);
     await mainWindow.loadURL(`http://127.0.0.1:${uiPort}/`);
   }
@@ -232,10 +300,80 @@ async function createWindow() {
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+  return mainWindow;
+}
+
+async function openSuiteWindow(spec) {
+  if (!spec) return;
+  const existing = suiteWindows.get(spec.id);
+  if (existing && !existing.isDestroyed()) {
+    existing.focus();
+    return existing;
+  }
+  if (!isDev) {
+    const dist = path.join(suiteRoot(), spec.id);
+    if (!fs.existsSync(path.join(dist, "index.html"))) {
+      dialog.showErrorBox(
+        spec.name,
+        "This React app is not in this install. Download the latest Localmod-Setup.exe from GitHub Releases."
+      );
+      return;
+    }
+  }
+  const isMac = process.platform === "darwin";
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 860,
+    minWidth: 800,
+    minHeight: 560,
+    title: spec.name,
+    backgroundColor: "#0c0f14",
+    show: false,
+    autoHideMenuBar: !isMac,
+    titleBarStyle: isMac ? "hiddenInset" : "default",
+    webPreferences: browserPrefs(),
+  });
+  win.once("ready-to-show", () => {
+    closeSplash();
+    win.show();
+  });
+  attachOpenHandler(win);
+  await waitForUrl(`http://127.0.0.1:${spec.port}/`);
+  await win.loadURL(`http://127.0.0.1:${spec.port}/`);
+  suiteWindows.set(spec.id, win);
+  win.on("closed", () => suiteWindows.delete(spec.id));
+  return win;
+}
+
+async function openRequested(ids) {
+  const wanted = (ids || []).map(suiteById).filter(Boolean);
+  if (!wanted.length) {
+    await createHubWindow();
+    return;
+  }
+  for (const spec of wanted) await openSuiteWindow(spec);
 }
 
 function buildMenu() {
   const isMac = process.platform === "darwin";
+  const appsMenu = {
+    label: "Apps",
+    submenu: [
+      {
+        label: "Localmod hub",
+        click: () => {
+          createHubWindow().catch(() => {});
+        },
+      },
+      { type: "separator" },
+      ...SUITE.map((spec) => ({
+        label: spec.name,
+        click: () => {
+          openSuiteWindow(spec).catch(() => {});
+        },
+      })),
+    ],
+  };
   const template = [
     ...(isMac
       ? [
@@ -259,6 +397,7 @@ function buildMenu() {
       label: "File",
       submenu: [isMac ? { role: "close" } : { role: "quit" }],
     },
+    appsMenu,
     {
       label: "Edit",
       submenu: [
@@ -302,25 +441,43 @@ if (process.platform === "win32") {
   app.setAppUserModelId("com.localmod.app");
 }
 
-app.whenReady().then(async () => {
-  buildMenu();
-  showSplash();
-  try {
-    await ensureEngine();
-    await createWindow();
-  } catch (err) {
-    closeSplash();
-    dialog.showErrorBox(
-      "Localmod",
-      `Could not start the local engine.\n\n${err.message || err}\n\nLogs: ${path.join(app.getPath("userData"), "engine.log")}`
-    );
-    app.quit();
-  }
-
-  app.on("activate", async () => {
-    if (BrowserWindow.getAllWindows().length === 0) await createWindow();
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on("second-instance", (_event, argv) => {
+    openRequested(requestedApps(argv)).catch((err) => console.error(err));
   });
-});
+
+  ipcMain.handle("localmod:openSuite", async (_event, id) => {
+    const spec = suiteById(id);
+    if (!spec) return { ok: false };
+    await openSuiteWindow(spec);
+    return { ok: true, id: spec.id };
+  });
+
+  app.whenReady().then(async () => {
+    buildMenu();
+    showSplash();
+    try {
+      await ensureEngine();
+      if (!isDev) await startPackagedUi();
+      await openRequested(requestedApps());
+      closeSplash();
+    } catch (err) {
+      closeSplash();
+      dialog.showErrorBox(
+        "Localmod",
+        `Could not start the local engine.\n\n${err.message || err}\n\nLogs: ${path.join(app.getPath("userData"), "engine.log")}`
+      );
+      app.quit();
+    }
+
+    app.on("activate", async () => {
+      if (BrowserWindow.getAllWindows().length === 0) await openRequested(requestedApps());
+    });
+  });
+}
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
@@ -334,9 +491,9 @@ app.on("before-quit", () => {
       /* ignore */
     }
   }
-  if (uiServer) {
+  for (const server of servers) {
     try {
-      uiServer.close();
+      server.close();
     } catch {
       /* ignore */
     }

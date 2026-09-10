@@ -38,6 +38,7 @@ export const PRODUCT = {
   /** Stable names so GitHub /releases/latest/download/Localmod.exe always works. */
   downloads: {
     windows: `${RELEASE_DL}/Localmod.exe`,
+    setup: `${RELEASE_DL}/Localmod-Setup.exe`,
     mac: `${RELEASE_DL}/Localmod.dmg`,
     linux: `${RELEASE_DL}/Localmod.AppImage`,
     apks: Object.fromEntries(SUITE_APKS.map((a) => [a.id, apkDownloadUrl(a.file)])) as Record<

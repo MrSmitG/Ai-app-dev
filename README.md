@@ -22,7 +22,8 @@ Each app is a **different React product** (own `App.tsx`, CSS, fonts, layout) �
 In the app open **Suite**, type or browse a folder path, then:
 
 - **Copy all files here** — copies this React suite into `{folder}/Localmod/` (Mac and Windows)
-- **Download Windows** — saves `Localmod.exe` into that folder
+- **Download Windows setup** — saves `Localmod-Setup.exe` (installs all six React apps)
+- **Download Windows** — saves portable `Localmod.exe`
 - **Download Mac** — saves `Localmod.dmg` into that folder
 - **Download all Android APKs** — saves `blackwhale.apk`, `nightweaver.apk`, `obsidian.apk`, `mako.apk`, `trench.apk`, and `ironmantis.apk` into that folder
 
@@ -30,13 +31,16 @@ Then run `Start Localmod.bat` (Windows) or `Start Localmod.command` (macOS). Eac
 
 ## Download and run
 
-No install toolchain. Files come from [GitHub Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest). After the file finishes, **click the Localmod icon**.
+No install toolchain. Files come from [GitHub Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest).
 
-If you cloned this repo, double-click **Start Localmod** instead — it downloads that same ready-to-run app (`.bat` on Windows, `.command` on Mac, `.sh` on Linux).
+**Windows / macOS / Linux:** download `Localmod-Setup.exe` (Windows), `Localmod.dmg` (Mac), or `Localmod.AppImage` (Linux). That desktop app **is** the six React products. APK files are only for Android phones — `blackwhale.apk` will not install on a PC.
+
+If you cloned this repo on Windows, double-click **Install Localmod.bat** to fetch `Localmod-Setup.exe` from the latest release.
 
 | | |
 |---|---|
-| **[Windows](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe)** | Click the Windows icon / this link. Then click `Localmod.exe` (or the desktop Localmod shortcut). |
+| **[Windows setup](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod-Setup.exe)** | Run `Localmod-Setup.exe`. Start Menu → Localmod has **Blackwhale**, **Nightweaver**, **Obsidian**, **Mako**, **The Trench**, **Ironmantis**. |
+| **[Windows portable](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe)** | Click `Localmod.exe`. Use the Apps menu for each React app. |
 | **[macOS](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg)** | Click the Apple icon. Open the DMG, drag Localmod to Applications, click the icon. |
 | **[Linux](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage)** | Click the Linux icon. Then double-click `Localmod.AppImage`. |
 | **[blackwhale.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/blackwhale.apk)** | Chat app. Allow unknown apps, then tap to install. |
@@ -48,7 +52,7 @@ If you cloned this repo, double-click **Start Localmod** instead — it download
 
 In the app, **About** shows the desktop OS icons plus one Android tile per APK.
 
-If a download 404s, the latest GitHub Release is still building. Tag `v0.3.0` so Actions can attach `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
+If a download 404s, the latest GitHub Release is still building. Tag `v0.3.1` so Actions can attach `Localmod-Setup.exe` (installs the six React apps), `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
 
 ## Why not a public blockchain
 

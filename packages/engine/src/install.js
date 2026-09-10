@@ -20,6 +20,7 @@ const TREE = [
   "Start Localmod.bat",
   "Start Localmod.command",
   "Start Localmod.sh",
+  "Install Localmod.bat",
   "scripts",
   "apps/desktop/package.json",
   "apps/desktop/package-lock.json",
@@ -52,6 +53,7 @@ export function installManifest() {
     files: TREE,
     downloads: {
       windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
+      setup: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod-Setup.exe",
       mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
       linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
       apks: Object.fromEntries(SUITE_APPS.map((a) => [a.id, suiteApkUrl(a.apk)])),
@@ -130,6 +132,7 @@ export async function downloadBinary(dest, platform) {
   fs.mkdirSync(target, { recursive: true });
   const files = {
     windows: { name: "Localmod.exe", url: installManifest().downloads.windows },
+    setup: { name: "Localmod-Setup.exe", url: installManifest().downloads.setup },
     mac: { name: "Localmod.dmg", url: installManifest().downloads.mac },
     linux: { name: "Localmod.AppImage", url: installManifest().downloads.linux },
   };
@@ -181,6 +184,7 @@ export async function downloadApks(dest, appId) {
 
 export async function install({ dest, mode = "files", platform }) {
   if (mode === "windows" || platform === "windows") return downloadBinary(dest, "windows");
+  if (mode === "setup" || platform === "setup") return downloadBinary(dest, "setup");
   if (mode === "mac" || platform === "mac") return downloadBinary(dest, "mac");
   if (mode === "linux" || platform === "linux") return downloadBinary(dest, "linux");
   if (mode === "android" || platform === "android") return downloadApks(dest);

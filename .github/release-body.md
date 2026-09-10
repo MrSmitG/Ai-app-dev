@@ -1,11 +1,11 @@
-Localmod **v0.3.0** — desktop binaries plus one Android APK per React app.
+Localmod **v0.3.1** — Windows setup installs the six React apps. Android still uses one APK each.
 
 ## Desktop
 
 | File | Platform |
 |---|---|
-| `Localmod.exe` | Windows (portable) |
-| `Localmod-Setup.exe` | Windows installer |
+| `Localmod-Setup.exe` | Windows installer — Start Menu shortcuts for each React app |
+| `Localmod.exe` | Windows portable |
 | `Localmod.dmg` | macOS |
 | `Localmod.AppImage` | Linux |
 

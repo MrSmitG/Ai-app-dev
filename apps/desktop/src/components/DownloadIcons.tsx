@@ -41,10 +41,17 @@ function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
 const DESKTOP_TILES = [
   {
     id: "windows" as const,
-    label: "Windows",
+    label: "Windows setup",
+    file: "Localmod-Setup.exe",
+    href: PRODUCT.downloads.setup,
+    hint: "Run this installer. Start Menu then has Blackwhale, Nightweaver, Obsidian, Mako, The Trench, Ironmantis.",
+  },
+  {
+    id: "windows" as const,
+    label: "Windows portable",
     file: "Localmod.exe",
     href: PRODUCT.downloads.windows,
-    hint: "Download, then click the Localmod icon. No install, no terminal.",
+    hint: "No install. Click the file. Apps menu opens each React app.",
   },
   {
     id: "mac" as const,
@@ -75,7 +82,7 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
     return (
       <div className="owner-card compact">
         <div className="section-label">Get the app</div>
-        <div className="muted tiny">Desktop binaries, then one APK per React app.</div>
+        <div className="muted tiny">Windows setup installs all six React apps. APKs are Android only.</div>
         <div className="download-icon-row">
           {DESKTOP_TILES.map((t) => (
             <a key={t.id} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>

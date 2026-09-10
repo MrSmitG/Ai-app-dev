@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
 import { PRODUCT, SUITE_APKS } from "../web3";
+import { isElectron } from "../platform";
 import { Tip } from "./ui";
 
 export function SuiteHome({
@@ -88,6 +89,9 @@ export function SuiteHome({
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("windows")}>
             {busy === "windows" ? "Downloading…" : "Download Windows (Localmod.exe)"}
           </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("setup")}>
+            {busy === "setup" ? "Downloading…" : "Download Windows setup (Localmod-Setup.exe)"}
+          </button>
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("mac")}>
             {busy === "mac" ? "Downloading…" : "Download Mac (Localmod.dmg)"}
           </button>
@@ -122,7 +126,14 @@ export function SuiteHome({
             <button
               type="button"
               className="suite-card-open"
-              onClick={() => window.open(`http://127.0.0.1:${app.port}`, "_blank", "noopener")}
+              onClick={() => {
+                const desktop = window.localmodDesktop;
+                if (isElectron() && desktop?.openSuite) {
+                  desktop.openSuite(app.id);
+                  return;
+                }
+                window.open(`http://127.0.0.1:${app.port}`, "_blank", "noopener");
+              }}
             >
               <div className="suite-usage">{app.usage}</div>
               <div className="suite-name">{app.name}</div>
