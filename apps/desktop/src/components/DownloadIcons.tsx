@@ -1,4 +1,5 @@
 import { PRODUCT, SUITE_APKS } from "../web3";
+import { ApkInstallGuide } from "./ApkInstallGuide";
 
 function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
   if (id === "windows") {
@@ -85,7 +86,7 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
         <div className="muted tiny">Windows setup installs all six React apps. APKs are Android only.</div>
         <div className="download-icon-row">
           {DESKTOP_TILES.map((t) => (
-            <a key={t.id} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
+            <a key={t.file} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
               <OsMark id={t.id} />
               <span className="sr-only">{t.label}</span>
             </a>
@@ -114,7 +115,7 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
       </p>
       <div className="download-grid desktop">
         {DESKTOP_TILES.map((t) => (
-          <a key={t.id} className="download-tile" href={t.href} download={t.file}>
+          <a key={t.file} className="download-tile" href={t.href} download={t.file}>
             <span className="download-os-icon">
               <OsMark id={t.id} />
             </span>
@@ -126,21 +127,10 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
       </div>
       <div className="section-label">Android APKs</div>
       <p className="muted">
-        One installable app each. They sit side by side on the launcher: <code className="mono">blackwhale.apk</code>,{" "}
-        <code className="mono">nightweaver.apk</code>, and so on.
+        Each APK is an independent phone app. Follow the five steps on that card — then repeat for the next APK you
+        want. They install side by side.
       </p>
-      <div className="download-grid apk-grid">
-        {APK_TILES.map((t) => (
-          <a key={t.id} className="download-tile" href={t.href} download={t.file}>
-            <span className="download-os-icon">
-              <OsMark id="android" />
-            </span>
-            <span className="download-os-name">{t.label}</span>
-            <span className="muted tiny">{t.file}</span>
-            <span className="muted tiny">{t.hint}</span>
-          </a>
-        ))}
-      </div>
+      <ApkInstallGuide />
       <p className="muted tiny">
         If a file is missing, the GitHub release is still building.{" "}
         <a className="status-link" href={PRODUCT.releasesUrl} target="_blank" rel="noreferrer">

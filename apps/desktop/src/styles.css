@@ -723,6 +723,30 @@ a.download-icon-only svg { width: 26px; height: 26px; }
   cursor: pointer;
 }
 .suite-apk-link { justify-self: start; }
+.apk-guide { gap: 12px; }
+.apk-step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.apk-step-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.apk-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.apk-steps.compact { font-size: 12px; gap: 6px; }
 .suite-card:hover { border-color: rgba(255,159,67,0.55); }
 .suite-card.on { border-color: rgba(107, 220, 140, 0.45); }
 .suite-usage {

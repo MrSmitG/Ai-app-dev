@@ -9,9 +9,15 @@ Localmod **v0.3.1** — Windows setup installs the six React apps. Android still
 | `Localmod.dmg` | macOS |
 | `Localmod.AppImage` | Linux |
 
-## Android APKs
+## Android APKs — independent install
 
-Sideload (allow unknown apps, then tap the file). Each APK is a separate app and they install side by side.
+Each APK is its own phone app. Repeat these five steps **for every file** you want. They install side by side and do not replace each other. Do not open `.apk` on Windows.
+
+1. Download that APK.
+2. Copy it to the phone (USB or Drive).
+3. Settings → Apps → Special app access → Install unknown apps → Files → Allow.
+4. Tap the `.apk` → Install.
+5. Open that app from the launcher.
 
 | File | App |
 |---|---|

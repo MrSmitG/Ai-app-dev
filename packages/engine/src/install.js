@@ -21,6 +21,7 @@ const TREE = [
   "Start Localmod.command",
   "Start Localmod.sh",
   "Install Localmod.bat",
+  "Install-Android.bat",
   "scripts",
   "apps/desktop/package.json",
   "apps/desktop/package-lock.json",

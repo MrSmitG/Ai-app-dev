@@ -18,13 +18,23 @@ const RELEASE_DL = "https://github.com/mrsmitg/ai-app-dev/releases/latest/downlo
 
 /** One sideload APK per React app. Names match GitHub Release assets. */
 export const SUITE_APKS = [
-  { id: "blackwhale", name: "Blackwhale", file: "blackwhale.apk" },
-  { id: "nightweaver", name: "Nightweaver", file: "nightweaver.apk" },
-  { id: "obsidian", name: "Obsidian", file: "obsidian.apk" },
-  { id: "mako", name: "Mako", file: "mako.apk" },
-  { id: "trench", name: "The Trench", file: "trench.apk" },
-  { id: "ironmantis", name: "Ironmantis", file: "ironmantis.apk" },
+  { id: "blackwhale", name: "Blackwhale", file: "blackwhale.apk", usage: "Chat" },
+  { id: "nightweaver", name: "Nightweaver", file: "nightweaver.apk", usage: "Agentic coding" },
+  { id: "obsidian", name: "Obsidian", file: "obsidian.apk", usage: "API keys" },
+  { id: "mako", name: "Mako", file: "mako.apk", usage: "Speed / race" },
+  { id: "trench", name: "The Trench", file: "trench.apk", usage: "Editor" },
+  { id: "ironmantis", name: "Ironmantis", file: "ironmantis.apk", usage: "Autonomous builder" },
 ] as const;
+
+export function apkInstallSteps(app: { name: string; file: string; usage: string }) {
+  return [
+    `Download ${app.file} (${app.usage}). This file is for an Android phone, not Windows.`,
+    `Copy ${app.file} onto the phone (USB, Google Drive, or Files).`,
+    `On the phone open Settings → Apps → Special app access → Install unknown apps. Choose Files (or Chrome) and turn Allow on.`,
+    `In Files, tap ${app.file}, then Install. ${app.name} is its own app — it does not replace the others.`,
+    `Open ${app.name} from the phone launcher. Repeat steps 1–5 for each other APK you want.`,
+  ];
+}
 
 export function apkDownloadUrl(file: string) {
   return `${RELEASE_DL}/${file}`;

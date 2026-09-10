@@ -43,14 +43,30 @@ If you cloned this repo on Windows, double-click **Install Localmod.bat** to fet
 | **[Windows portable](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe)** | Click `Localmod.exe`. Use the Apps menu for each React app. |
 | **[macOS](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg)** | Click the Apple icon. Open the DMG, drag Localmod to Applications, click the icon. |
 | **[Linux](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage)** | Click the Linux icon. Then double-click `Localmod.AppImage`. |
-| **[blackwhale.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/blackwhale.apk)** | Chat app. Allow unknown apps, then tap to install. |
-| **[nightweaver.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/nightweaver.apk)** | Agentic coding app. Installs next to Blackwhale. |
-| **[obsidian.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/obsidian.apk)** | API-key vault. |
-| **[mako.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/mako.apk)** | Speed / race HUD. |
-| **[trench.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/trench.apk)** | One-file editor. |
-| **[ironmantis.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/ironmantis.apk)** | Autonomous builder. |
+## Android — independent APKs (phone only)
 
-In the app, **About** shows the desktop OS icons plus one Android tile per APK.
+Each file is a **separate app**. Repeat the five steps for every APK you want. They do not replace each other. These files will not install on Windows.
+
+**Per APK**
+
+1. Download that one file.
+2. Copy it to the phone (USB or Drive).
+3. Phone: Settings → Apps → Special app access → Install unknown apps → Files → Allow.
+4. Tap the `.apk` → Install.
+5. Open that app from the launcher. Then go back to step 1 for the next APK.
+
+| File | App |
+|---|---|
+| **[blackwhale.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/blackwhale.apk)** | Chat — steps 1–5 above for this file only |
+| **[nightweaver.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/nightweaver.apk)** | Agentic coding — repeat steps 1–5 |
+| **[obsidian.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/obsidian.apk)** | API keys — repeat steps 1–5 |
+| **[mako.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/mako.apk)** | Speed / race — repeat steps 1–5 |
+| **[trench.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/trench.apk)** | Editor — repeat steps 1–5 |
+| **[ironmantis.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/ironmantis.apk)** | Autonomous builder — repeat steps 1–5 |
+
+On Windows you can double-click **Install-Android.bat** to download all six into `Downloads\Localmod-apks\`, or `apps/blackwhale/Install-Android.bat` (and the other app folders) for one APK.
+
+In the app, **About** and **Suite** show the same five steps on each APK card.
 
 If a download 404s, the latest GitHub Release is still building. Tag `v0.3.1` so Actions can attach `Localmod-Setup.exe` (installs the six React apps), `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
 

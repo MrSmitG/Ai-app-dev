@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
-import { PRODUCT, SUITE_APKS } from "../web3";
+import { PRODUCT, SUITE_APKS, apkInstallSteps } from "../web3";
 import { isElectron } from "../platform";
 import { Tip } from "./ui";
+import { ApkInstallGuide } from "./ApkInstallGuide";
 
 export function SuiteHome({
   setTab: _setTab,
@@ -120,6 +121,7 @@ export function SuiteHome({
           </div>
         )}
       </div>
+      <ApkInstallGuide />
       <div className="suite-grid">
         {apps.map((app: any) => (
           <div key={app.id} className="suite-card">
@@ -157,8 +159,17 @@ export function SuiteHome({
               href={PRODUCT.downloads.apks[app.id as keyof typeof PRODUCT.downloads.apks]}
               download={`${app.id}.apk`}
             >
-              {app.apk || `${app.id}.apk`}
+              Step 1 · {app.apk || `${app.id}.apk`}
             </a>
+            <ol className="apk-steps compact">
+              {apkInstallSteps({
+                name: app.name,
+                file: app.apk || `${app.id}.apk`,
+                usage: app.usage || app.id,
+              }).map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
           </div>
         ))}
       </div>
