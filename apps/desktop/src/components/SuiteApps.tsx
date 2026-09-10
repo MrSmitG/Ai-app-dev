@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
-import { PRODUCT, SUITE_APKS, apkInstallSteps } from "../web3";
+import { PRODUCT, SUITE_PC, pcInstallSteps } from "../web3";
 import { isElectron } from "../platform";
 import { Tip } from "./ui";
 import { ApkInstallGuide } from "./ApkInstallGuide";
+import { PcSetupGuide } from "./PcSetupGuide";
 
 export function SuiteHome({
   setTab: _setTab,
@@ -74,7 +75,7 @@ export function SuiteHome({
       <div className="panel">
         <div className="section-label">Install to a file path</div>
         <p className="muted">
-          Browse a folder on this Mac or PC. Copy the React suite files there, or drop the ready-to-run Windows / Mac download into that folder.
+          Browse a folder on this PC. Download that app’s Windows Setup.exe into it — not an APK. APKs are Android phones only.
         </p>
         <label>
           Folder
@@ -91,7 +92,10 @@ export function SuiteHome({
             {busy === "windows" ? "Downloading…" : "Download Windows (Localmod.exe)"}
           </button>
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("setup")}>
-            {busy === "setup" ? "Downloading…" : "Download Windows setup (Localmod-Setup.exe)"}
+            {busy === "setup" ? "Downloading…" : "Download hub setup (Localmod-Setup.exe)"}
+          </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("windows-apps")}>
+            {busy === "windows-apps" ? "Downloading…" : "Download all PC setups"}
           </button>
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("mac")}>
             {busy === "mac" ? "Downloading…" : "Download Mac (Localmod.dmg)"}
@@ -101,15 +105,15 @@ export function SuiteHome({
           </button>
         </div>
         <div className="row wrap pad-sm">
-          {SUITE_APKS.map((app) => (
+          {SUITE_PC.map((app) => (
             <button
               key={app.id}
-              className="btn"
+              className="btn primary"
               disabled={!!busy}
               type="button"
               onClick={() => runInstall(app.id)}
             >
-              {busy === app.id ? "Downloading…" : app.file}
+              {busy === app.id ? "Downloading…" : app.setup}
             </button>
           ))}
         </div>
@@ -121,6 +125,7 @@ export function SuiteHome({
           </div>
         )}
       </div>
+      <PcSetupGuide />
       <ApkInstallGuide />
       <div className="suite-grid">
         {apps.map((app: any) => (
@@ -156,15 +161,15 @@ export function SuiteHome({
             </button>
             <a
               className="btn suite-apk-link"
-              href={PRODUCT.downloads.apks[app.id as keyof typeof PRODUCT.downloads.apks]}
-              download={`${app.id}.apk`}
+              href={PRODUCT.downloads.pc[app.id as keyof typeof PRODUCT.downloads.pc]}
+              download={app.setup || `${app.id}-Setup.exe`}
             >
-              Step 1 · {app.apk || `${app.id}.apk`}
+              Step 1 · {app.setup || `${app.id}-Setup.exe`}
             </a>
             <ol className="apk-steps compact">
-              {apkInstallSteps({
+              {pcInstallSteps({
                 name: app.name,
-                file: app.apk || `${app.id}.apk`,
+                setup: app.setup || `${app.name.replace(/\s+/g, "")}-Setup.exe`,
                 usage: app.usage || app.id,
               }).map((step) => (
                 <li key={step}>{step}</li>

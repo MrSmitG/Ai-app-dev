@@ -40,7 +40,34 @@ function requestedApps(argv = process.argv) {
   for (const a of argv) {
     if (String(a).startsWith("--app=")) ids.push(String(a).slice(6).toLowerCase());
   }
+  if (!ids.length) {
+    const bundled = bundledSuiteId();
+    if (bundled) ids.push(bundled);
+  }
   return ids;
+}
+
+function bundledSuiteId() {
+  const candidates = [];
+  if (process.resourcesPath) candidates.push(path.join(process.resourcesPath, "suite-app.txt"));
+  candidates.push(path.join(__dirname, "suite-app.txt"));
+  for (const file of candidates) {
+    try {
+      if (fs.existsSync(file)) {
+        const id = String(fs.readFileSync(file, "utf8") || "").trim().toLowerCase();
+        if (suiteById(id)) return id;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  const base = path.basename(process.execPath, path.extname(process.execPath)).toLowerCase().replace(/\s+/g, "");
+  if (base && base !== "localmod" && base !== "electron") {
+    const spec =
+      suiteById(base) || SUITE.find((s) => s.name.toLowerCase().replace(/\s+/g, "") === base);
+    if (spec) return spec.id;
+  }
+  return "";
 }
 
 function suiteById(id) {
@@ -438,7 +465,10 @@ function buildMenu() {
 
 app.setName("Localmod");
 if (process.platform === "win32") {
-  app.setAppUserModelId("com.localmod.app");
+  const bundled = bundledSuiteId();
+  const spec = bundled ? suiteById(bundled) : null;
+  if (spec) app.setName(spec.name);
+  app.setAppUserModelId(spec ? `com.localmod.${spec.id}` : "com.localmod.app");
 }
 
 const gotLock = app.requestSingleInstanceLock();

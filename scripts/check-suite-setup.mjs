@@ -26,6 +26,7 @@ const FILES = [
   "Start-Windows.bat",
   "Start-macOS.command",
   "Start-Linux.sh",
+  "Install-Windows.bat",
   "Install-Android.bat",
   "src/App.tsx",
   "src/main.tsx",

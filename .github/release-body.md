@@ -1,23 +1,34 @@
-Localmod **v0.3.1** — Windows setup installs the six React apps. Android still uses one APK each.
+Localmod **v0.3.2** — one Windows Setup.exe per React app. APKs are Android phones only.
 
-## Desktop
+## Windows PC setups (this is the install path)
+
+These are installers, not phone APKs. Double-click the Setup.exe. Each app installs next to the others.
+
+| File | App |
+|---|---|
+| [Blackwhale-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Blackwhale-Setup.exe) | Chat |
+| [Nightweaver-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Nightweaver-Setup.exe) | Agentic coding |
+| [Obsidian-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Obsidian-Setup.exe) | API keys |
+| [Mako-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Mako-Setup.exe) | Speed / race |
+| [Trench-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Trench-Setup.exe) | Editor |
+| [Ironmantis-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Ironmantis-Setup.exe) | Autonomous builder |
+
+1. Download that Setup.exe.
+2. Double-click it and finish setup.
+3. Open the app from the desktop or Start menu.
+
+## Hub / other OS
 
 | File | Platform |
 |---|---|
-| `Localmod-Setup.exe` | Windows installer — Start Menu shortcuts for each React app |
+| `Localmod-Setup.exe` | Windows installer with all six React apps |
 | `Localmod.exe` | Windows portable |
 | `Localmod.dmg` | macOS |
 | `Localmod.AppImage` | Linux |
 
-## Android APKs — independent install
+## Android APKs — phone only
 
-Each APK is its own phone app. Repeat these five steps **for every file** you want. They install side by side and do not replace each other. Do not open `.apk` on Windows.
-
-1. Download that APK.
-2. Copy it to the phone (USB or Drive).
-3. Settings → Apps → Special app access → Install unknown apps → Files → Allow.
-4. Tap the `.apk` → Install.
-5. Open that app from the launcher.
+Do not open `.apk` on Windows. Each APK is its own phone app.
 
 | File | App |
 |---|---|
@@ -27,5 +38,3 @@ Each APK is its own phone app. Repeat these five steps **for every file** you wa
 | [mako.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/mako.apk) | Speed / race |
 | [trench.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/trench.apk) | Editor |
 | [ironmantis.apk](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/ironmantis.apk) | Autonomous builder |
-
-These APKs are the React UIs. Full local GGUF inference still runs on Windows / macOS / Linux.

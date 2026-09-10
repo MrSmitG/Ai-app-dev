@@ -3,9 +3,12 @@ setlocal
 cd /d "%~dp0"
 title Install Localmod
 echo This installs the Localmod React apps from GitHub Releases:
-echo   Blackwhale, Nightweaver, Obsidian, Mako, The Trench, Ironmantis
+echo   Blackwhale-Setup.exe, Nightweaver-Setup.exe, Obsidian-Setup.exe,
+echo   Mako-Setup.exe, Trench-Setup.exe, Ironmantis-Setup.exe
 echo.
-echo APK files (blackwhale.apk and so on) are for Android phones, not Windows.
+echo Those are Windows PC installers. APK files are for Android phones, not Windows.
+echo This file still fetches the hub installer (Localmod-Setup.exe) with all six.
+echo For one app only, use that app folder's Install-Windows.bat.
 echo.
 
 set "URL=https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod-Setup.exe"

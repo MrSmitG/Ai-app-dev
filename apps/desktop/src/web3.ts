@@ -16,7 +16,29 @@ export const WEB3 = {
 
 const RELEASE_DL = "https://github.com/mrsmitg/ai-app-dev/releases/latest/download";
 
-/** One sideload APK per React app. Names match GitHub Release assets. */
+/** One Windows Setup.exe per React app. */
+export const SUITE_PC = [
+  { id: "blackwhale", name: "Blackwhale", product: "Blackwhale", setup: "Blackwhale-Setup.exe", usage: "Chat" },
+  { id: "nightweaver", name: "Nightweaver", product: "Nightweaver", setup: "Nightweaver-Setup.exe", usage: "Agentic coding" },
+  { id: "obsidian", name: "Obsidian", product: "Obsidian", setup: "Obsidian-Setup.exe", usage: "API keys" },
+  { id: "mako", name: "Mako", product: "Mako", setup: "Mako-Setup.exe", usage: "Speed / race" },
+  { id: "trench", name: "The Trench", product: "Trench", setup: "Trench-Setup.exe", usage: "Editor" },
+  { id: "ironmantis", name: "Ironmantis", product: "Ironmantis", setup: "Ironmantis-Setup.exe", usage: "Autonomous builder" },
+] as const;
+
+export function pcSetupUrl(file: string) {
+  return `${RELEASE_DL}/${file}`;
+}
+
+export function pcInstallSteps(app: { name: string; setup: string; usage: string }) {
+  return [
+    `Download ${app.setup} (${app.usage}) — this is the Windows installer, not a phone APK.`,
+    `Double-click ${app.setup} and finish setup.`,
+    `Click ${app.name} on the desktop or in the Start menu. That app installs next to the others; it does not replace them.`,
+  ];
+}
+
+/** Phone APKs only. PC install uses SUITE_PC. */
 export const SUITE_APKS = [
   { id: "blackwhale", name: "Blackwhale", file: "blackwhale.apk", usage: "Chat" },
   { id: "nightweaver", name: "Nightweaver", file: "nightweaver.apk", usage: "Agentic coding" },
@@ -51,6 +73,10 @@ export const PRODUCT = {
     setup: `${RELEASE_DL}/Localmod-Setup.exe`,
     mac: `${RELEASE_DL}/Localmod.dmg`,
     linux: `${RELEASE_DL}/Localmod.AppImage`,
+    pc: Object.fromEntries(SUITE_PC.map((a) => [a.id, pcSetupUrl(a.setup)])) as Record<
+      (typeof SUITE_PC)[number]["id"],
+      string
+    >,
     apks: Object.fromEntries(SUITE_APKS.map((a) => [a.id, apkDownloadUrl(a.file)])) as Record<
       (typeof SUITE_APKS)[number]["id"],
       string

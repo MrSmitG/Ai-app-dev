@@ -30,8 +30,8 @@ If `npm ci` fails with a lockfile mismatch, run `npm install` / `npm --prefix ap
 
 - No dedicated lint or unit-test scripts in root `package.json` yet.
 - UI build: `npm run build`
-- Desktop installers (local): `npm run build:win` / `npm run build:mac` (needs electron-builder; mac DMG should be built on a Mac)
-- Android APKs: `npm run build:android` (needs Android SDK; GitHub Release workflow attaches `blackwhale.apk`, `nightweaver.apk`, `obsidian.apk`, `mako.apk`, `trench.apk`, `ironmantis.apk`)
+- Desktop installers (local): `npm run build:win` / `npm run build:mac` (needs electron-builder; mac DMG should be built on a Mac). `build:win` also emits `Blackwhale-Setup.exe` … `Ironmantis-Setup.exe`.
+- Android APKs (phone only): `npm run build:android` (needs Android SDK)
 
 ### Non-obvious gotchas
 
@@ -41,6 +41,6 @@ If `npm ci` fails with a lockfile mismatch, run `npm install` / `npm --prefix ap
 - New engine modules include context meter, Cursor agent, skills, voice, folder picker, and **bundles** (`GET /bundles`, `POST /bundles/use`).
 - Bundles tab lets users turn on curated packs (starter chat, vision, voice, RAG, agent, privacy). Chat-model packs are exclusive; feature packs stack.
 - Suite apps are **six different React products** (own layout, CSS, Vite): Blackwhale chat 1421, Nightweaver IDE 1422, Obsidian vault 1423, Mako HUD 1424, The Trench editor 1425, Ironmantis terminal 1426. Start with `npm run blackwhale`, then `npm run nightweaver`, and so on. Confirm setups with `npm run check:apps`. The hub on 1420 does not embed them.
-- Suite tab installs to a chosen folder path on Mac and Windows (`GET /install`, `POST /install/pick`, `POST /install`).
+- Suite tab installs to a chosen folder path on Mac and Windows (`GET /install`, `POST /install/pick`, `POST /install`). Suite app ids download that app’s `*-Setup.exe` (PC), not the APK.
 - Full chat completions need `llama-server` or Ollama. Without a loaded model, vault / RAG / settings / UI still work.
 - Do not commit Hugging Face tokens or vault passphrases.

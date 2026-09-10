@@ -21,28 +21,41 @@ Each app is a **different React product** (own `App.tsx`, CSS, fonts, layout) �
 
 In the app open **Suite**, type or browse a folder path, then:
 
-- **Copy all files here** — copies this React suite into `{folder}/Localmod/` (Mac and Windows)
-- **Download Windows setup** — saves `Localmod-Setup.exe` (installs all six React apps)
+- **Blackwhale-Setup.exe** (and the other five buttons) — saves that app’s Windows installer
+- **Download all PC setups** — saves all six `*-Setup.exe` files
+- **Download hub setup** — saves `Localmod-Setup.exe` (all six React apps in one installer)
 - **Download Windows** — saves portable `Localmod.exe`
 - **Download Mac** — saves `Localmod.dmg` into that folder
-- **Download all Android APKs** — saves `blackwhale.apk`, `nightweaver.apk`, `obsidian.apk`, `mako.apk`, `trench.apk`, and `ironmantis.apk` into that folder
+- **Download all Android APKs** — phone-only files (`blackwhale.apk` …). Do not open these on a PC.
 
-Then run `Start Localmod.bat` (Windows) or `Start Localmod.command` (macOS). Each app folder also has its own Start script.
+Then double-click the `*-Setup.exe` you downloaded.
 
-## Download and run
+## Download and run (Windows PC)
 
-No install toolchain. Files come from [GitHub Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest).
+No phone APK. Files come from [GitHub Releases](https://github.com/mrsmitg/ai-app-dev/releases/latest).
 
-**Windows / macOS / Linux:** download `Localmod-Setup.exe` (Windows), `Localmod.dmg` (Mac), or `Localmod.AppImage` (Linux). That desktop app **is** the six React products. APK files are only for Android phones — `blackwhale.apk` will not install on a PC.
+**Independent Windows setups** — one installer per React app. Double-click the Setup.exe. They install side by side.
 
-If you cloned this repo on Windows, double-click **Install Localmod.bat** to fetch `Localmod-Setup.exe` from the latest release.
+| File | App |
+|---|---|
+| **[Blackwhale-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Blackwhale-Setup.exe)** | Chat |
+| **[Nightweaver-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Nightweaver-Setup.exe)** | Agentic coding |
+| **[Obsidian-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Obsidian-Setup.exe)** | API keys |
+| **[Mako-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Mako-Setup.exe)** | Speed / race |
+| **[Trench-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Trench-Setup.exe)** | Editor |
+| **[Ironmantis-Setup.exe](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Ironmantis-Setup.exe)** | Autonomous builder |
+
+On Windows you can double-click **Install-Windows.bat** to fetch all six into `Downloads\Localmod-setups\`, or `apps/blackwhale/Install-Windows.bat` (and the other app folders) for one Setup.exe.
+
+**Hub / other OS**
 
 | | |
 |---|---|
-| **[Windows setup](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod-Setup.exe)** | Run `Localmod-Setup.exe`. Start Menu → Localmod has **Blackwhale**, **Nightweaver**, **Obsidian**, **Mako**, **The Trench**, **Ironmantis**. |
-| **[Windows portable](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe)** | Click `Localmod.exe`. Use the Apps menu for each React app. |
-| **[macOS](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg)** | Click the Apple icon. Open the DMG, drag Localmod to Applications, click the icon. |
-| **[Linux](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage)** | Click the Linux icon. Then double-click `Localmod.AppImage`. |
+| **[Windows hub setup](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod-Setup.exe)** | One installer with all six. Start Menu → Localmod. |
+| **[Windows portable](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe)** | Click `Localmod.exe`. Apps menu opens each React app. |
+| **[macOS](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg)** | Open the DMG, drag Localmod to Applications. |
+| **[Linux](https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage)** | Double-click `Localmod.AppImage`. |
+
 ## Android — independent APKs (phone only)
 
 Each file is a **separate app**. Repeat the five steps for every APK you want. They do not replace each other. These files will not install on Windows.
@@ -66,9 +79,9 @@ Each file is a **separate app**. Repeat the five steps for every APK you want. T
 
 On Windows you can double-click **Install-Android.bat** to download all six into `Downloads\Localmod-apks\`, or `apps/blackwhale/Install-Android.bat` (and the other app folders) for one APK.
 
-In the app, **About** and **Suite** show the same five steps on each APK card.
+In the app, **About** and **Suite** show three PC steps on each Setup.exe card. APK cards are labeled Android phones only.
 
-If a download 404s, the latest GitHub Release is still building. Tag `v0.3.1` so Actions can attach `Localmod-Setup.exe` (installs the six React apps), `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
+If a download 404s, the latest GitHub Release is still building. Tag `v0.3.2` so Actions can attach `Blackwhale-Setup.exe` … `Ironmantis-Setup.exe`, plus `Localmod-Setup.exe`, `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
 
 ## Why not a public blockchain
 
@@ -111,7 +124,7 @@ npm run desktop      # Electron window
 ### Package installers
 
 ```bash
-npm run build:win    # Localmod.exe + Localmod-Setup.exe
+npm run build:win    # Localmod.exe + Localmod-Setup.exe + Blackwhale-Setup.exe … Ironmantis-Setup.exe
 npm run build:mac    # Localmod.dmg (run on a Mac)
 npm run build:linux  # Localmod.AppImage
 npm run build:android # blackwhale.apk … ironmantis.apk (needs Android SDK)

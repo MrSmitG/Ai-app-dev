@@ -1,5 +1,7 @@
 # Localmod Android
 
+Phone-only. On a Windows PC download `Blackwhale-Setup.exe` (and the other `*-Setup.exe` files) from GitHub Releases — not these APKs.
+
 Each React app is an **independent APK**. Install only the ones you want. They sit side by side on the phone (`com.localmod.blackwhale`, `com.localmod.nightweaver`, …). An APK will not install on Windows.
 
 ## Independent install — repeat for every APK

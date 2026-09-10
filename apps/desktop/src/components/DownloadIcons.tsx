@@ -1,5 +1,6 @@
-import { PRODUCT, SUITE_APKS } from "../web3";
+import { PRODUCT, SUITE_PC } from "../web3";
 import { ApkInstallGuide } from "./ApkInstallGuide";
+import { PcSetupGuide } from "./PcSetupGuide";
 
 function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
   if (id === "windows") {
@@ -70,12 +71,12 @@ const DESKTOP_TILES = [
   },
 ];
 
-const APK_TILES = SUITE_APKS.map((app) => ({
+const PC_TILES = SUITE_PC.map((app) => ({
   id: app.id,
   label: app.name,
-  file: app.file,
-  href: PRODUCT.downloads.apks[app.id],
-  hint: `Allow unknown apps, then tap ${app.file} to install. Installs next to the other Localmod apps.`,
+  file: app.setup,
+  href: PRODUCT.downloads.pc[app.id],
+  hint: `Windows installer for ${app.usage}. Double-click ${app.setup} — not a phone APK.`,
 }));
 
 export function DownloadIcons({ compact = false }: { compact?: boolean }) {
@@ -83,7 +84,7 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
     return (
       <div className="owner-card compact">
         <div className="section-label">Get the app</div>
-        <div className="muted tiny">Windows setup installs all six React apps. APKs are Android only.</div>
+        <div className="muted tiny">PC: one Setup.exe per React app. APKs are Android phones only.</div>
         <div className="download-icon-row">
           {DESKTOP_TILES.map((t) => (
             <a key={t.file} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
@@ -93,9 +94,9 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
           ))}
         </div>
         <div className="download-icon-row">
-          {APK_TILES.map((t) => (
-            <a key={t.id} className="download-icon-only apk" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
-              <OsMark id="android" />
+          {PC_TILES.map((t) => (
+            <a key={t.id} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
+              <OsMark id="windows" />
               <span className="apk-mini-name">{t.id}</span>
               <span className="sr-only">{t.file}</span>
             </a>
@@ -110,8 +111,8 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
       <div className="hero-kicker">Download</div>
       <h2 className="owner-name">Click your system icon</h2>
       <p className="muted">
-        This is the Localmod React app. Files come from GitHub Releases. After the download finishes, click the
-        Localmod icon — no Node.js, Git, or terminal.
+        On a Windows PC download that app’s Setup.exe (Blackwhale-Setup.exe, Nightweaver-Setup.exe, …). Those are
+        installers. Phone APKs are a different path below.
       </p>
       <div className="download-grid desktop">
         {DESKTOP_TILES.map((t) => (
@@ -125,11 +126,9 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
           </a>
         ))}
       </div>
-      <div className="section-label">Android APKs</div>
-      <p className="muted">
-        Each APK is an independent phone app. Follow the five steps on that card — then repeat for the next APK you
-        want. They install side by side.
-      </p>
+      <PcSetupGuide />
+      <div className="section-label">Android phones only</div>
+      <p className="muted">Skip this on a Windows PC. These APKs are a different install path.</p>
       <ApkInstallGuide />
       <p className="muted tiny">
         If a file is missing, the GitHub release is still building.{" "}

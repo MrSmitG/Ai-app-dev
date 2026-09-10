@@ -20,6 +20,7 @@ export const SUITE_APPS = [
     port: 1421,
     start: "npm run blackwhale",
     apk: "blackwhale.apk",
+    setup: "Blackwhale-Setup.exe",
     group: "studio",
     aliases: ["studio", "chat"],
   },
@@ -35,6 +36,7 @@ export const SUITE_APPS = [
     port: 1422,
     start: "npm run nightweaver",
     apk: "nightweaver.apk",
+    setup: "Nightweaver-Setup.exe",
     group: "ide",
     aliases: ["code", "current"],
   },
@@ -50,6 +52,7 @@ export const SUITE_APPS = [
     port: 1423,
     start: "npm run obsidian",
     apk: "obsidian.apk",
+    setup: "Obsidian-Setup.exe",
     group: "ide",
     aliases: ["keys", "keyring"],
   },
@@ -65,6 +68,7 @@ export const SUITE_APPS = [
     port: 1424,
     start: "npm run mako",
     apk: "mako.apk",
+    setup: "Mako-Setup.exe",
     group: "ide",
     aliases: ["fast", "pulse"],
   },
@@ -80,6 +84,7 @@ export const SUITE_APPS = [
     port: 1425,
     start: "npm run trench",
     apk: "trench.apk",
+    setup: "Trench-Setup.exe",
     group: "extension",
     aliases: ["editor", "keep"],
   },
@@ -95,12 +100,17 @@ export const SUITE_APPS = [
     port: 1426,
     start: "npm run ironmantis",
     apk: "ironmantis.apk",
+    setup: "Ironmantis-Setup.exe",
     group: "extension",
     aliases: ["engineer", "hands"],
   },
 ];
 
 export function suiteApkUrl(file) {
+  return `${RELEASE_DL}/${file}`;
+}
+
+export function suiteSetupUrl(file) {
   return `${RELEASE_DL}/${file}`;
 }
 
