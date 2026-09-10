@@ -1,7 +1,7 @@
 {
   "name": "@localmod/mako",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "description": "Mako — latency race HUD. Separate React app on :1424.",
   "scripts": {

@@ -1,7 +1,7 @@
 {
   "name": "@localmod/obsidian",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "description": "Obsidian — stone-tablet API key vault. Separate React app on :1423.",
   "scripts": {

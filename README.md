@@ -48,7 +48,7 @@ If you cloned this repo, double-click **Start Localmod** instead — it download
 
 In the app, **About** shows the desktop OS icons plus one Android tile per APK.
 
-If a download 404s, the latest GitHub Release is still building. Tag `v0.2.3` (or newer) so Actions can attach `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
+If a download 404s, the latest GitHub Release is still building. Tag `v0.3.0` so Actions can attach `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
 
 ## Why not a public blockchain
 

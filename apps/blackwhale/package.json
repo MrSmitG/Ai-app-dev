@@ -1,7 +1,7 @@
 {
   "name": "@localmod/blackwhale",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "description": "Blackwhale — ocean chat messenger. Separate React app on :1421.",
   "scripts": {

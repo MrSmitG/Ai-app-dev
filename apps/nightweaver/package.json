@@ -1,7 +1,7 @@
 {
   "name": "@localmod/nightweaver",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "description": "Nightweaver — three-column agentic IDE. Separate React app on :1422.",
   "scripts": {
