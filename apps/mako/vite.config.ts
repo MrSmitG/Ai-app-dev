@@ -8,6 +8,7 @@ const repo = path.resolve(dir, "../..");
 
 export default defineConfig({
   plugins: [react()],
+  base: "./",
   root: dir,
   resolve: {
     alias: {

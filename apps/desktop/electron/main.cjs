@@ -87,6 +87,28 @@ function suiteRoot() {
   return path.join(__dirname, "../../../build/suite-pack");
 }
 
+function suiteDist(spec) {
+  return path.join(suiteRoot(), spec.id);
+}
+
+function suiteIndex(spec) {
+  return path.join(suiteDist(spec), "index.html");
+}
+
+function probeUrl(url, timeoutMs = 800) {
+  return new Promise((resolve) => {
+    const req = http.get(url, (res) => {
+      res.resume();
+      resolve(Boolean(res.statusCode && res.statusCode < 500));
+    });
+    req.on("error", () => resolve(false));
+    req.setTimeout(timeoutMs, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
 function listenStatic(dist, preferredPort) {
   const index = path.join(dist, "index.html");
   if (!fs.existsSync(index)) {
@@ -96,9 +118,11 @@ function listenStatic(dist, preferredPort) {
     try {
       const u = new URL(req.url || "/", "http://127.0.0.1");
       let rel = decodeURIComponent(u.pathname);
-      if (rel === "/") rel = "/index.html";
-      let file = path.normalize(path.join(dist, rel));
-      if (!file.startsWith(dist)) {
+      if (rel === "/" || !rel) rel = "index.html";
+      else rel = rel.replace(/^\/+/, "");
+      const root = path.resolve(dist);
+      let file = path.resolve(root, rel);
+      if (file !== root && !file.startsWith(root + path.sep)) {
         res.writeHead(403);
         res.end();
         return;
@@ -123,10 +147,6 @@ function listenStatic(dist, preferredPort) {
         } catch {
           /* ignore */
         }
-        if (err.code === "EADDRINUSE" && port === preferredPort) {
-          resolve({ server: null, port: preferredPort, reused: true });
-          return;
-        }
         reject(err);
       };
       server.once("error", onError);
@@ -136,21 +156,43 @@ function listenStatic(dist, preferredPort) {
         resolve({ server, port: server.address().port, reused: false });
       });
     });
-  return bind(preferredPort);
+  return (async () => {
+    try {
+      return await bind(preferredPort);
+    } catch (err) {
+      if (err.code === "EADDRINUSE" || err.code === "EACCES") {
+        if (await probeUrl(`http://127.0.0.1:${preferredPort}/`)) {
+          return { server: null, port: preferredPort, reused: true };
+        }
+        return bind(0);
+      }
+      throw err;
+    }
+  })();
 }
 
 async function startPackagedUi() {
   if (isDev) return;
-  const hub = await listenStatic(uiDist(), UI_PORT);
-  uiPort = hub.port;
-  const root = suiteRoot();
-  for (const spec of SUITE) {
-    const dist = path.join(root, spec.id);
+  try {
+    const hub = await listenStatic(uiDist(), UI_PORT);
+    uiPort = hub.port;
+  } catch (err) {
+    console.error("Hub static server failed:", err.message || err);
+  }
+  const wanted = requestedApps();
+  const apps = wanted.length ? SUITE.filter((s) => wanted.includes(s.id)) : SUITE;
+  for (const spec of apps) {
+    const dist = suiteDist(spec);
     if (!fs.existsSync(path.join(dist, "index.html"))) {
-      console.log(`Suite pack missing ${spec.id}`);
+      console.log(`Suite pack missing ${spec.id} at ${dist}`);
       continue;
     }
-    await listenStatic(dist, spec.port);
+    try {
+      const bound = await listenStatic(dist, spec.port);
+      spec.livePort = bound.port;
+    } catch (err) {
+      console.error(`Suite static server failed ${spec.id}:`, err.message || err);
+    }
   }
 }
 
@@ -166,7 +208,7 @@ function engineCwd() {
   return path.resolve(__dirname, "../../..");
 }
 
-function waitForUrl(url, timeoutMs = 90000) {
+function waitForUrl(url, timeoutMs = 20000) {
   const start = Date.now();
   return new Promise((resolve, reject) => {
     const tick = () => {
@@ -179,6 +221,9 @@ function waitForUrl(url, timeoutMs = 90000) {
       req.on("error", () => {
         if (Date.now() - start > timeoutMs) reject(new Error(`Timeout waiting for ${url}`));
         else setTimeout(tick, 400);
+      });
+      req.setTimeout(2000, () => {
+        req.destroy();
       });
     };
     tick();
@@ -251,7 +296,7 @@ function showSplash() {
   });
   const html = encodeURIComponent(`<!doctype html><html><body style="margin:0;background:#0c0f14;color:#e8e4dc;font-family:Segoe UI,system-ui,sans-serif;display:grid;place-items:center;height:100vh">
     <div style="text-align:center">
-      <div style="font-size:28px;font-weight:800;letter-spacing:.04em;color:#ff9f43">Localmod</div>
+      <div style="font-size:28px;font-weight:800;letter-spacing:.04em;color:#ff9f43">${app.getName()}</div>
       <div style="margin-top:12px;opacity:.75">Starting on this machine…</div>
     </div>
   </body></html>`);
@@ -320,8 +365,13 @@ async function createHubWindow() {
     await waitForUrl(`http://127.0.0.1:${UI_PORT}/`);
     await mainWindow.loadURL(`http://127.0.0.1:${UI_PORT}/`);
   } else {
-    await waitForUrl(`http://127.0.0.1:${uiPort}/`);
-    await mainWindow.loadURL(`http://127.0.0.1:${uiPort}/`);
+    const hubIndex = path.join(uiDist(), "index.html");
+    if (fs.existsSync(hubIndex) && !(await probeUrl(`http://127.0.0.1:${uiPort}/`))) {
+      await mainWindow.loadFile(hubIndex);
+    } else {
+      await waitForUrl(`http://127.0.0.1:${uiPort}/`);
+      await mainWindow.loadURL(`http://127.0.0.1:${uiPort}/`);
+    }
   }
 
   mainWindow.on("closed", () => {
@@ -338,11 +388,11 @@ async function openSuiteWindow(spec) {
     return existing;
   }
   if (!isDev) {
-    const dist = path.join(suiteRoot(), spec.id);
-    if (!fs.existsSync(path.join(dist, "index.html"))) {
+    const index = suiteIndex(spec);
+    if (!fs.existsSync(index)) {
       dialog.showErrorBox(
         spec.name,
-        "This React app is not in this install. Download the latest Localmod-Setup.exe from GitHub Releases."
+        `This React app is not in this install (${suiteDist(spec)}).\nDownload the latest ${spec.name}-Setup.exe from GitHub Releases.`
       );
       return;
     }
@@ -365,8 +415,12 @@ async function openSuiteWindow(spec) {
     win.show();
   });
   attachOpenHandler(win);
-  await waitForUrl(`http://127.0.0.1:${spec.port}/`);
-  await win.loadURL(`http://127.0.0.1:${spec.port}/`);
+  if (isDev) {
+    await waitForUrl(`http://127.0.0.1:${spec.port}/`);
+    await win.loadURL(`http://127.0.0.1:${spec.port}/`);
+  } else {
+    await win.loadFile(suiteIndex(spec));
+  }
   suiteWindows.set(spec.id, win);
   win.on("closed", () => suiteWindows.delete(spec.id));
   return win;
@@ -496,9 +550,14 @@ if (!gotLock) {
       closeSplash();
     } catch (err) {
       closeSplash();
+      const msg = String(err.message || err);
+      const title = app.getName() || "Localmod";
+      const hint = /4781/.test(msg)
+        ? "The local engine did not start."
+        : "The app window did not open.";
       dialog.showErrorBox(
-        "Localmod",
-        `Could not start the local engine.\n\n${err.message || err}\n\nLogs: ${path.join(app.getPath("userData"), "engine.log")}`
+        title,
+        `${hint}\n\n${msg}\n\nLogs: ${path.join(app.getPath("userData"), "engine.log")}`
       );
       app.quit();
     }

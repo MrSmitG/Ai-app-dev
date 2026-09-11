@@ -50,6 +50,16 @@ for (const app of APPS) {
   rmSync(dir, { recursive: true, force: true });
   cpSync(unpacked, dir, { recursive: true });
   writeFileSync(path.join(dir, "resources", "suite-app.txt"), `${app.id}\n`);
+  const suiteIndex = path.join(dir, "resources", "suite", app.id, "index.html");
+  if (!existsSync(suiteIndex)) {
+    console.error(`Missing packaged UI at ${suiteIndex}`);
+    process.exit(1);
+  }
+  const engineEntry = path.join(dir, "resources", "engine", "src", "index.js");
+  if (!existsSync(engineEntry)) {
+    console.error(`Missing packaged engine at ${engineEntry}`);
+    process.exit(1);
+  }
   const fromExe = path.join(dir, localmodExe);
   const toExe = path.join(dir, `${app.product}.exe`);
   if (fromExe !== toExe && existsSync(fromExe)) renameSync(fromExe, toExe);

@@ -1,6 +1,6 @@
 {
   "name": "localmod",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "Local-first desktop studio for open-weight models — React + Electron for Mac & Windows",
   "license": "MIT",

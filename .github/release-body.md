@@ -1,4 +1,4 @@
-Localmod **v0.3.2** — one Windows Setup.exe per React app. APKs are Android phones only.
+Localmod **v0.3.3** — Windows Setup.exe opens the React app from disk. v0.3.2 could time out waiting for `http://127.0.0.1:1421/`.
 
 ## Windows PC setups (this is the install path)
 

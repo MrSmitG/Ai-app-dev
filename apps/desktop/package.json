@@ -1,6 +1,6 @@
 {
   "name": "@localmod/desktop",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "type": "module",
   "description": "Localmod React Router 7 framework UI + Electron shell for Mac & Windows",
