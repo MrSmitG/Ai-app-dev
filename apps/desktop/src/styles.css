@@ -567,10 +567,11 @@ label.check { display: flex; align-items: center; gap: 8px; color: var(--text); 
 .banner.ok { background: rgba(107,220,140,0.08); border-color: rgba(107,220,140,0.35); color: #b9f0c8; }
 
 .statusbar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 0 18px; border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 6px 18px; border-top: 1px solid rgba(255,255,255,0.06);
   background: rgba(8, 10, 14, 0.9); color: var(--muted); font-size: 12px;
 }
+.statusbar .apk-status { display: inline-flex; align-items: center; gap: 10px; }
 .brand-word { color: var(--accent-text); font-weight: 700; letter-spacing: 0.04em; }
 .statusbar .dot { width: 3px; height: 3px; border-radius: 50%; background: #4a5568; }
 .statusbar .grow { flex: 1; }
@@ -601,6 +602,9 @@ a.status-link:hover { text-decoration: underline; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
+.download-grid.apk-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .download-tile {
   display: grid;
   gap: 8px;
@@ -619,7 +623,7 @@ a.status-link:hover { text-decoration: underline; }
 }
 .download-os-icon { color: var(--accent-text); display: grid; place-items: center; }
 .download-os-name { font-weight: 700; letter-spacing: 0.02em; }
-.download-icon-row { display: flex; gap: 8px; }
+.download-icon-row { display: flex; gap: 8px; flex-wrap: wrap; }
 a.download-icon-only {
   width: 44px; height: 44px; border-radius: 12px;
   display: grid; place-items: center;
@@ -627,6 +631,11 @@ a.download-icon-only {
   border: 1px solid rgba(255,159,67,0.35);
   background: rgba(255,159,67,0.08);
 }
+a.download-icon-only.apk {
+  width: auto; height: auto; min-width: 44px;
+  padding: 6px 8px; gap: 2px;
+}
+.apk-mini-name { font-size: 9px; font-weight: 700; letter-spacing: 0.02em; }
 a.download-icon-only:hover { border-color: rgba(255,159,67,0.8); }
 a.download-icon-only svg { width: 26px; height: 26px; }
 .sr-only {
@@ -703,6 +712,41 @@ a.download-icon-only svg { width: 26px; height: 26px; }
   gap: 8px;
   color: inherit;
 }
+.suite-card-open {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.suite-apk-link { justify-self: start; }
+.apk-guide { gap: 12px; }
+.apk-step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.apk-step-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.apk-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.apk-steps.compact { font-size: 12px; gap: 6px; }
 .suite-card:hover { border-color: rgba(255,159,67,0.55); }
 .suite-card.on { border-color: rgba(107, 220, 140, 0.45); }
 .suite-usage {

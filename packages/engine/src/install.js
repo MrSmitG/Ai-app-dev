@@ -3,9 +3,9 @@ import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { pickFolder } from "./pickFolder.js";
-import { SUITE_APPS } from "./suite.js";
+import { SUITE_APPS, suiteApkUrl, suiteSetupUrl } from "./suite.js";
 
-const SKIP = new Set(["node_modules", ".git", "dist", "release", "build", "squashfs-root", "coverage"]);
+const SKIP = new Set(["node_modules", ".git", "dist", "release", "build", "squashfs-root", "coverage", ".gradle"]);
 
 export function repoRoot() {
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -20,6 +20,9 @@ const TREE = [
   "Start Localmod.bat",
   "Start Localmod.command",
   "Start Localmod.sh",
+  "Install Localmod.bat",
+  "Install-Windows.bat",
+  "Install-Android.bat",
   "scripts",
   "apps/desktop/package.json",
   "apps/desktop/package-lock.json",
@@ -38,6 +41,7 @@ const TREE = [
   "apps/ironmantis",
   "apps/keep",
   "apps/hands",
+  "apps/android",
   "apps/cli",
   "packages/engine/src",
   "packages/engine/package.json",
@@ -51,8 +55,11 @@ export function installManifest() {
     files: TREE,
     downloads: {
       windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
+      setup: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod-Setup.exe",
       mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
       linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
+      pc: Object.fromEntries(SUITE_APPS.map((a) => [a.id, suiteSetupUrl(a.setup)])),
+      apks: Object.fromEntries(SUITE_APPS.map((a) => [a.id, suiteApkUrl(a.apk)])),
     },
   };
 }
@@ -115,8 +122,8 @@ Run:
 Apps (open after start):
 ${SUITE_APPS.map((a) => `  ${a.name}  →  ${a.route}`).join("\n")}
 
-Or download the ready-to-run binary into this folder from GitHub Releases
-(Localmod.exe on Windows, Localmod.dmg on Mac).
+Or download a Windows Setup.exe for one React app
+(Blackwhale-Setup.exe, Nightweaver-Setup.exe, …) or Localmod-Setup.exe for all six.
 `;
   fs.writeFileSync(path.join(target, "INSTALLED.txt"), readme);
   copied.push("INSTALLED.txt");
@@ -128,6 +135,7 @@ export async function downloadBinary(dest, platform) {
   fs.mkdirSync(target, { recursive: true });
   const files = {
     windows: { name: "Localmod.exe", url: installManifest().downloads.windows },
+    setup: { name: "Localmod-Setup.exe", url: installManifest().downloads.setup },
     mac: { name: "Localmod.dmg", url: installManifest().downloads.mac },
     linux: { name: "Localmod.AppImage", url: installManifest().downloads.linux },
   };
@@ -147,9 +155,70 @@ export async function downloadBinary(dest, platform) {
   return { dest: target, file: out, bytes: buf.length, name: spec.name };
 }
 
+async function saveUrl(dest, name, url) {
+  const out = path.join(dest, name);
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) throw new Error(`Download failed (${res.status}) for ${name}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(out, buf);
+  return { file: out, bytes: buf.length, name };
+}
+
+export async function downloadPcSetups(dest, appId) {
+  const target = assertDest(dest);
+  fs.mkdirSync(target, { recursive: true });
+  const apps = appId ? SUITE_APPS.filter((a) => a.id === appId) : SUITE_APPS;
+  if (!apps.length) throw new Error(`Unknown Windows app: ${appId}`);
+  const saved = [];
+  let bytes = 0;
+  for (const app of apps) {
+    const one = await saveUrl(target, app.setup, suiteSetupUrl(app.setup));
+    saved.push(one);
+    bytes += one.bytes;
+  }
+  return {
+    dest: target,
+    file: saved[saved.length - 1].file,
+    bytes,
+    name: saved.map((s) => s.name).join(", "),
+    files: saved,
+  };
+}
+
+export async function downloadApks(dest, appId) {
+  const target = assertDest(dest);
+  fs.mkdirSync(target, { recursive: true });
+  const apps = appId ? SUITE_APPS.filter((a) => a.id === appId) : SUITE_APPS;
+  if (!apps.length) throw new Error(`Unknown Android app: ${appId}`);
+  const saved = [];
+  let bytes = 0;
+  for (const app of apps) {
+    const one = await saveUrl(target, app.apk, suiteApkUrl(app.apk));
+    saved.push(one);
+    bytes += one.bytes;
+  }
+  return {
+    dest: target,
+    file: saved[saved.length - 1].file,
+    bytes,
+    name: saved.map((s) => s.name).join(", "),
+    files: saved,
+  };
+}
+
 export async function install({ dest, mode = "files", platform }) {
   if (mode === "windows" || platform === "windows") return downloadBinary(dest, "windows");
+  if (mode === "setup" || platform === "setup") return downloadBinary(dest, "setup");
   if (mode === "mac" || platform === "mac") return downloadBinary(dest, "mac");
   if (mode === "linux" || platform === "linux") return downloadBinary(dest, "linux");
+  if (mode === "android" || platform === "android") return downloadApks(dest);
+  if (String(mode || "").startsWith("apk:")) return downloadApks(dest, String(mode).slice(4));
+  if (mode === "windows-apps" || platform === "windows-apps") return downloadPcSetups(dest);
+  if (String(mode || "").startsWith("pc:")) return downloadPcSetups(dest, String(mode).slice(3));
+  if (String(mode || "").endsWith("-setup")) {
+    return downloadPcSetups(dest, String(mode).slice(0, -"-setup".length));
+  }
+  const suiteApp = SUITE_APPS.find((a) => a.id === mode);
+  if (suiteApp) return downloadPcSetups(dest, suiteApp.id);
   return copyFiles(dest);
 }

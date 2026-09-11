@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api";
+import { PRODUCT, SUITE_PC, pcInstallSteps } from "../web3";
+import { isElectron } from "../platform";
 import { Tip } from "./ui";
+import { ApkInstallGuide } from "./ApkInstallGuide";
+import { PcSetupGuide } from "./PcSetupGuide";
 
 export function SuiteHome({
   setTab: _setTab,
@@ -71,7 +75,7 @@ export function SuiteHome({
       <div className="panel">
         <div className="section-label">Install to a file path</div>
         <p className="muted">
-          Browse a folder on this Mac or PC. Copy the React suite files there, or drop the ready-to-run Windows / Mac download into that folder.
+          Browse a folder on this PC. Download that app’s Windows Setup.exe into it — not an APK. APKs are Android phones only.
         </p>
         <label>
           Folder
@@ -87,9 +91,31 @@ export function SuiteHome({
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("windows")}>
             {busy === "windows" ? "Downloading…" : "Download Windows (Localmod.exe)"}
           </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("setup")}>
+            {busy === "setup" ? "Downloading…" : "Download hub setup (Localmod-Setup.exe)"}
+          </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("windows-apps")}>
+            {busy === "windows-apps" ? "Downloading…" : "Download all PC setups"}
+          </button>
           <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("mac")}>
             {busy === "mac" ? "Downloading…" : "Download Mac (Localmod.dmg)"}
           </button>
+          <button className="btn" disabled={!!busy} type="button" onClick={() => runInstall("android")}>
+            {busy === "android" ? "Downloading…" : "Download all Android APKs"}
+          </button>
+        </div>
+        <div className="row wrap pad-sm">
+          {SUITE_PC.map((app) => (
+            <button
+              key={app.id}
+              className="btn primary"
+              disabled={!!busy}
+              type="button"
+              onClick={() => runInstall(app.id)}
+            >
+              {busy === app.id ? "Downloading…" : app.setup}
+            </button>
+          ))}
         </div>
         {installOut && (
           <div className="banner ok">
@@ -99,31 +125,57 @@ export function SuiteHome({
           </div>
         )}
       </div>
+      <PcSetupGuide />
+      <ApkInstallGuide />
       <div className="suite-grid">
         {apps.map((app: any) => (
-          <button
-            key={app.id}
-            type="button"
-            className="suite-card"
-            onClick={() => window.open(`http://127.0.0.1:${app.port}`, "_blank", "noopener")}
-          >
-            <div className="suite-usage">{app.usage}</div>
-            <div className="suite-name">{app.name}</div>
-            <div className="muted tiny">{app.tagline}</div>
-            <p className="muted">{app.blurb}</p>
-            {Array.isArray(app.does) && (
-              <ul className="muted tiny" style={{ margin: 0, paddingLeft: 16 }}>
-                {app.does.map((d: string) => (
-                  <li key={d}>{d}</li>
-                ))}
-              </ul>
-            )}
-            {app.folder && (
-              <div className="muted tiny">
-                Own React app in {app.folder} · {app.start} · http://127.0.0.1:{app.port}
-              </div>
-            )}
-          </button>
+          <div key={app.id} className="suite-card">
+            <button
+              type="button"
+              className="suite-card-open"
+              onClick={() => {
+                const desktop = window.localmodDesktop;
+                if (isElectron() && desktop?.openSuite) {
+                  desktop.openSuite(app.id);
+                  return;
+                }
+                window.open(`http://127.0.0.1:${app.port}`, "_blank", "noopener");
+              }}
+            >
+              <div className="suite-usage">{app.usage}</div>
+              <div className="suite-name">{app.name}</div>
+              <div className="muted tiny">{app.tagline}</div>
+              <p className="muted">{app.blurb}</p>
+              {Array.isArray(app.does) && (
+                <ul className="muted tiny" style={{ margin: 0, paddingLeft: 16 }}>
+                  {app.does.map((d: string) => (
+                    <li key={d}>{d}</li>
+                  ))}
+                </ul>
+              )}
+              {app.folder && (
+                <div className="muted tiny">
+                  Own React app in {app.folder} · {app.start} · http://127.0.0.1:{app.port}
+                </div>
+              )}
+            </button>
+            <a
+              className="btn suite-apk-link"
+              href={PRODUCT.downloads.pc[app.id as keyof typeof PRODUCT.downloads.pc]}
+              download={app.setup || `${app.id}-Setup.exe`}
+            >
+              Step 1 · {app.setup || `${app.id}-Setup.exe`}
+            </a>
+            <ol className="apk-steps compact">
+              {pcInstallSteps({
+                name: app.name,
+                setup: app.setup || `${app.name.replace(/\s+/g, "")}-Setup.exe`,
+                usage: app.usage || app.id,
+              }).map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </div>
         ))}
       </div>
     </section>

@@ -2,6 +2,7 @@
 export type LocalmodDesktop = {
   platform: string;
   isDesktop: boolean;
+  openSuite?: (id: string) => Promise<{ ok: boolean; id?: string }>;
   versions?: { electron?: string; chrome?: string; node?: string };
 };
 

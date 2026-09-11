@@ -1,6 +1,8 @@
-import { PRODUCT } from "../web3";
+import { PRODUCT, SUITE_PC } from "../web3";
+import { ApkInstallGuide } from "./ApkInstallGuide";
+import { PcSetupGuide } from "./PcSetupGuide";
 
-function OsMark({ id }: { id: "windows" | "mac" | "linux" }) {
+function OsMark({ id }: { id: "windows" | "mac" | "linux" | "android" }) {
   if (id === "windows") {
     return (
       <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden>
@@ -18,6 +20,16 @@ function OsMark({ id }: { id: "windows" | "mac" | "linux" }) {
       </svg>
     );
   }
+  if (id === "android") {
+    return (
+      <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden>
+        <path
+          fill="currentColor"
+          d="M17.6 9.48c.5 0 .9.4.9.9v6.24c0 .5-.4.9-.9.9h-.12v1.98c0 .55-.45 1-1 1s-1-.45-1-1v-1.98H9.52v1.98c0 .55-.45 1-1 1s-1-.45-1-1v-1.98h-.12c-.5 0-.9-.4-.9-.9V10.38c0-.5.4-.9.9-.9zM7.96 7.28 6.74 5.16c-.18-.32-.08-.64.24-.82.32-.18.64-.08.82.24L9 6.74c.9-.42 1.92-.66 3-.66s2.1.24 3 .66l1.2-2.16c.18-.32.5-.42.82-.24.32.18.42.5.24.82L16.04 7.28C17.66 8.24 18.76 9.96 19 12H5c.24-2.04 1.34-3.76 2.96-4.72zM9.2 11.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6zm5.6 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6z"
+        />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden>
       <path
@@ -28,13 +40,20 @@ function OsMark({ id }: { id: "windows" | "mac" | "linux" }) {
   );
 }
 
-const TILES = [
+const DESKTOP_TILES = [
   {
     id: "windows" as const,
-    label: "Windows",
+    label: "Windows setup",
+    file: "Localmod-Setup.exe",
+    href: PRODUCT.downloads.setup,
+    hint: "Run this installer. Start Menu then has Blackwhale, Nightweaver, Obsidian, Mako, The Trench, Ironmantis.",
+  },
+  {
+    id: "windows" as const,
+    label: "Windows portable",
     file: "Localmod.exe",
     href: PRODUCT.downloads.windows,
-    hint: "Download, then click the Localmod icon. No install, no terminal.",
+    hint: "No install. Click the file. Apps menu opens each React app.",
   },
   {
     id: "mac" as const,
@@ -52,17 +71,34 @@ const TILES = [
   },
 ];
 
+const PC_TILES = SUITE_PC.map((app) => ({
+  id: app.id,
+  label: app.name,
+  file: app.setup,
+  href: PRODUCT.downloads.pc[app.id],
+  hint: `Windows installer for ${app.usage}. Double-click ${app.setup} — not a phone APK.`,
+}));
+
 export function DownloadIcons({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <div className="owner-card compact">
         <div className="section-label">Get the app</div>
-        <div className="muted tiny">Click an icon — GitHub download, then run Localmod.</div>
+        <div className="muted tiny">PC: one Setup.exe per React app. APKs are Android phones only.</div>
         <div className="download-icon-row">
-          {TILES.map((t) => (
-            <a key={t.id} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
+          {DESKTOP_TILES.map((t) => (
+            <a key={t.file} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
               <OsMark id={t.id} />
               <span className="sr-only">{t.label}</span>
+            </a>
+          ))}
+        </div>
+        <div className="download-icon-row">
+          {PC_TILES.map((t) => (
+            <a key={t.id} className="download-icon-only" href={t.href} download={t.file} title={`${t.label}: ${t.hint}`}>
+              <OsMark id="windows" />
+              <span className="apk-mini-name">{t.id}</span>
+              <span className="sr-only">{t.file}</span>
             </a>
           ))}
         </div>
@@ -75,12 +111,12 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
       <div className="hero-kicker">Download</div>
       <h2 className="owner-name">Click your system icon</h2>
       <p className="muted">
-        This is the Localmod React app. Files come from GitHub Releases. After the download finishes, click the
-        Localmod icon — no Node.js, Git, or terminal.
+        On a Windows PC download that app’s Setup.exe (Blackwhale-Setup.exe, Nightweaver-Setup.exe, …). Those are
+        installers. Phone APKs are a different path below.
       </p>
-      <div className="download-grid">
-        {TILES.map((t) => (
-          <a key={t.id} className="download-tile" href={t.href} download={t.file}>
+      <div className="download-grid desktop">
+        {DESKTOP_TILES.map((t) => (
+          <a key={t.file} className="download-tile" href={t.href} download={t.file}>
             <span className="download-os-icon">
               <OsMark id={t.id} />
             </span>
@@ -90,6 +126,10 @@ export function DownloadIcons({ compact = false }: { compact?: boolean }) {
           </a>
         ))}
       </div>
+      <PcSetupGuide />
+      <div className="section-label">Android phones only</div>
+      <p className="muted">Skip this on a Windows PC. These APKs are a different install path.</p>
+      <ApkInstallGuide />
       <p className="muted tiny">
         If a file is missing, the GitHub release is still building.{" "}
         <a className="status-link" href={PRODUCT.releasesUrl} target="_blank" rel="noreferrer">

@@ -14,6 +14,54 @@ export const WEB3 = {
   solana: String(import.meta.env.VITE_WEB3_SOLANA || ACCOUNT.solana || "").trim(),
 } as const;
 
+const RELEASE_DL = "https://github.com/mrsmitg/ai-app-dev/releases/latest/download";
+
+/** One Windows Setup.exe per React app. */
+export const SUITE_PC = [
+  { id: "blackwhale", name: "Blackwhale", product: "Blackwhale", setup: "Blackwhale-Setup.exe", usage: "Chat" },
+  { id: "nightweaver", name: "Nightweaver", product: "Nightweaver", setup: "Nightweaver-Setup.exe", usage: "Agentic coding" },
+  { id: "obsidian", name: "Obsidian", product: "Obsidian", setup: "Obsidian-Setup.exe", usage: "API keys" },
+  { id: "mako", name: "Mako", product: "Mako", setup: "Mako-Setup.exe", usage: "Speed / race" },
+  { id: "trench", name: "The Trench", product: "Trench", setup: "Trench-Setup.exe", usage: "Editor" },
+  { id: "ironmantis", name: "Ironmantis", product: "Ironmantis", setup: "Ironmantis-Setup.exe", usage: "Autonomous builder" },
+] as const;
+
+export function pcSetupUrl(file: string) {
+  return `${RELEASE_DL}/${file}`;
+}
+
+export function pcInstallSteps(app: { name: string; setup: string; usage: string }) {
+  return [
+    `Download ${app.setup} (${app.usage}) — this is the Windows installer, not a phone APK.`,
+    `Double-click ${app.setup} and finish setup.`,
+    `Click ${app.name} on the desktop or in the Start menu. That app installs next to the others; it does not replace them.`,
+  ];
+}
+
+/** Phone APKs only. PC install uses SUITE_PC. */
+export const SUITE_APKS = [
+  { id: "blackwhale", name: "Blackwhale", file: "blackwhale.apk", usage: "Chat" },
+  { id: "nightweaver", name: "Nightweaver", file: "nightweaver.apk", usage: "Agentic coding" },
+  { id: "obsidian", name: "Obsidian", file: "obsidian.apk", usage: "API keys" },
+  { id: "mako", name: "Mako", file: "mako.apk", usage: "Speed / race" },
+  { id: "trench", name: "The Trench", file: "trench.apk", usage: "Editor" },
+  { id: "ironmantis", name: "Ironmantis", file: "ironmantis.apk", usage: "Autonomous builder" },
+] as const;
+
+export function apkInstallSteps(app: { name: string; file: string; usage: string }) {
+  return [
+    `Download ${app.file} (${app.usage}). This file is for an Android phone, not Windows.`,
+    `Copy ${app.file} onto the phone (USB, Google Drive, or Files).`,
+    `On the phone open Settings → Apps → Special app access → Install unknown apps. Choose Files (or Chrome) and turn Allow on.`,
+    `In Files, tap ${app.file}, then Install. ${app.name} is its own app — it does not replace the others.`,
+    `Open ${app.name} from the phone launcher. Repeat steps 1–5 for each other APK you want.`,
+  ];
+}
+
+export function apkDownloadUrl(file: string) {
+  return `${RELEASE_DL}/${file}`;
+}
+
 export const PRODUCT = {
   name: "Localmod",
   blurb:
@@ -21,9 +69,18 @@ export const PRODUCT = {
   releasesUrl: "https://github.com/mrsmitg/ai-app-dev/releases/latest",
   /** Stable names so GitHub /releases/latest/download/Localmod.exe always works. */
   downloads: {
-    windows: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.exe",
-    mac: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.dmg",
-    linux: "https://github.com/mrsmitg/ai-app-dev/releases/latest/download/Localmod.AppImage",
+    windows: `${RELEASE_DL}/Localmod.exe`,
+    setup: `${RELEASE_DL}/Localmod-Setup.exe`,
+    mac: `${RELEASE_DL}/Localmod.dmg`,
+    linux: `${RELEASE_DL}/Localmod.AppImage`,
+    pc: Object.fromEntries(SUITE_PC.map((a) => [a.id, pcSetupUrl(a.setup)])) as Record<
+      (typeof SUITE_PC)[number]["id"],
+      string
+    >,
+    apks: Object.fromEntries(SUITE_APKS.map((a) => [a.id, apkDownloadUrl(a.file)])) as Record<
+      (typeof SUITE_APKS)[number]["id"],
+      string
+    >,
   },
 } as const;
 

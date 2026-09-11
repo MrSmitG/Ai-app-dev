@@ -1,6 +1,6 @@
 {
   "name": "localmod",
-  "version": "0.2.0",
+  "version": "0.3.4",
   "private": true,
   "description": "Local-first desktop studio for open-weight models — React + Electron for Mac & Windows",
   "license": "MIT",
@@ -26,11 +26,12 @@
     "desktop:win": "npm run desktop",
     "desktop:mac": "npm run desktop",
     "build": "npm --prefix apps/desktop run build",
-    "prepare:app": "node scripts/pack-engine.mjs && npm run build",
+    "prepare:app": "node scripts/pack-engine.mjs && node scripts/pack-suite.mjs && npm run build",
     "build:desktop": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --publish never",
-    "build:win": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --win --publish never",
+    "build:win": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --win --publish never && node scripts/pack-windows-apps.mjs",
     "build:mac": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --mac --publish never",
     "build:linux": "npm run prepare:app && electron-builder --config apps/desktop/electron-builder.yml --linux --publish never",
+    "build:android": "node scripts/pack-android.mjs",
     "cli": "node apps/cli/src/localmodd.js",
     "preview": "npm --prefix apps/desktop run preview"
   },

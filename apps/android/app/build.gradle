@@ -1,0 +1,46 @@
+plugins {
+    id "com.android.application"
+}
+
+def suiteApp = (findProperty("suiteApp") ?: "blackwhale").toString()
+def suiteName = (findProperty("suiteName") ?: "Blackwhale").toString()
+
+android {
+    namespace "com.localmod.app"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.localmod.${suiteApp}"
+        minSdk 26
+        targetSdk 35
+        versionCode 34
+        versionName "0.3.4"
+        resValue "string", "app_name", suiteName
+        manifestPlaceholders = [appLabel: suiteName]
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "androidx.webkit:webkit:1.12.1"
+}
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == "org.jetbrains.kotlin") {
+            details.useVersion "1.9.24"
+        }
+    }
+}

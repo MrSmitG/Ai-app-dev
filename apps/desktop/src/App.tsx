@@ -6,7 +6,7 @@ import { Icon, LabelWithTip, LocationBar, Tip, bytes } from "./components/ui";
 import { LlmPanel } from "./components/LlmPanel";
 import { DownloadIcons } from "./components/DownloadIcons";
 import { Web3Support } from "./components/Web3Support";
-import { PRODUCT } from "./web3";
+import { PRODUCT, SUITE_PC } from "./web3";
 import { VoiceControls, VoiceSettingsPanel } from "./components/VoiceControls";
 import { ContextMeter, type ContextUsage } from "./components/ContextMeter";
 import { MemoryTree } from "./components/MemoryTree";
@@ -31,7 +31,7 @@ const NAV = [
   ["harbor", "Data", "harbor", "Load files and folders into collections for RAG retrieval in Chat."],
   ["tools", "Tools", "tools", "Local OpenAI-style API, MCP servers, and multi-model race using Ollama tags."],
   ["settings", "Options", "settings", "API keys, privacy vault, Ollama URL, and developer settings."],
-  ["about", "About", "about", "Click your OS icon to download Localmod from GitHub. Then click the Localmod icon to run."],
+  ["about", "About", "about", "Windows PC: download Blackwhale-Setup.exe, Nightweaver-Setup.exe, and so on. Those are installers, not phone APKs."],
 ] as const;
 
 const MODEL_TABS = [
@@ -1450,11 +1450,22 @@ export default function App() {
           <span className="dot" />
           <span>Click an OS icon to download</span>
           <span className="dot" />
+          <a className="status-link" href={PRODUCT.downloads.setup} download="Localmod-Setup.exe">Windows setup</a>
+          <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.windows} download="Localmod.exe">Windows</a>
           <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.mac} download="Localmod.dmg">macOS</a>
           <span className="dot" />
           <a className="status-link" href={PRODUCT.downloads.linux} download="Localmod.AppImage">Linux</a>
+          <span className="dot" />
+          {SUITE_PC.map((app) => (
+            <span key={app.id} className="apk-status">
+              <a className="status-link" href={PRODUCT.downloads.pc[app.id]} download={app.setup}>
+                {app.setup}
+              </a>
+              <span className="dot" />
+            </span>
+          ))}
           <span className="grow" />
           <span>{forge.activeRuns ? `${forge.activeRuns} agent run(s)` : "Ready"}</span>
         </footer>

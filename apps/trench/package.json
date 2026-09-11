@@ -1,7 +1,7 @@
 {
   "name": "@localmod/trench",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "description": "The Trench — paper one-file editor. Separate React app on :1425.",
   "scripts": {

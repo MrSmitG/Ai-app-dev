@@ -1,0 +1,37 @@
+name: Android APK
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Install
+        run: |
+          npm ci
+          npm --prefix apps/desktop ci
+      - name: Build suite APKs
+        run: npm run build:android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: suite-apks
+          path: |
+            release/blackwhale.apk
+            release/nightweaver.apk
+            release/obsidian.apk
+            release/mako.apk
+            release/trench.apk
+            release/ironmantis.apk

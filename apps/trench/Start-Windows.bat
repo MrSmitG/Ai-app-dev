@@ -1,3 +1,3 @@
 @echo off
 cd /d "%~dp0\..\.."
-node scripts/start-suite-app.mjs trench
+call "%~dp0..\..\scripts\start-windows.cmd" trench

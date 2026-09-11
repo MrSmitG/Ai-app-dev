@@ -17,13 +17,14 @@ extraMetadata:
 npmRebuild: false
 nodeGypRebuild: false
 extraResources:
-  - from: build/engine-pack/src
-    to: engine/src
-  - from: build/engine-pack/package.json
-    to: engine/package.json
-  - from: build/engine-pack/node_modules
-    to: engine/node_modules
+  - from: build/engine-pack
+    to: engine
+  - from: build/suite-pack
+    to: suite
 asar: true
+electronFuses:
+  runAsNode: true
+  enableNodeCliInspectArguments: true
 icon: apps/desktop/build/icon.png
 win:
   target:
@@ -48,6 +49,7 @@ nsis:
   shortcutName: Localmod
   uninstallDisplayName: Localmod
   artifactName: Localmod-Setup.exe
+  include: installer.nsh
 portable:
   artifactName: Localmod.exe
 publish:
