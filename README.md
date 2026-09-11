@@ -81,7 +81,7 @@ On Windows you can double-click **Install-Android.bat** to download all six into
 
 In the app, **About** and **Suite** show three PC steps on each Setup.exe card. APK cards are labeled Android phones only.
 
-If a download 404s, the latest GitHub Release is still building. Tag `v0.3.3` so Actions can attach `Blackwhale-Setup.exe` … `Ironmantis-Setup.exe`, plus `Localmod-Setup.exe`, `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
+If a download 404s, the latest GitHub Release is still building. Tag `v0.3.4` so Actions can attach `Blackwhale-Setup.exe` … `Ironmantis-Setup.exe`, plus `Localmod-Setup.exe`, `Localmod.exe`, `Localmod.dmg`, `Localmod.AppImage`, and the six `*.apk` files.
 
 ## Why not a public blockchain
 

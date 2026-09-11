@@ -1,4 +1,4 @@
-Localmod **v0.3.3** — Windows Setup.exe opens the React app from disk. v0.3.2 could time out waiting for `http://127.0.0.1:1421/`.
+Localmod **v0.3.4** — packaged Windows apps start the local engine inside the app (fixes “The local engine did not start”). One Setup.exe per React app.
 
 ## Windows PC setups (this is the install path)
 

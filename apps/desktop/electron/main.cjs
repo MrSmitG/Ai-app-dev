@@ -1,8 +1,9 @@
-const { app, BrowserWindow, shell, Menu, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, shell, Menu, dialog, ipcMain, utilityProcess } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
+const { pathToFileURL } = require("node:url");
 
 const isDev = !app.isPackaged;
 const ENGINE_PORT = Number(process.env.LOCALMOD_ENGINE_PORT || 4781);
@@ -20,6 +21,7 @@ const SUITE = [
 let mainWindow = null;
 let splashWindow = null;
 let engineProc = null;
+let engineStartError = null;
 const servers = [];
 const suiteWindows = new Map();
 let uiPort = UI_PORT;
@@ -196,6 +198,29 @@ async function startPackagedUi() {
   }
 }
 
+function engineLogPath() {
+  return path.join(app.getPath("userData"), "engine.log");
+}
+
+function appendEngineLog(text) {
+  try {
+    const file = engineLogPath();
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, `${new Date().toISOString()} ${text}\n`);
+  } catch {
+    /* ignore */
+  }
+}
+
+function readEngineLogTail(max = 4000) {
+  try {
+    const buf = fs.readFileSync(engineLogPath(), "utf8");
+    return buf.slice(-max);
+  } catch {
+    return "";
+  }
+}
+
 function engineEntry() {
   if (app.isPackaged) {
     return path.join(process.resourcesPath, "engine", "src", "index.js");
@@ -206,6 +231,16 @@ function engineEntry() {
 function engineCwd() {
   if (app.isPackaged) return path.join(process.resourcesPath, "engine");
   return path.resolve(__dirname, "../../..");
+}
+
+function engineEnv() {
+  return {
+    ...process.env,
+    LOCALMOD_ENGINE: "1",
+    LOCALMOD_ENGINE_PORT: String(ENGINE_PORT),
+    LOCALMOD_HOME: process.env.LOCALMOD_HOME || path.join(app.getPath("home"), ".localmod"),
+    NODE_PATH: path.join(engineCwd(), "node_modules"),
+  };
 }
 
 function waitForUrl(url, timeoutMs = 20000) {
@@ -244,44 +279,115 @@ function healthOk() {
   });
 }
 
-function startEngine() {
+function startEngineChild() {
   const entry = engineEntry();
   const cwd = engineCwd();
-  const logFile = path.join(app.getPath("userData"), "engine.log");
+  const logFile = engineLogPath();
   fs.mkdirSync(path.dirname(logFile), { recursive: true });
   const logFd = fs.openSync(logFile, "a");
-  const env = {
-    ...process.env,
-    LOCALMOD_ENGINE_PORT: String(ENGINE_PORT),
-    LOCALMOD_HOME: process.env.LOCALMOD_HOME || path.join(app.getPath("home"), ".localmod"),
-  };
+  const env = engineEnv();
   let cmd = "node";
   const args = [entry];
   if (app.isPackaged) {
     cmd = process.execPath;
     env.ELECTRON_RUN_AS_NODE = "1";
-    env.NODE_PATH = path.join(cwd, "node_modules");
   }
+  appendEngineLog(`spawn ${cmd} ${args.join(" ")} cwd=${cwd}`);
   engineProc = spawn(cmd, args, {
     cwd,
     env,
     stdio: ["ignore", logFd, logFd],
     windowsHide: true,
   });
+  engineProc.on("error", (err) => {
+    appendEngineLog(`spawn error: ${err.message || err}`);
+  });
   engineProc.on("exit", (code) => {
-    console.log(`Localmod engine exited (${code})`);
+    appendEngineLog(`engine child exited (${code})`);
     engineProc = null;
   });
 }
 
+async function startEngineUtility(entry) {
+  if (!utilityProcess || typeof utilityProcess.fork !== "function") {
+    startEngineChild();
+    return;
+  }
+  appendEngineLog(`utilityProcess.fork ${entry}`);
+  const child = utilityProcess.fork(entry, [], {
+    cwd: engineCwd(),
+    stdio: "pipe",
+    serviceName: "localmod-engine",
+    env: engineEnv(),
+  });
+  engineProc = child;
+  const logFile = engineLogPath();
+  const pipe = (stream) => {
+    if (!stream) return;
+    stream.on("data", (d) => {
+      try {
+        fs.appendFileSync(logFile, d);
+      } catch {
+        /* ignore */
+      }
+    });
+  };
+  pipe(child.stdout);
+  pipe(child.stderr);
+  child.on("exit", (code) => {
+    appendEngineLog(`utility engine exited (${code})`);
+    engineProc = null;
+  });
+}
+
+async function startEngineInProcess() {
+  const entry = engineEntry();
+  if (!fs.existsSync(entry)) {
+    throw new Error(`Engine files are missing at ${entry}`);
+  }
+  process.env.LOCALMOD_ENGINE_PORT = String(ENGINE_PORT);
+  if (!process.env.LOCALMOD_HOME) {
+    process.env.LOCALMOD_HOME = path.join(app.getPath("home"), ".localmod");
+  }
+  const extra = path.join(engineCwd(), "node_modules");
+  if (fs.existsSync(extra)) {
+    const Module = require("module");
+    process.env.NODE_PATH = [extra, process.env.NODE_PATH].filter(Boolean).join(path.delimiter);
+    Module._initPaths();
+  }
+  appendEngineLog(`import engine ${entry}`);
+  const mod = await import(pathToFileURL(entry).href);
+  if (typeof mod.startEngine !== "function") {
+    throw new Error("Engine pack did not export startEngine");
+  }
+  await mod.startEngine(ENGINE_PORT);
+}
+
+async function startEnginePackaged() {
+  try {
+    await startEngineInProcess();
+    if (await healthOk()) return;
+    appendEngineLog("in-process engine imported but /health is not up");
+  } catch (err) {
+    appendEngineLog(`in-process engine failed: ${err?.stack || err}`);
+  }
+  try {
+    await startEngineUtility(engineEntry());
+  } catch (err) {
+    appendEngineLog(`utility engine failed: ${err?.stack || err}`);
+    startEngineChild();
+  }
+}
+
 async function ensureEngine() {
   if (process.env.LOCALMOD_EXTERNAL_ENGINE === "1" || (await healthOk())) {
-    console.log(`Engine already on http://127.0.0.1:${ENGINE_PORT}`);
+    appendEngineLog(`Engine already on http://127.0.0.1:${ENGINE_PORT}`);
     await waitForUrl(`http://127.0.0.1:${ENGINE_PORT}/health`);
     return;
   }
-  startEngine();
-  await waitForUrl(`http://127.0.0.1:${ENGINE_PORT}/health`);
+  if (app.isPackaged) await startEnginePackaged();
+  else startEngineChild();
+  await waitForUrl(`http://127.0.0.1:${ENGINE_PORT}/health`, 25000);
 }
 
 function showSplash() {
@@ -544,20 +650,32 @@ if (!gotLock) {
     buildMenu();
     showSplash();
     try {
-      await ensureEngine();
+      try {
+        await ensureEngine();
+      } catch (err) {
+        appendEngineLog(`ensureEngine failed: ${err?.stack || err}`);
+        engineStartError = err;
+      }
       if (!isDev) await startPackagedUi();
       await openRequested(requestedApps());
       closeSplash();
+      if (engineStartError) {
+        const log = readEngineLogTail();
+        dialog.showMessageBox({
+          type: "warning",
+          title: app.getName() || "Localmod",
+          message: "The local engine did not start. The app window is open; chat and models need the engine.",
+          detail: `${engineStartError.message || engineStartError}\n\nLogs: ${engineLogPath()}\n\n${log}`,
+        }).catch(() => {});
+      }
     } catch (err) {
       closeSplash();
       const msg = String(err.message || err);
       const title = app.getName() || "Localmod";
-      const hint = /4781/.test(msg)
-        ? "The local engine did not start."
-        : "The app window did not open.";
+      const log = readEngineLogTail();
       dialog.showErrorBox(
         title,
-        `${hint}\n\n${msg}\n\nLogs: ${path.join(app.getPath("userData"), "engine.log")}`
+        `${msg}\n\nLogs: ${engineLogPath()}\n\n${log}`
       );
       app.quit();
     }
@@ -575,7 +693,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   if (engineProc && !engineProc.killed) {
     try {
-      engineProc.kill();
+      if (typeof engineProc.kill === "function") engineProc.kill();
     } catch {
       /* ignore */
     }
